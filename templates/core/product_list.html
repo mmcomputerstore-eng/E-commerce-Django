@@ -1,0 +1,447 @@
+{% extends "partials/base.html" %}
+{% load static %}
+
+{% block title %} All Products | MM Computer Store {% endblock title %}
+
+{% block content %}
+<main class="main">
+    <!-- Page Header -->
+    <div class="page-header text-center" style="background-image: url('{% static 'assets/images/page-header-bg.jpg' %}')">
+        <div class="container">
+            <h1 class="page-title">Products<span>Explore Our Catalog</span></h1>
+        </div><!-- End .container -->
+    </div><!-- End .page-header -->
+
+    <!-- Breadcrumb Navigation -->
+    <nav aria-label="breadcrumb" class="breadcrumb-nav mb-4">
+        <div class="container">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{% url 'core:home' %}">Home</a></li>
+                <li class="breadcrumb-item active" aria-current="page">Products</li>
+                {% if selected_category %}
+                <li class="breadcrumb-item active text-primary" aria-current="page">{{ selected_category.title }}</li>
+                {% endif %}
+            </ol>
+        </div><!-- End .container -->
+    </nav><!-- End .breadcrumb-nav -->
+
+    <div class="page-content">
+        <div class="container">
+            <div class="row">
+
+                <!-- ============================================== -->
+                <!-- SIDEBAR FILTERS (CATEGORIES & VENDORS)        -->
+                <!-- ============================================== -->
+                <aside class="col-lg-3 col-md-4 mb-4">
+                    <div class="sidebar sidebar-shop p-4 bg-white rounded shadow-sm" style="border: 1px solid #ebebeb;">
+                        <!-- Filter Clean / Header -->
+                        <div class="widget-header d-flex align-items-center justify-content-between pb-3 mb-4" style="border-bottom: 2px solid #f4f4f4;">
+                            <h4 class="m-0 font-weight-bold" style="font-size: 1.6rem; color: #333;">
+                                <i class="icon-filter mr-2 text-primary"></i>Filters
+                            </h4>
+                            {% if selected_category or selected_vendor %}
+                            <a href="{% url 'core:products' %}" class="btn btn-sm btn-outline-danger" style="border-radius: 20px; font-size: 1.1rem; padding: 2px 10px;">
+                                Clean All
+                            </a>
+                            {% endif %}
+                        </div>
+
+                        <!-- 1. CATEGORY FILTER -->
+                        <div class="widget mb-4">
+                            <h5 class="widget-title mb-3 font-weight-bold d-flex align-items-center justify-content-between" style="font-size: 1.4rem; color: #222;">
+                                <span><i class="icon-th-list mr-2 text-primary"></i>Category</span>
+                                {% if selected_category %}
+                                <a href="{% url 'core:products' %}{% if selected_vendor %}?vendor={{ selected_vendor.vid }}{% endif %}" class="small text-danger" style="font-size: 1.1rem; font-weight: normal;">Clear</a>
+                                {% endif %}
+                            </h5>
+                            <div class="widget-body">
+                                <ul class="list-unstyled mb-0 filter-category-list">
+                                    <!-- All Categories item -->
+                                    <li class="mb-2">
+                                        <a href="{% url 'core:products' %}{% if selected_vendor %}?vendor={{ selected_vendor.vid }}{% endif %}"
+                                           class="d-flex align-items-center justify-content-between p-2 rounded transition-all {% if not selected_category %}active-filter-item{% endif %}"
+                                           style="text-decoration: none; color: #333; {% if not selected_category %}background: #eef5ff; font-weight: 600; color: #39f; border: 1px solid #b8daff;{% else %}border: 1px solid transparent;{% endif %}">
+                                            <div class="d-flex align-items-center">
+                                                <div style="width: 36px; height: 36px; border-radius: 6px; background: #e9ecef; display: flex; align-items: center; justify-content: center; margin-right: 12px; font-size: 1.4rem; color: #555;">
+                                                    <i class="icon-grid"></i>
+                                                </div>
+                                                <span style="font-size: 1.3rem;">All Categories</span>
+                                            </div>
+                                            {% if not selected_category %}
+                                            <i class="icon-check text-primary font-weight-bold"></i>
+                                            {% endif %}
+                                        </a>
+                                    </li>
+
+                                    {% for c in categories %}
+                                    <li class="mb-2">
+                                        <!-- Clicking active category toggles it off, otherwise activates it -->
+                                        <a href="{% if selected_category.id == c.id %}{% url 'core:products' %}{% if selected_vendor %}?vendor={{ selected_vendor.vid }}{% endif %}{% else %}{% url 'core:products' %}?category={{ c.cid }}{% if selected_vendor %}&vendor={{ selected_vendor.vid }}{% endif %}{% endif %}"
+                                           class="d-flex align-items-center justify-content-between p-2 rounded transition-all {% if selected_category.id == c.id %}active-filter-item{% endif %}"
+                                           style="text-decoration: none; color: #333; {% if selected_category.id == c.id %}background: #eef5ff; font-weight: 600; color: #39f; border: 1px solid #b8daff;{% else %}border: 1px solid transparent;{% endif %}">
+                                            <div class="d-flex align-items-center" style="min-width: 0;">
+                                                {% if c.image %}
+                                                <img src="{{ c.image.url }}" alt="{{ c.title }}" style="width: 36px; height: 36px; object-fit: cover; border-radius: 6px; margin-right: 12px; border: 1px solid #ebebeb; flex-shrink: 0;">
+                                                {% else %}
+                                                <div style="width: 36px; height: 36px; border-radius: 6px; background: #f0f0f0; display: flex; align-items: center; justify-content: center; margin-right: 12px; font-size: 1.4rem; color: #888; flex-shrink: 0;">
+                                                    <i class="icon-image"></i>
+                                                </div>
+                                                {% endif %}
+                                                <span class="text-truncate" style="font-size: 1.3rem;" title="{{ c.title }}">{{ c.title }}</span>
+                                            </div>
+                                            <div class="d-flex align-items-center ml-2">
+                                                <span class="badge badge-pill badge-light" style="font-size: 1.1rem; color: #777;">{{ c.product_count }}</span>
+                                                {% if selected_category.id == c.id %}
+                                                <i class="icon-check text-primary font-weight-bold ml-1"></i>
+                                                {% endif %}
+                                            </div>
+                                        </a>
+                                    </li>
+                                    {% empty %}
+                                    <li class="text-muted small">No categories found</li>
+                                    {% endfor %}
+                                </ul>
+                            </div><!-- End .widget-body -->
+                        </div><!-- End .widget -->
+
+                        <hr style="border-top: 1px solid #eee; margin: 1.5rem 0;">
+
+                        <!-- 2. VENDOR FILTER -->
+                        <div class="widget">
+                            <h5 class="widget-title mb-3 font-weight-bold d-flex align-items-center justify-content-between" style="font-size: 1.4rem; color: #222;">
+                                <span><i class="icon-user mr-2 text-primary"></i>Vendor</span>
+                                {% if selected_vendor %}
+                                <a href="{% url 'core:products' %}{% if selected_category %}?category={{ selected_category.cid }}{% endif %}" class="small text-danger" style="font-size: 1.1rem; font-weight: normal;">Clear</a>
+                                {% endif %}
+                            </h5>
+                            <div class="widget-body">
+                                <ul class="list-unstyled mb-0 filter-vendor-list">
+                                    <!-- All Vendors item -->
+                                    <li class="mb-2">
+                                        <a href="{% url 'core:products' %}{% if selected_category %}?category={{ selected_category.cid }}{% endif %}"
+                                           class="d-flex align-items-center justify-content-between p-2 rounded transition-all {% if not selected_vendor %}active-filter-item{% endif %}"
+                                           style="text-decoration: none; color: #333; {% if not selected_vendor %}background: #eef5ff; font-weight: 600; color: #39f; border: 1px solid #b8daff;{% else %}border: 1px solid transparent;{% endif %}">
+                                            <div class="d-flex align-items-center">
+                                                <div class="rounded-circle" style="width: 36px; height: 36px; background: #e9ecef; display: flex; align-items: center; justify-content: center; margin-right: 12px; font-size: 1.4rem; color: #555; border: 2px solid #ddd;">
+                                                    <i class="icon-users"></i>
+                                                </div>
+                                                <span style="font-size: 1.3rem;">All Vendors</span>
+                                            </div>
+                                            {% if not selected_vendor %}
+                                            <i class="icon-check text-primary font-weight-bold"></i>
+                                            {% endif %}
+                                        </a>
+                                    </li>
+
+                                    {% for v in vendors %}
+                                    <li class="mb-2">
+                                        <!-- Clicking active vendor toggles it off, otherwise activates it -->
+                                        <a href="{% if selected_vendor.id == v.id %}{% url 'core:products' %}{% if selected_category %}?category={{ selected_category.cid }}{% endif %}{% else %}{% url 'core:products' %}?vendor={{ v.vid }}{% if selected_category %}&category={{ selected_category.cid }}{% endif %}{% endif %}"
+                                           class="d-flex align-items-center justify-content-between p-2 rounded transition-all {% if selected_vendor.id == v.id %}active-filter-item{% endif %}"
+                                           style="text-decoration: none; color: #333; {% if selected_vendor.id == v.id %}background: #eef5ff; font-weight: 600; color: #39f; border: 1px solid #b8daff;{% else %}border: 1px solid transparent;{% endif %}">
+                                            <div class="d-flex align-items-center" style="min-width: 0;">
+                                                {% if v.image %}
+                                                <img src="{{ v.image.url }}" alt="{{ v.title }}" class="rounded-circle" style="width: 36px; height: 36px; object-fit: cover; border-radius: 50%; margin-right: 12px; border: 2px solid #ddd; flex-shrink: 0;">
+                                                {% else %}
+                                                <div class="rounded-circle" style="width: 36px; height: 36px; background: #f0f0f0; display: flex; align-items: center; justify-content: center; margin-right: 12px; font-size: 1.4rem; color: #888; border: 2px solid #ddd; flex-shrink: 0;">
+                                                    <i class="icon-user"></i>
+                                                </div>
+                                                {% endif %}
+                                                <span class="text-truncate" style="font-size: 1.3rem;" title="{{ v.title }}">{{ v.title }}</span>
+                                            </div>
+                                            <div class="d-flex align-items-center ml-2">
+                                                <span class="badge badge-pill badge-light" style="font-size: 1.1rem; color: #777;">{{ v.product_count }}</span>
+                                                {% if selected_vendor.id == v.id %}
+                                                <i class="icon-check text-primary font-weight-bold ml-1"></i>
+                                                {% endif %}
+                                            </div>
+                                        </a>
+                                    </li>
+                                    {% empty %}
+                                    <li class="text-muted small">No vendors found</li>
+                                    {% endfor %}
+                                </ul>
+                            </div><!-- End .widget-body -->
+                        </div><!-- End .widget -->
+                    </div><!-- End .sidebar -->
+                </aside>
+
+                <!-- ============================================== -->
+                <!-- MAIN CONTENT (PRODUCTS LISTING)               -->
+                <!-- ============================================== -->
+                <div class="col-lg-9 col-md-8">
+
+                    <!-- Active Filters Indicator Bar -->
+                    {% if selected_category or selected_vendor %}
+                    <div class="active-filters-bar p-3 mb-4 bg-light rounded d-flex align-items-center flex-wrap" style="border: 1px dashed #b8daff; background-color: #f8fbff !important;">
+                        <span class="mr-2 font-weight-bold text-dark" style="font-size: 1.3rem;">
+                            <i class="icon-sliders mr-1 text-primary"></i> Active Filters:
+                        </span>
+
+                        {% if selected_category %}
+                        <span class="badge badge-primary px-3 py-2 mr-2 mb-1 d-inline-flex align-items-center" style="font-size: 1.2rem; border-radius: 20px; background-color: #39f;">
+                            Category: {{ selected_category.title }}
+                            <a href="{% url 'core:products' %}{% if selected_vendor %}?vendor={{ selected_vendor.vid }}{% endif %}" class="text-white ml-2" style="text-decoration: none; font-size: 1.4rem; line-height: 1;" title="Remove this category filter">&times;</a>
+                        </span>
+                        {% endif %}
+
+                        {% if selected_vendor %}
+                        <span class="badge badge-info px-3 py-2 mr-2 mb-1 d-inline-flex align-items-center" style="font-size: 1.2rem; border-radius: 20px; background-color: #17a2b8;">
+                            Vendor: {{ selected_vendor.title }}
+                            <a href="{% url 'core:products' %}{% if selected_category %}?category={{ selected_category.cid }}{% endif %}" class="text-white ml-2" style="text-decoration: none; font-size: 1.4rem; line-height: 1;" title="Remove this vendor filter">&times;</a>
+                        </span>
+                        {% endif %}
+
+                        <a href="{% url 'core:products' %}" class="btn btn-link btn-sm text-danger ml-auto p-0 font-weight-bold" style="font-size: 1.2rem; text-decoration: underline;">
+                            Reset All Filters
+                        </a>
+                    </div>
+                    {% endif %}
+
+                    <!-- Toolbox / Count bar -->
+                    <div class="d-flex align-items-center justify-content-between mb-4 pb-2 border-bottom">
+                        <div style="font-size: 1.4rem; color: #666;">
+                            Showing <strong class="text-dark">{{ products.count }}</strong> product{{ products.count|pluralize }}
+                            {% if selected_category %} in <span class="text-primary font-weight-bold">{{ selected_category.title }}</span>{% endif %}
+                            {% if selected_vendor %} by <span class="text-info font-weight-bold">{{ selected_vendor.title }}</span>{% endif %}
+                        </div>
+                    </div>
+
+                    <!-- ============================================== -->
+                    <!-- 1. FEATURED PRODUCTS SECTION (UPAR)           -->
+                    <!-- ============================================== -->
+                    <div class="featured-products-section mb-5">
+                        <div class="heading heading-flex mb-3 align-items-center">
+                            <div class="heading-left">
+                                <h2 class="title mb-0 d-flex align-items-center" style="font-size: 2rem;">
+                                    <i class="icon-star text-warning mr-2"></i> Featured Products
+                                </h2>
+                                <p class="text-muted mt-1 mb-0" style="font-size: 1.3rem;">
+                                    Top spotlight items chosen for premium quality.
+                                </p>
+                            </div><!-- End .heading-left -->
+
+                            <div class="heading-right">
+                                <span class="badge badge-pill badge-primary px-3 py-2" style="font-size: 1.2rem; background-color: #39f;">
+                                    {{ featured_products.count }} Featured Item{{ featured_products.count|pluralize }}
+                                </span>
+                            </div><!-- End .heading-right -->
+                        </div><!-- End .heading -->
+
+                        <div class="products mb-3">
+                            <div class="row">
+                                {% for p in featured_products %}
+                                <div class="col-6 col-md-6 col-lg-4 mb-4">
+                                    <div class="product product-7 text-center h-100 shadow-sm rounded-lg" style="border: 1px solid #ebebeb; background: #fff; display: flex; flex-direction: column; justify-content: space-between;">
+                                        <figure class="product-media position-relative m-0" style="background: #fbfbfb; overflow: hidden; min-height: 240px; display: flex; align-items: center; justify-content: center;">
+                                            <!-- Badges -->
+                                            <span class="product-label" style="background-color: #ef837b; color: #fff; font-weight: 600; top: 10px; left: 10px;">Featured</span>
+
+                                            {% if p.old_price and p.get_percentage %}
+                                            <span class="product-label label-new" style="top: 10px; right: 10px; left: auto; background-color: #a6c76c;">{{ p.get_percentage|floatformat:0 }}% Off</span>
+                                            {% endif %}
+
+                                            <a href="#" style="width: 100%; display: block;">
+                                                {% if p.image %}
+                                                <img src="{{ p.image.url }}" alt="{{ p.title }}" class="product-image" style="height: 230px; object-fit: contain; width: 100%; padding: 15px;">
+                                                {% else %}
+                                                <img src="{% static 'assets/images/demos/demo-13/products/product-1.jpg' %}" alt="{{ p.title }}" class="product-image" style="height: 230px; object-fit: contain; width: 100%; padding: 15px;">
+                                                {% endif %}
+                                            </a>
+
+                                            <div class="product-action-vertical">
+                                                <a href="#" class="btn-product-icon btn-wishlist btn-expandable" title="Add to wishlist"><span>add to wishlist</span></a>
+                                                <a href="#" class="btn-product-icon btn-compare" title="Compare"><span>Compare</span></a>
+                                                <a href="{% static 'popup/quickView.html' %}" class="btn-product-icon btn-quickview" title="Quick view"><span>Quick view</span></a>
+                                            </div><!-- End .product-action-vertical -->
+
+                                            <div class="product-action">
+                                                <a href="#" class="btn-product btn-cart" title="Add to cart"><span>add to cart</span></a>
+                                            </div><!-- End .product-action -->
+                                        </figure><!-- End .product-media -->
+
+                                        <div class="product-body p-3 text-center" style="flex-grow: 1; display: flex; flex-direction: column; justify-content: space-between;">
+                                            <div>
+                                                <div class="product-cat text-muted mb-1" style="font-size: 1.2rem;">
+                                                    <a href="{% url 'core:products' %}?category={{ p.category.cid }}" style="color: #999;">{{ p.category.title|default:"General" }}</a>
+                                                </div><!-- End .product-cat -->
+
+                                                <h3 class="product-title font-weight-normal mb-2" style="font-size: 1.5rem; line-height: 1.3;">
+                                                    <a href="#" style="color: #333;">{{ p.title }}</a>
+                                                </h3><!-- End .product-title -->
+                                            </div>
+
+                                            <div>
+                                                <div class="product-price d-flex align-items-center justify-content-center mb-2" style="font-size: 1.6rem; font-weight: 600; color: #39f;">
+                                                    ${{ p.price }}
+                                                    {% if p.old_price %}
+                                                    <span class="old-price ml-2" style="text-decoration: line-through; color: #ccc; font-size: 1.3rem; font-weight: 400;">${{ p.old_price }}</span>
+                                                    {% endif %}
+                                                </div><!-- End .product-price -->
+
+                                                <div class="ratings-container justify-content-center mb-2">
+                                                    <div class="ratings">
+                                                        <div class="ratings-val" style="width: 80%;"></div><!-- End .ratings-val -->
+                                                    </div><!-- End .ratings -->
+                                                    <span class="ratings-text">( 12 Reviews )</span>
+                                                </div><!-- End .rating-container -->
+
+                                                {% if p.vendor %}
+                                                <div class="product-vendor" style="font-size: 1.2rem;">
+                                                    <span class="text-muted">By</span>
+                                                    <a href="{% url 'core:products' %}?vendor={{ p.vendor.vid }}" style="color: #39f; font-weight: 500;">{{ p.vendor }}</a>
+                                                </div>
+                                                {% endif %}
+                                            </div>
+                                        </div><!-- End .product-body -->
+                                    </div><!-- End .product -->
+                                </div><!-- End .col -->
+                                {% empty %}
+                                <div class="col-12 text-center py-4">
+                                    <div class="p-4" style="background: #fdfdfd; border: 1px dashed #e0e0e0; border-radius: 8px;">
+                                        <i class="icon-star-o" style="font-size: 2.4rem; color: #ccc;"></i>
+                                        <h5 class="mt-2 text-muted" style="font-size: 1.4rem;">No Featured Products</h5>
+                                        <p class="text-muted mb-0 small">No featured products match the selected criteria.</p>
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            </div><!-- End .row -->
+                        </div><!-- End .products -->
+                    </div><!-- End .featured-products-section -->
+
+                    <!-- Section Separator -->
+                    <div class="section-separator my-5">
+                        <hr style="border-top: 1px solid #e5e5e5;">
+                    </div>
+
+                    <!-- ============================================== -->
+                    <!-- 2. UNFEATURED / MORE PRODUCTS SECTION (NEECHE) -->
+                    <!-- ============================================== -->
+                    <div class="unfeatured-products-section mb-5">
+                        <div class="heading heading-flex mb-3 align-items-center">
+                            <div class="heading-left">
+                                <h2 class="title mb-0 d-flex align-items-center" style="font-size: 2rem;">
+                                    <i class="icon-th-large text-primary mr-2"></i> More Products
+                                </h2>
+                                <p class="text-muted mt-1 mb-0" style="font-size: 1.3rem;">
+                                    Browse through our standard collection.
+                                </p>
+                            </div><!-- End .heading-left -->
+
+                            <div class="heading-right">
+                                <span class="badge badge-pill badge-secondary px-3 py-2" style="font-size: 1.2rem; background-color: #6c757d;">
+                                    {{ unfeatured_products.count }} Product{{ unfeatured_products.count|pluralize }}
+                                </span>
+                            </div><!-- End .heading-right -->
+                        </div><!-- End .heading -->
+
+                        <div class="products mb-3">
+                            <div class="row">
+                                {% for p in unfeatured_products %}
+                                <div class="col-6 col-md-6 col-lg-4 mb-4">
+                                    <div class="product product-7 text-center h-100 shadow-sm rounded-lg" style="border: 1px solid #ebebeb; background: #fff; display: flex; flex-direction: column; justify-content: space-between;">
+                                        <figure class="product-media position-relative m-0" style="background: #fbfbfb; overflow: hidden; min-height: 240px; display: flex; align-items: center; justify-content: center;">
+                                            {% if p.old_price and p.get_percentage %}
+                                            <span class="product-label label-new" style="top: 10px; left: 10px; background-color: #a6c76c;">{{ p.get_percentage|floatformat:0 }}% Off</span>
+                                            {% endif %}
+
+                                            <a href="#" style="width: 100%; display: block;">
+                                                {% if p.image %}
+                                                <img src="{{ p.image.url }}" alt="{{ p.title }}" class="product-image" style="height: 230px; object-fit: contain; width: 100%; padding: 15px;">
+                                                {% else %}
+                                                <img src="{% static 'assets/images/demos/demo-13/products/product-1.jpg' %}" alt="{{ p.title }}" class="product-image" style="height: 230px; object-fit: contain; width: 100%; padding: 15px;">
+                                                {% endif %}
+                                            </a>
+
+                                            <div class="product-action-vertical">
+                                                <a href="#" class="btn-product-icon btn-wishlist btn-expandable" title="Add to wishlist"><span>add to wishlist</span></a>
+                                                <a href="#" class="btn-product-icon btn-compare" title="Compare"><span>Compare</span></a>
+                                                <a href="{% static 'popup/quickView.html' %}" class="btn-product-icon btn-quickview" title="Quick view"><span>Quick view</span></a>
+                                            </div><!-- End .product-action-vertical -->
+
+                                            <div class="product-action">
+                                                <a href="#" class="btn-product btn-cart" title="Add to cart"><span>add to cart</span></a>
+                                            </div><!-- End .product-action -->
+                                        </figure><!-- End .product-media -->
+
+                                        <div class="product-body p-3 text-center" style="flex-grow: 1; display: flex; flex-direction: column; justify-content: space-between;">
+                                            <div>
+                                                <div class="product-cat text-muted mb-1" style="font-size: 1.2rem;">
+                                                    <a href="{% url 'core:products' %}?category={{ p.category.cid }}" style="color: #999;">{{ p.category.title|default:"General" }}</a>
+                                                </div><!-- End .product-cat -->
+
+                                                <h3 class="product-title font-weight-normal mb-2" style="font-size: 1.5rem; line-height: 1.3;">
+                                                    <a href="#" style="color: #333;">{{ p.title }}</a>
+                                                </h3><!-- End .product-title -->
+                                            </div>
+
+                                            <div>
+                                                <div class="product-price d-flex align-items-center justify-content-center mb-2" style="font-size: 1.6rem; font-weight: 600; color: #39f;">
+                                                    ${{ p.price }}
+                                                    {% if p.old_price %}
+                                                    <span class="old-price ml-2" style="text-decoration: line-through; color: #ccc; font-size: 1.3rem; font-weight: 400;">${{ p.old_price }}</span>
+                                                    {% endif %}
+                                                </div><!-- End .product-price -->
+
+                                                <div class="ratings-container justify-content-center mb-2">
+                                                    <div class="ratings">
+                                                        <div class="ratings-val" style="width: 80%;"></div><!-- End .ratings-val -->
+                                                    </div><!-- End .ratings -->
+                                                    <span class="ratings-text">( 12 Reviews )</span>
+                                                </div><!-- End .rating-container -->
+
+                                                {% if p.vendor %}
+                                                <div class="product-vendor" style="font-size: 1.2rem;">
+                                                    <span class="text-muted">By</span>
+                                                    <a href="{% url 'core:products' %}?vendor={{ p.vendor.vid }}" style="color: #39f; font-weight: 500;">{{ p.vendor }}</a>
+                                                </div>
+                                                {% endif %}
+                                            </div>
+                                        </div><!-- End .product-body -->
+                                    </div><!-- End .product -->
+                                </div><!-- End .col -->
+                                {% empty %}
+                                <div class="col-12 text-center py-4">
+                                    <div class="p-4" style="background: #fdfdfd; border: 1px dashed #e0e0e0; border-radius: 8px;">
+                                        <i class="icon-box" style="font-size: 2.4rem; color: #ccc;"></i>
+                                        <h5 class="mt-2 text-muted" style="font-size: 1.4rem;">No Regular Products</h5>
+                                        <p class="text-muted mb-0 small">No additional products match the selected criteria.</p>
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            </div><!-- End .row -->
+                        </div><!-- End .products -->
+                    </div><!-- End .unfeatured-products-section -->
+
+                    {% if products.count == 0 %}
+                    <div class="text-center py-5 my-4 bg-white rounded shadow-sm p-5 border">
+                        <i class="icon-exclamation-circle text-muted" style="font-size: 4rem;"></i>
+                        <h3 class="mt-3 font-weight-bold">No Products Found</h3>
+                        <p class="text-muted">No products found matching your selected category and vendor filters.</p>
+                        <a href="{% url 'core:products' %}" class="btn btn-primary mt-2">
+                            <span>Clear All Filters</span><i class="icon-refresh ml-2"></i>
+                        </a>
+                    </div>
+                    {% endif %}
+
+                </div><!-- End .col-lg-9 -->
+
+            </div><!-- End .row -->
+        </div><!-- End .container -->
+    </div><!-- End .page-content -->
+</main><!-- End .main -->
+
+<style>
+.filter-category-list a, .filter-vendor-list a {
+    transition: all 0.2s ease-in-out;
+}
+.filter-category-list a:hover, .filter-vendor-list a:hover {
+    background-color: #f4f8ff !important;
+    color: #39f !important;
+}
+.active-filter-item {
+    background-color: #eef5ff !important;
+    border-color: #b8daff !important;
+}
+</style>
+{% endblock content %}

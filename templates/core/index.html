@@ -271,7 +271,9 @@
                             {% for p in products %}
                                 <div class="product">
                                     <figure class="product-media">
-                                        <span class="product-label label-new">New</span>
+                                        {% if p.old_price %}
+                                        <span class="product-label label-new">{{p.get_percentage | floatformat}}% Off</span>
+                                        {% endif %}
                                         <a href="product.html">
                                             <img src="{{p.image.url}}" alt="Product image" class="product-image">
                                         </a>
@@ -293,7 +295,10 @@
                                         </div><!-- End .product-cat -->
                                         <h3 class="product-title"><a href="product.html">{{p.title}}</a></h3><!-- End .product-title -->
                                         <div class="product-price">
-                                            $399.00
+                                            ${{p.price}}
+                                            {% if p.old_price %}
+                                            <p style="text-decoration: line-through">${{p.old_price}}</p>
+                                            {% endif %}
                                         </div><!-- End .product-price -->
                                         <div class="ratings-container">
                                             <div class="ratings">
@@ -301,46 +306,13 @@
                                             </div><!-- End .ratings -->
                                             <span class="ratings-text">( 12 Reviews )</span>
                                         </div><!-- End .rating-container -->
+                                        <div  >
+                                            By  <a style='Color:"lite-blue"' href="#">{{p.vendor}}</a>
+
+                                        </div>
                                     </div><!-- End .product-body -->
                                 </div><!-- End .product -->
                                 {% endfor %}
-                                <div class="product">
-                                    <figure class="product-media">
-                                        <span class="product-label label-new">New</span>
-                                        <a href="product.html">
-                                            <img src="{% static 'assets/images/demos/demo-13/products/product-6.jpg' %}" alt="Product image" class="product-image">
-                                        </a>
-
-                                        <div class="product-action-vertical">
-                                            <a href="#" class="btn-product-icon btn-wishlist btn-expandable"><span>add to wishlist</span></a>
-                                            <a href="#" class="btn-product-icon btn-compare" title="Compare"><span>Compare</span></a>
-                                            <a href="popup/quickView.html" class="btn-product-icon btn-quickview" title="Quick view"><span>Quick view</span></a>
-                                        </div><!-- End .product-action-vertical -->
-
-                                        <div class="product-action">
-                                            <a href="#" class="btn-product btn-cart" title="Add to cart"><span>add to cart</span></a>
-                                        </div><!-- End .product-action -->
-                                    </figure><!-- End .product-media -->
-
-                                    <div class="product-body">
-                                        <div class="product-cat">
-                                            <a href="#">Appliances</a>
-                                        </div><!-- End .product-cat -->
-                                        <h3 class="product-title"><a href="product.html">Neato Robotics</a></h3><!-- End .product-title -->
-                                        <div class="product-price">
-                                            $399.00
-                                        </div><!-- End .product-price -->
-                                        <div class="ratings-container">
-                                            <div class="ratings">
-                                                <div class="ratings-val" style="width: 80%;"></div><!-- End .ratings-val -->
-                                            </div><!-- End .ratings -->
-                                            <span class="ratings-text">( 12 Reviews )</span>
-                                        </div><!-- End .rating-container -->
-                                    </div><!-- End .product-body -->
-                                </div><!-- End .product -->
-
-
-
                                 
                             </div><!-- End .owl-carousel -->
                         </div><!-- .End .tab-pane -->
