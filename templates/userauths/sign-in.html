@@ -1,0 +1,87 @@
+{% extends "partials/base.html" %}
+{% load static %}
+
+{% block title %}Sign In - Molla eCommerce{% endblock title %}
+
+{% block content %}
+<main class="main">
+    <nav aria-label="breadcrumb" class="breadcrumb-nav border-0 mb-0">
+        <div class="container">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{% url 'core:home' %}">Home</a></li>
+                <li class="breadcrumb-item"><a href="#">Pages</a></li>
+                <li class="breadcrumb-item active" aria-current="page">Sign In</li>
+            </ol>
+        </div><!-- End .container -->
+    </nav><!-- End .breadcrumb-nav -->
+
+    <div class="login-page bg-image pt-8 pb-8 pt-md-12 pb-md-12 pt-lg-17 pb-lg-17" style="background-image: url('{% static 'assets/images/backgrounds/login-bg.jpg' %}'); background-size: cover; background-position: center;">
+        <div class="container">
+            <div class="form-box">
+                <div class="form-tab">
+                    <ul class="nav nav-pills nav-fill nav-border-anim" role="tablist">
+                        <li class="nav-item">
+                            <a class="nav-link active" id="signin-tab-page" data-toggle="tab" href="#signin-page" role="tab" aria-controls="signin-page" aria-selected="true">Sign In</a>
+                        </li>
+                    </ul>
+                    <div class="tab-content" id="tab-content-page">
+                        <div class="tab-pane fade show active" id="signin-page" role="tabpanel" aria-labelledby="signin-tab-page">
+                            
+                            <form action="{% url 'userauth:login' %}" method="POST">
+                                {% csrf_token %}
+                                
+                                <div class="form-group">
+                                    <label for="singin-email-page">Username or email address *</label>
+                                    <input type="text" class="form-control" id="singin-email-page" name="email" value="{{ email|default:'' }}" placeholder="Enter your username or email" required>
+                                </div><!-- End .form-group -->
+
+                                <div class="form-group">
+                                    <label for="singin-password-page">Password *</label>
+                                    <input type="password" class="form-control" id="singin-password-page" name="password" placeholder="Enter your password" required>
+                                </div><!-- End .form-group -->
+
+                                <div class="form-footer">
+                                    <button type="submit" class="btn btn-outline-primary-2">
+                                        <span>LOG IN</span>
+                                        <i class="icon-long-arrow-right"></i>
+                                    </button>
+
+                                    <div class="custom-control custom-checkbox">
+                                        <input type="checkbox" class="custom-control-input" id="signin-remember-page" name="remember_me">
+                                        <label class="custom-control-label" for="signin-remember-page">Remember Me</label>
+                                    </div><!-- End .custom-checkbox -->
+
+                                    <a href="#" class="forgot-link">Forgot Your Password?</a>
+                                </div><!-- End .form-footer -->
+                            </form>
+
+                            <div class="text-center mt-2 mb-2">
+                                <p>Don't have an account? <a href="{% url 'userauth:sign-up' %}" style="color: #3399ff; font-weight: 500;">Register here</a></p>
+                            </div>
+
+                            <div class="form-choice">
+                                <p class="text-center">or sign in with</p>
+                                <div class="row">
+                                    <div class="col-sm-6">
+                                        <a href="#" class="btn btn-login btn-g">
+                                            <i class="icon-google"></i>
+                                            Login With Google
+                                        </a>
+                                    </div><!-- End .col-6 -->
+                                    <div class="col-sm-6">
+                                        <a href="#" class="btn btn-login btn-f">
+                                            <i class="icon-facebook-f"></i>
+                                            Login With Facebook
+                                        </a>
+                                    </div><!-- End .col-6 -->
+                                </div><!-- End .row -->
+                            </div><!-- End .form-choice -->
+
+                        </div><!-- .End .tab-pane -->
+                    </div><!-- End .tab-content -->
+                </div><!-- End .form-tab -->
+            </div><!-- End .form-box -->
+        </div><!-- End .container -->
+    </div><!-- End .login-page -->
+</main><!-- End .main -->
+{% endblock content %}

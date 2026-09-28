@@ -1,0 +1,106 @@
+{% extends "partials/base.html" %}
+{% load static %}
+
+{% block title %}Sign Up - Molla eCommerce{% endblock title %}
+
+{% block content %}
+<main class="main">
+    <nav aria-label="breadcrumb" class="breadcrumb-nav border-0 mb-0">
+        <div class="container">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{% url 'core:home' %}">Home</a></li>
+                <li class="breadcrumb-item"><a href="#">Pages</a></li>
+                <li class="breadcrumb-item active" aria-current="page">Sign Up</li>
+            </ol>
+        </div><!-- End .container -->
+    </nav><!-- End .breadcrumb-nav -->
+
+    <div class="login-page bg-image pt-8 pb-8 pt-md-12 pb-md-12 pt-lg-17 pb-lg-17" style="background-image: url('{% static 'assets/images/backgrounds/login-bg.jpg' %}'); background-size: cover; background-position: center;">
+        <div class="container">
+            <div class="form-box">
+                <div class="form-tab">
+                    <ul class="nav nav-pills nav-fill nav-border-anim" role="tablist">
+                        <li class="nav-item">
+                            <a class="nav-link active" id="register-tab-page" data-toggle="tab" href="#register-page" role="tab" aria-controls="register-page" aria-selected="true">Register</a>
+                        </li>
+                    </ul>
+                    <div class="tab-content" id="tab-content-page">
+                        <div class="tab-pane fade show active" id="register-page" role="tabpanel" aria-labelledby="register-tab-page">
+                            
+                            {% if form.errors %}
+                                <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                                    <strong>Please correct the following:</strong>
+                                    <ul class="mb-0 mt-1 pl-3" style="list-style-type: disc;">
+                                        {% for field, errors in form.errors.items %}
+                                            {% for error in errors %}
+                                                <li>{{ error }}</li>
+                                            {% endfor %}
+                                        {% endfor %}
+                                    </ul>
+                                    <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                                        <span aria-hidden="true">&times;</span>
+                                    </button>
+                                </div>
+                            {% endif %}
+
+                            <form action="" method="POST">
+                                {% csrf_token %}
+                                <div class="form-group">
+                                    <label for="id_username_page">Username *</label>
+                                    <input type="text" class="form-control" id="id_username_page" name="username" value="{{ form.username.value|default:'' }}" placeholder="Choose a username" required>
+                                </div><!-- End .form-group -->
+
+                                <div class="form-group">
+                                    <label for="id_email_page">Your email address *</label>
+                                    <input type="email" class="form-control" id="id_email_page" name="email" value="{{ form.email.value|default:'' }}" placeholder="example@mail.com" required>
+                                </div><!-- End .form-group -->
+
+                                <div class="form-group">
+                                    <label for="id_password1_page">Password *</label>
+                                    <input type="password" class="form-control" id="id_password1_page" name="password1" placeholder="Enter password" required>
+                                </div><!-- End .form-group -->
+
+                                <div class="form-group">
+                                    <label for="id_password2_page">Confirm Password *</label>
+                                    <input type="password" class="form-control" id="id_password2_page" name="password2" placeholder="Confirm password" required>
+                                </div><!-- End .form-group -->
+
+                                <div class="form-footer">
+                                    <button type="submit" class="btn btn-outline-primary-2">
+                                        <span>SIGN UP</span>
+                                        <i class="icon-long-arrow-right"></i>
+                                    </button>
+
+                                    <div class="custom-control custom-checkbox">
+                                        <input type="checkbox" class="custom-control-input" id="register-policy-page" required checked>
+                                        <label class="custom-control-label" for="register-policy-page">I agree to the <a href="#">privacy policy</a> *</label>
+                                    </div><!-- End .custom-checkbox -->
+                                </div><!-- End .form-footer -->
+                            </form>
+
+                            <div class="form-choice">
+                                <p class="text-center">or sign up with</p>
+                                <div class="row">
+                                    <div class="col-sm-6">
+                                        <a href="#" class="btn btn-login btn-g">
+                                            <i class="icon-google"></i>
+                                            Sign Up With Google
+                                        </a>
+                                    </div><!-- End .col-6 -->
+                                    <div class="col-sm-6">
+                                        <a href="#" class="btn btn-login btn-f">
+                                            <i class="icon-facebook-f"></i>
+                                            Sign Up With Facebook
+                                        </a>
+                                    </div><!-- End .col-6 -->
+                                </div><!-- End .row -->
+                            </div><!-- End .form-choice -->
+
+                        </div><!-- .End .tab-pane -->
+                    </div><!-- End .tab-content -->
+                </div><!-- End .form-tab -->
+            </div><!-- End .form-box -->
+        </div><!-- End .container -->
+    </div><!-- End .login-page -->
+</main><!-- End .main -->
+{% endblock content %}
