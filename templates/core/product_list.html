@@ -21,6 +21,9 @@
                 {% if selected_category %}
                 <li class="breadcrumb-item active text-primary" aria-current="page">{{ selected_category.title }}</li>
                 {% endif %}
+                {% if selected_tag %}
+                <li class="breadcrumb-item active text-primary" aria-current="page">Tag: #{{ selected_tag.name }}</li>
+                {% endif %}
             </ol>
         </div><!-- End .container -->
     </nav><!-- End .breadcrumb-nav -->
@@ -39,7 +42,7 @@
                             <h4 class="m-0 font-weight-bold" style="font-size: 1.6rem; color: #333;">
                                 <i class="icon-filter mr-2 text-primary"></i>Filters
                             </h4>
-                            {% if selected_category or selected_vendor %}
+                            {% if selected_category or selected_vendor or selected_tag %}
                             <a href="{% url 'core:products' %}" class="btn btn-sm btn-outline-danger" style="border-radius: 20px; font-size: 1.1rem; padding: 2px 10px;">
                                 Clean All
                             </a>
@@ -58,7 +61,7 @@
                                 <ul class="list-unstyled mb-0 filter-category-list">
                                     <!-- All Categories item -->
                                     <li class="mb-2">
-                                        <a href="{% url 'core:products' %}{% if selected_vendor %}?vendor={{ selected_vendor.vid }}{% endif %}"
+                                        <a href="{% url 'core:products' %}{% if selected_vendor %}?vendor={{ selected_vendor.vid }}{% endif %}{% if selected_tag %}{% if selected_vendor %}&{% else %}?{% endif %}tag={{ selected_tag.slug }}{% endif %}"
                                            class="d-flex align-items-center justify-content-between p-2 rounded transition-all {% if not selected_category %}active-filter-item{% endif %}"
                                            style="text-decoration: none; color: #333; {% if not selected_category %}background: #eef5ff; font-weight: 600; color: #39f; border: 1px solid #b8daff;{% else %}border: 1px solid transparent;{% endif %}">
                                             <div class="d-flex align-items-center">
@@ -76,7 +79,7 @@
                                     {% for c in categories %}
                                     <li class="mb-2">
                                         <!-- Clicking active category toggles it off, otherwise activates it -->
-                                        <a href="{% if selected_category.id == c.id %}{% url 'core:products' %}{% if selected_vendor %}?vendor={{ selected_vendor.vid }}{% endif %}{% else %}{% url 'core:products' %}?category={{ c.cid }}{% if selected_vendor %}&vendor={{ selected_vendor.vid }}{% endif %}{% endif %}"
+                                        <a href="{% if selected_category.id == c.id %}{% url 'core:products' %}{% if selected_vendor %}?vendor={{ selected_vendor.vid }}{% endif %}{% if selected_tag %}{% if selected_vendor %}&{% else %}?{% endif %}tag={{ selected_tag.slug }}{% endif %}{% else %}{% url 'core:products' %}?category={{ c.cid }}{% if selected_vendor %}&vendor={{ selected_vendor.vid }}{% endif %}{% if selected_tag %}&tag={{ selected_tag.slug }}{% endif %}{% endif %}"
                                            class="d-flex align-items-center justify-content-between p-2 rounded transition-all {% if selected_category.id == c.id %}active-filter-item{% endif %}"
                                            style="text-decoration: none; color: #333; {% if selected_category.id == c.id %}background: #eef5ff; font-weight: 600; color: #39f; border: 1px solid #b8daff;{% else %}border: 1px solid transparent;{% endif %}">
                                             <div class="d-flex align-items-center" style="min-width: 0;">
@@ -118,7 +121,7 @@
                                 <ul class="list-unstyled mb-0 filter-vendor-list">
                                     <!-- All Vendors item -->
                                     <li class="mb-2">
-                                        <a href="{% url 'core:products' %}{% if selected_category %}?category={{ selected_category.cid }}{% endif %}"
+                                        <a href="{% url 'core:products' %}{% if selected_category %}?category={{ selected_category.cid }}{% endif %}{% if selected_tag %}{% if selected_category %}&{% else %}?{% endif %}tag={{ selected_tag.slug }}{% endif %}"
                                            class="d-flex align-items-center justify-content-between p-2 rounded transition-all {% if not selected_vendor %}active-filter-item{% endif %}"
                                            style="text-decoration: none; color: #333; {% if not selected_vendor %}background: #eef5ff; font-weight: 600; color: #39f; border: 1px solid #b8daff;{% else %}border: 1px solid transparent;{% endif %}">
                                             <div class="d-flex align-items-center">
@@ -136,7 +139,7 @@
                                     {% for v in vendors %}
                                     <li class="mb-2">
                                         <!-- Clicking active vendor toggles it off, otherwise activates it -->
-                                        <a href="{% if selected_vendor.id == v.id %}{% url 'core:products' %}{% if selected_category %}?category={{ selected_category.cid }}{% endif %}{% else %}{% url 'core:products' %}?vendor={{ v.vid }}{% if selected_category %}&category={{ selected_category.cid }}{% endif %}{% endif %}"
+                                        <a href="{% if selected_vendor.id == v.id %}{% url 'core:products' %}{% if selected_category %}?category={{ selected_category.cid }}{% endif %}{% if selected_tag %}{% if selected_category %}&{% else %}?{% endif %}tag={{ selected_tag.slug }}{% endif %}{% else %}{% url 'core:products' %}?vendor={{ v.vid }}{% if selected_category %}&category={{ selected_category.cid }}{% endif %}{% if selected_tag %}&tag={{ selected_tag.slug }}{% endif %}{% endif %}"
                                            class="d-flex align-items-center justify-content-between p-2 rounded transition-all {% if selected_vendor.id == v.id %}active-filter-item{% endif %}"
                                            style="text-decoration: none; color: #333; {% if selected_vendor.id == v.id %}background: #eef5ff; font-weight: 600; color: #39f; border: 1px solid #b8daff;{% else %}border: 1px solid transparent;{% endif %}">
                                             <div class="d-flex align-items-center" style="min-width: 0;">
@@ -163,6 +166,39 @@
                                 </ul>
                             </div><!-- End .widget-body -->
                         </div><!-- End .widget -->
+
+                        <hr style="border-top: 1px solid #eee; margin: 1.5rem 0;">
+
+                        <!-- 3. TAGS FILTER (TAG CLOUD) -->
+                        <div class="widget">
+                            <h5 class="widget-title mb-3 font-weight-bold d-flex align-items-center justify-content-between" style="font-size: 1.4rem; color: #222;">
+                                <span><i class="icon-tags mr-2 text-primary"></i>Tags</span>
+                                {% if selected_tag %}
+                                <a href="{% url 'core:products' %}{% if selected_category %}?category={{ selected_category.cid }}{% endif %}{% if selected_vendor %}{% if selected_category %}&{% else %}?{% endif %}vendor={{ selected_vendor.vid }}{% endif %}" class="small text-danger" style="font-size: 1.1rem; font-weight: normal;">Clear</a>
+                                {% endif %}
+                            </h5>
+                            <div class="widget-body">
+                                <div class="tagcloud d-flex flex-wrap" style="gap: 6px;">
+                                    <a href="{% url 'core:products' %}{% if selected_category %}?category={{ selected_category.cid }}{% endif %}{% if selected_vendor %}{% if selected_category %}&{% else %}?{% endif %}vendor={{ selected_vendor.vid }}{% endif %}"
+                                       class="tag-item badge px-3 py-2 rounded {% if not selected_tag %}tag-active text-white bg-primary{% else %}badge-light border text-dark{% endif %}"
+                                       style="font-size: 1.2rem; text-decoration: none; transition: all 0.2s; font-weight: 500;">
+                                        All Tags
+                                    </a>
+
+                                    {% for t in tags %}
+                                    <a href="{% if selected_tag.id == t.id %}{% url 'core:products' %}{% if selected_category %}?category={{ selected_category.cid }}{% endif %}{% if selected_vendor %}{% if selected_category %}&{% else %}?{% endif %}vendor={{ selected_vendor.vid }}{% endif %}{% else %}{% url 'core:products' %}?tag={{ t.slug }}{% if selected_category %}&category={{ selected_category.cid }}{% endif %}{% if selected_vendor %}&vendor={{ selected_vendor.vid }}{% endif %}{% endif %}"
+                                       class="tag-item badge px-3 py-2 rounded {% if selected_tag.id == t.id %}tag-active text-white bg-primary{% else %}badge-light border text-dark{% endif %}"
+                                       style="font-size: 1.2rem; text-decoration: none; transition: all 0.2s; font-weight: 500;"
+                                       title="{{ t.product_count }} product{{ t.product_count|pluralize }} tagged #{{ t.name }}">
+                                        #{{ t.name }}
+                                        <span class="badge badge-pill {% if selected_tag.id == t.id %}badge-light text-primary{% else %}badge-secondary{% endif %} ml-1" style="font-size: 1rem;">{{ t.product_count }}</span>
+                                    </a>
+                                    {% empty %}
+                                    <span class="text-muted small">No tags available</span>
+                                    {% endfor %}
+                                </div>
+                            </div><!-- End .widget-body -->
+                        </div><!-- End .widget -->
                     </div><!-- End .sidebar -->
                 </aside>
 
@@ -172,7 +208,7 @@
                 <div class="col-lg-9 col-md-8">
 
                     <!-- Active Filters Indicator Bar -->
-                    {% if selected_category or selected_vendor %}
+                    {% if selected_category or selected_vendor or selected_tag %}
                     <div class="active-filters-bar p-3 mb-4 bg-light rounded d-flex align-items-center flex-wrap" style="border: 1px dashed #b8daff; background-color: #f8fbff !important;">
                         <span class="mr-2 font-weight-bold text-dark" style="font-size: 1.3rem;">
                             <i class="icon-sliders mr-1 text-primary"></i> Active Filters:
@@ -181,14 +217,21 @@
                         {% if selected_category %}
                         <span class="badge badge-primary px-3 py-2 mr-2 mb-1 d-inline-flex align-items-center" style="font-size: 1.2rem; border-radius: 20px; background-color: #39f;">
                             Category: {{ selected_category.title }}
-                            <a href="{% url 'core:products' %}{% if selected_vendor %}?vendor={{ selected_vendor.vid }}{% endif %}" class="text-white ml-2" style="text-decoration: none; font-size: 1.4rem; line-height: 1;" title="Remove this category filter">&times;</a>
+                            <a href="{% url 'core:products' %}{% if selected_vendor %}?vendor={{ selected_vendor.vid }}{% endif %}{% if selected_tag %}{% if selected_vendor %}&{% else %}?{% endif %}tag={{ selected_tag.slug }}{% endif %}" class="text-white ml-2" style="text-decoration: none; font-size: 1.4rem; line-height: 1;" title="Remove this category filter">&times;</a>
                         </span>
                         {% endif %}
 
                         {% if selected_vendor %}
                         <span class="badge badge-info px-3 py-2 mr-2 mb-1 d-inline-flex align-items-center" style="font-size: 1.2rem; border-radius: 20px; background-color: #17a2b8;">
                             Vendor: {{ selected_vendor.title }}
-                            <a href="{% url 'core:products' %}{% if selected_category %}?category={{ selected_category.cid }}{% endif %}" class="text-white ml-2" style="text-decoration: none; font-size: 1.4rem; line-height: 1;" title="Remove this vendor filter">&times;</a>
+                            <a href="{% url 'core:products' %}{% if selected_category %}?category={{ selected_category.cid }}{% endif %}{% if selected_tag %}{% if selected_category %}&{% else %}?{% endif %}tag={{ selected_tag.slug }}{% endif %}" class="text-white ml-2" style="text-decoration: none; font-size: 1.4rem; line-height: 1;" title="Remove this vendor filter">&times;</a>
+                        </span>
+                        {% endif %}
+
+                        {% if selected_tag %}
+                        <span class="badge badge-warning text-dark px-3 py-2 mr-2 mb-1 d-inline-flex align-items-center" style="font-size: 1.2rem; border-radius: 20px; background-color: #ffc107;">
+                            Tag: #{{ selected_tag.name }}
+                            <a href="{% url 'core:products' %}{% if selected_category %}?category={{ selected_category.cid }}{% endif %}{% if selected_vendor %}{% if selected_category %}&{% else %}?{% endif %}vendor={{ selected_vendor.vid }}{% endif %}" class="text-dark ml-2" style="text-decoration: none; font-size: 1.4rem; line-height: 1;" title="Remove this tag filter">&times;</a>
                         </span>
                         {% endif %}
 
@@ -229,6 +272,7 @@
                             Showing <strong class="text-dark">{{ products.count }}</strong> product{{ products.count|pluralize }}
                             {% if selected_category %} in <span class="text-primary font-weight-bold">{{ selected_category.title }}</span>{% endif %}
                             {% if selected_vendor %} by <span class="text-info font-weight-bold">{{ selected_vendor.title }}</span>{% endif %}
+                            {% if selected_tag %} tagged <span class="text-warning font-weight-bold">#{{ selected_tag.name }}</span>{% endif %}
                         </div>
                     </div>
 
@@ -290,6 +334,14 @@
                                                 <div class="product-cat text-muted mb-1" style="font-size: 1.2rem;">
                                                     <a href="{% url 'core:products' %}?category={{ p.category.cid }}" style="color: #999;">{{ p.category.title|default:"General" }}</a>
                                                 </div><!-- End .product-cat -->
+
+                                                {% if p.tags.all %}
+                                                <div class="product-tags mb-1" style="font-size: 1.1rem; line-height: 1.2;">
+                                                    {% for tag in p.tags.all|slice:":3" %}
+                                                    <a href="{% url 'core:products' %}?tag={{ tag.slug }}" class="badge badge-light border text-muted px-1 py-0 mr-1" style="font-size: 1rem; font-weight: normal; transition: all 0.2s;" onmouseover="this.style.color='#39f'; this.style.borderColor='#39f';" onmouseout="this.style.color='#777'; this.style.borderColor='#e0e0e0';">#{{ tag.name }}</a>
+                                                    {% endfor %}
+                                                </div>
+                                                {% endif %}
 
                                                 <h3 class="product-title font-weight-normal mb-2" style="font-size: 1.5rem; line-height: 1.3;">
                                                     <a href="{% url 'core:product-details' p.pid %}" style="color: #333;">{{ p.title }}</a>
@@ -394,6 +446,14 @@
                                                 <div class="product-cat text-muted mb-1" style="font-size: 1.2rem;">
                                                     <a href="{% url 'core:products' %}?category={{ p.category.cid }}" style="color: #999;">{{ p.category.title|default:"General" }}</a>
                                                 </div><!-- End .product-cat -->
+
+                                                {% if p.tags.all %}
+                                                <div class="product-tags mb-1" style="font-size: 1.1rem; line-height: 1.2;">
+                                                    {% for tag in p.tags.all|slice:":3" %}
+                                                    <a href="{% url 'core:products' %}?tag={{ tag.slug }}" class="badge badge-light border text-muted px-1 py-0 mr-1" style="font-size: 1rem; font-weight: normal; transition: all 0.2s;" onmouseover="this.style.color='#39f'; this.style.borderColor='#39f';" onmouseout="this.style.color='#777'; this.style.borderColor='#e0e0e0';">#{{ tag.name }}</a>
+                                                    {% endfor %}
+                                                </div>
+                                                {% endif %}
 
                                                 <h3 class="product-title font-weight-normal mb-2" style="font-size: 1.5rem; line-height: 1.3;">
                                                     <a href="{% url 'core:product-details' p.pid %}" style="color: #333;">{{ p.title }}</a>

@@ -291,8 +291,15 @@
 
                                     <div class="product-body">
                                         <div class="product-cat">
-                                            <a href="#">{{p.category.title}}</a>
+                                            <a href="{% url 'core:products' %}?category={{ p.category.cid }}">{{p.category.title}}</a>
                                         </div><!-- End .product-cat -->
+                                        {% if p.tags.all %}
+                                        <div class="product-tags mb-1" style="font-size: 1.1rem; line-height: 1.2;">
+                                            {% for tag in p.tags.all|slice:":3" %}
+                                            <a href="{% url 'core:products' %}?tag={{ tag.slug }}" class="badge badge-light border text-muted px-1 py-0 mr-1" style="font-size: 1rem; font-weight: normal; transition: all 0.2s;" onmouseover="this.style.color='#39f'; this.style.borderColor='#39f';" onmouseout="this.style.color='#777'; this.style.borderColor='#e0e0e0';">#{{ tag.name }}</a>
+                                            {% endfor %}
+                                        </div>
+                                        {% endif %}
                                         <h3 class="product-title"><a href="{% url 'core:product-details' p.pid %}">{{p.title}}</a></h3><!-- End .product-title -->
                                         <div class="product-price">
                                             ${{p.price}}

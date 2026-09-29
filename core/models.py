@@ -2,6 +2,7 @@ from django.db import models
 from shortuuid.django_fields import ShortUUIDField
 from django.utils.html import mark_safe
 from userauth.models import User
+from taggit.managers import TaggableManager
 
 
 def user_directory_path(instance, filename):
@@ -29,10 +30,6 @@ RATING = (
     (4, '⭐⭐⭐⭐☆'),
     (5, '⭐⭐⭐⭐⭐'),
 )
-
-
-class Tags(models.Model):
-    pass
 
 
 class Category(models.Model):
@@ -173,13 +170,11 @@ class Products(models.Model):
         default='No Description'
     )
 
-    tags = models.ForeignKey(
-        Tags,
-        on_delete=models.SET_NULL,
-        null=True,
-        blank=True
-    )
+    tags = TaggableManager(
+            blank=True,
+        )
 
+    
     product_status = models.CharField(
         choices=STATUS,
         max_length=20,

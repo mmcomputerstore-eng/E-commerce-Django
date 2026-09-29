@@ -25,13 +25,23 @@ class ProductsAdmin(admin.ModelAdmin):
         'product_image',
         'price',
         'category',
+        'display_tags',
         'featured',
         'product_status',
         'pid',
     ]
     list_editable = ['price', 'product_status', 'featured']
     list_filter = ['category', 'product_status', 'featured', 'in_stock']
-    search_fields = ['title', 'description', 'pid', 'sku']
+    search_fields = ['title', 'description', 'pid', 'sku', 'tags__name']
+
+    def get_queryset(self, request):
+        return super().get_queryset(request).prefetch_related('tags')
+
+    def display_tags(self, obj):
+        tags = [t.name for t in obj.tags.all()]
+        return ", ".join(tags) if tags else "—"
+    display_tags.short_description = 'Tags'
+
 
 
 class CategoryAdmin(admin.ModelAdmin):
