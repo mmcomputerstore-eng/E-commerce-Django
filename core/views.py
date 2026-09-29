@@ -1,4 +1,4 @@
-from django.shortcuts import render
+from django.shortcuts import render, get_object_or_404
 from django.db.models import Count, Q
 
 from core.models import (
@@ -70,4 +70,49 @@ def products_list_view(request):
         'vendor_param': vendor_param,
     }
     return render(request, 'core/product_list.html', context)
+
+
+def vendor_list_view(request):
+    vendors = Vendor.objects.annotate(
+        product_count=Count('products', filter=Q(products__product_status='published'))
+    ).order_by('-date', '-id')
+    context = {
+        'vendors': vendors,
+    }
+    return render(request, 'core/vendor_list.html', context)
+
+
+def vendor_details_view(request, vid):
+    vendor = get_object_or_404(Vendor, vid=vid)
+    products = Products.objects.filter(vendor=vendor, product_status='published').order_by('-featured', '-id')
+    context = {
+        'vendor': vendor,
+        'products': products,
+    }
+    return render(request, 'core/vendor_details.html', context)
+
+
+def product_details_view(request, pid):
+    product = get_object_or_404(Products, pid=pid)
+    p_images = ProductImage.objects.filter(product=product)
+
+    if product.category:
+        related_products = Products.objects.filter(
+            category=product.category,
+            product_status='published'
+        ).exclude(pid=pid).order_by('-featured', '-id')[:4]
+    else:
+        related_products = Products.objects.filter(
+            product_status='published'
+        ).exclude(pid=pid).order_by('-featured', '-id')[:4]
+
+    reviews = ProductReview.objects.filter(product=product).order_by('-date')
+
+    context = {
+        'product': product,
+        'p_images': p_images,
+        'related_products': related_products,
+        'reviews': reviews,
+    }
+    return render(request, 'core/product_details.html', context)
 

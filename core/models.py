@@ -71,6 +71,7 @@ class Vendor(models.Model):
 
     title = models.CharField(max_length=100)
     image = models.ImageField(upload_to=user_directory_path)
+    cover_image = models.ImageField(upload_to=user_directory_path, default=None, null=True, blank=True)
     description = models.TextField(null=True, blank=True)
 
     address = models.CharField(
@@ -102,6 +103,8 @@ class Vendor(models.Model):
         default='100'
     )
 
+    date = models.DateTimeField(auto_now_add=True,null=True,blank=True)
+
     user = models.ForeignKey(
         User,
         on_delete=models.CASCADE,
@@ -117,6 +120,13 @@ class Vendor(models.Model):
                 '<img src="%s" width="50" height="50" style="object-fit:cover; border-radius:6px;" />' % self.image.url
             )
         return "No Image"
+
+    def vendor_cover_image(self):
+        if self.cover_image:
+            return mark_safe(
+                '<img src="%s" width="90" height="45" style="object-fit:cover; border-radius:6px;" />' % self.cover_image.url
+            )
+        return "No Cover"
 
     def __str__(self):
         return self.title
@@ -199,7 +209,8 @@ class Products(models.Model):
         Vendor,
         on_delete=models.SET_NULL,
         null=True,
-        blank=True
+        blank=True,
+        related_name='products'
     )
 
     sku = ShortUUIDField(
@@ -241,6 +252,7 @@ class ProductImage(models.Model):
     product = models.ForeignKey(
         Products,
         on_delete=models.SET_NULL,
+        related_name='p_images',
         null=True
     )
 

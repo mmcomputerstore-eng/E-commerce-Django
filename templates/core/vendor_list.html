@@ -1,0 +1,168 @@
+{% extends "partials/base.html" %}
+{% load static %}
+
+{% block title %} All Vendors | MM Computer Store {% endblock title %}
+
+{% block content %}
+<main class="main">
+    <!-- Page Header -->
+    <div class="page-header text-center" style="background-image: url('{% static 'assets/images/page-header-bg.jpg' %}'); background-size: cover; background-position: center; padding: 4.5rem 0;">
+        <div class="container">
+            <h1 class="page-title text-white font-weight-bold" style="font-size: 3.2rem; letter-spacing: -0.5px;">
+                Our Verified Vendors
+                <span class="text-white-50 mt-1" style="font-size: 1.5rem; font-weight: normal; display: block;">Discover trusted stores and shop directly from top sellers</span>
+            </h1>
+        </div><!-- End .container -->
+    </div><!-- End .page-header -->
+
+    <!-- Breadcrumb Navigation -->
+    <nav aria-label="breadcrumb" class="breadcrumb-nav mb-4">
+        <div class="container">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{% url 'core:home' %}">Home</a></li>
+                <li class="breadcrumb-item active" aria-current="page">Vendors</li>
+            </ol>
+        </div><!-- End .container -->
+    </nav><!-- End .breadcrumb-nav -->
+
+    <div class="page-content pb-6">
+        <div class="container">
+            <!-- Filter & Status Bar -->
+            <div class="toolbox d-flex align-items-center justify-content-between p-3 mb-4 bg-white rounded shadow-sm" style="border: 1px solid #ebebeb;">
+                <div class="toolbox-left d-flex align-items-center">
+                    <span class="badge badge-primary px-3 py-2 mr-3" style="font-size: 1.3rem; border-radius: 20px;">
+                        <i class="icon-users mr-1"></i> {{ vendors.count }} Vendor{{ vendors.count|pluralize }}
+                    </span>
+                    <span class="text-muted" style="font-size: 1.3rem;">Explore store profiles, ratings, and vendor collections</span>
+                </div>
+                <div class="toolbox-right">
+                    <a href="{% url 'core:products' %}" class="btn btn-outline-dark btn-sm rounded-pill" style="font-size: 1.2rem;">
+                        <i class="icon-th mr-1"></i> View All Products
+                    </a>
+                </div>
+            </div><!-- End .toolbox -->
+
+            <!-- Vendors Grid -->
+            <div class="row">
+                {% for v in vendors %}
+                <div class="col-12 col-md-6 col-lg-4 mb-4">
+                    <div class="vendor-card bg-white rounded shadow-sm h-100 d-flex flex-column justify-content-between position-relative" 
+                         style="border: 1px solid #ebebeb; border-radius: 14px; overflow: hidden; transition: all 0.3s ease;">
+                        
+                        <!-- Top Header Cover / Image -->
+                        <div class="vendor-cover position-relative p-3 text-right" 
+                             style="height: 120px; {% if v.cover_image %}background: linear-gradient(to bottom, rgba(0,0,0,0.15), rgba(0,0,0,0.55)), url('{{ v.cover_image.url }}') center/cover no-repeat;{% else %}background: linear-gradient(135deg, #1f2937 0%, #3b82f6 100%);{% endif %} border-radius: 14px 14px 0 0;">
+                            <span class="badge badge-success px-2 py-1 shadow-sm" style="font-size: 1.1rem; border-radius: 12px;">
+                                <i class="icon-check"></i> Verified
+                            </span>
+                        </div>
+
+                        <!-- Vendor Avatar / DP (overlapping) -->
+                        <div class="vendor-avatar-wrapper text-center" style="margin-top: -50px; position: relative; z-index: 2;">
+                            <a href="{% url 'core:vendor_details' v.vid %}" class="d-inline-block">
+                                {% if v.image %}
+                                <img src="{{ v.image.url }}" 
+                                     alt="{{ v.title }}" 
+                                     class="rounded-circle shadow" 
+                                     style="width: 100px; height: 100px; object-fit: cover; border: 4px solid #fff; background-color: #fff;">
+                                {% else %}
+                                <div class="rounded-circle shadow mx-auto d-flex align-items-center justify-content-center" 
+                                     style="width: 100px; height: 100px; border: 4px solid #fff; background: #eef5ff; color: #39f; font-size: 3.5rem;">
+                                    <i class="icon-user"></i>
+                                </div>
+                                {% endif %}
+                            </a>
+                        </div>
+
+                        <!-- Vendor Body Info -->
+                        <div class="vendor-card-body p-4 text-center flex-grow-1 d-flex flex-column justify-content-between">
+                            <div>
+                                <!-- Title -->
+                                <h3 class="vendor-title font-weight-bold mb-1" style="font-size: 1.8rem;">
+                                    <a href="{% url 'core:vendor_details' v.vid %}" class="text-dark" style="transition: color 0.2s ease;">
+                                        {{ v.title }}
+                                    </a>
+                                </h3>
+
+                                <div class="text-muted mb-3" style="font-size: 1.2rem;">
+                                    <i class="icon-calendar mr-1"></i> Seller since {{ v.date|date:"Y"|default:"2024" }}
+                                </div>
+
+                                <!-- Description Snippet -->
+                                <p class="vendor-desc text-muted mb-3" style="font-size: 1.3rem; line-height: 1.5; min-height: 40px;">
+                                    {{ v.description|truncatewords:14|default:"Quality certified seller with authentic tech hardware and fast customer care." }}
+                                </p>
+
+                                <!-- Details List -->
+                                <div class="vendor-details-info text-left p-3 rounded mb-3" style="background: #fbfbfb; border: 1px solid #f0f0f0; font-size: 1.25rem;">
+                                    <div class="d-flex align-items-center mb-2 text-truncate" title="{{ v.address }}">
+                                        <i class="icon-map-marker text-primary mr-2" style="font-size: 1.4rem; width: 16px;"></i>
+                                        <span class="text-dark">{{ v.address|default:"123 Main Street" }}</span>
+                                    </div>
+                                    <div class="d-flex align-items-center text-truncate" title="{{ v.contact }}">
+                                        <i class="icon-phone text-primary mr-2" style="font-size: 1.4rem; width: 16px;"></i>
+                                        <span class="text-dark">{{ v.contact|default:"+1234" }}</span>
+                                    </div>
+                                </div>
+
+                                <!-- Key Store Stats -->
+                                <div class="vendor-stats-row d-flex justify-content-around text-center py-2 mb-3 rounded" style="background: #f8fbff; border: 1px solid #e3effd;">
+                                    <div>
+                                        <span class="font-weight-bold d-block text-primary" style="font-size: 1.4rem;">
+                                            {{ v.product_count|default:v.products.count }}
+                                        </span>
+                                        <span class="text-muted small" style="font-size: 1.1rem;">Products</span>
+                                    </div>
+                                    <div style="border-left: 1px solid #dbe8fa;"></div>
+                                    <div>
+                                        <span class="font-weight-bold d-block text-success" style="font-size: 1.4rem;">
+                                            {{ v.chat_resp_time|default:"100" }}%
+                                        </span>
+                                        <span class="text-muted small" style="font-size: 1.1rem;">Response</span>
+                                    </div>
+                                    <div style="border-left: 1px solid #dbe8fa;"></div>
+                                    <div>
+                                        <span class="font-weight-bold d-block text-info" style="font-size: 1.4rem;">
+                                            {{ v.ship_on_time|default:"100" }}%
+                                        </span>
+                                        <span class="text-muted small" style="font-size: 1.1rem;">On Time</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Action Button -->
+                            <div class="mt-2">
+                                <a href="{% url 'core:vendor_details' v.vid %}" 
+                                   class="btn btn-primary btn-block rounded-pill font-weight-bold shadow-sm py-3" 
+                                   style="font-size: 1.3rem; letter-spacing: 0.3px; transition: all 0.25s ease;">
+                                    Visit Store & Products <i class="icon-long-arrow-right ml-1"></i>
+                                </a>
+                            </div>
+                        </div><!-- End .vendor-card-body -->
+                    </div><!-- End .vendor-card -->
+                </div><!-- End .col -->
+                {% empty %}
+                <div class="col-12 text-center py-5">
+                    <div class="p-5 bg-white rounded shadow-sm mx-auto" style="max-width: 500px; border: 1px dashed #ddd;">
+                        <i class="icon-user text-muted" style="font-size: 4rem;"></i>
+                        <h4 class="mt-3 font-weight-bold text-dark">No Vendors Found</h4>
+                        <p class="text-muted mb-4" style="font-size: 1.3rem;">There are no vendors registered in the store right now.</p>
+                        <a href="{% url 'core:home' %}" class="btn btn-primary rounded-pill px-4">Return Home</a>
+                    </div>
+                </div>
+                {% endfor %}
+            </div><!-- End .row -->
+        </div><!-- End .container -->
+    </div><!-- End .page-content -->
+</main>
+
+<style>
+.vendor-card:hover {
+    transform: translateY(-6px);
+    box-shadow: 0 12px 25px rgba(0,0,0,0.1) !important;
+}
+.vendor-title a:hover {
+    color: #39f !important;
+}
+</style>
+{% endblock content %}

@@ -43,6 +43,7 @@ class VendorAdmin(admin.ModelAdmin):
     list_display = [
         'title',
         'vendor_image',
+        'vendor_cover_image',
         'user',
         'contact',
         'chat_resp_time',

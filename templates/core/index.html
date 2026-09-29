@@ -274,7 +274,7 @@
                                         {% if p.old_price %}
                                         <span class="product-label label-new">{{p.get_percentage | floatformat}}% Off</span>
                                         {% endif %}
-                                        <a href="product.html">
+                                        <a href="{% url 'core:product-details' p.pid %}">
                                             <img src="{{p.image.url}}" alt="Product image" class="product-image">
                                         </a>
 
@@ -293,7 +293,7 @@
                                         <div class="product-cat">
                                             <a href="#">{{p.category.title}}</a>
                                         </div><!-- End .product-cat -->
-                                        <h3 class="product-title"><a href="product.html">{{p.title}}</a></h3><!-- End .product-title -->
+                                        <h3 class="product-title"><a href="{% url 'core:product-details' p.pid %}">{{p.title}}</a></h3><!-- End .product-title -->
                                         <div class="product-price">
                                             ${{p.price}}
                                             {% if p.old_price %}
@@ -306,9 +306,10 @@
                                             </div><!-- End .ratings -->
                                             <span class="ratings-text">( 12 Reviews )</span>
                                         </div><!-- End .rating-container -->
-                                        <div  >
-                                            By  <a style='Color:"lite-blue"' href="#">{{p.vendor}}</a>
-
+                                        <div>
+                                            {% if p.vendor %}
+                                            By <a href="{% url 'core:vendor_details' p.vendor.vid %}" style="color: #39f; font-weight: 500;">{{ p.vendor }}</a>
+                                            {% endif %}
                                         </div>
                                     </div><!-- End .product-body -->
                                 </div><!-- End .product -->

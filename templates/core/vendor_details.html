@@ -1,0 +1,319 @@
+{% extends "partials/base.html" %}
+{% load static %}
+
+{% block title %} {{ vendor.title }} - Vendor Store | MM Computer Store {% endblock title %}
+
+{% block content %}
+<main class="main">
+    <!-- Breadcrumb Navigation -->
+    <nav aria-label="breadcrumb" class="breadcrumb-nav mb-3">
+        <div class="container">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{% url 'core:home' %}">Home</a></li>
+                <li class="breadcrumb-item"><a href="{% url 'core:vendors' %}">Vendors</a></li>
+                <li class="breadcrumb-item active" aria-current="page">{{ vendor.title }}</li>
+            </ol>
+        </div><!-- End .container -->
+    </nav><!-- End .breadcrumb-nav -->
+
+    <div class="page-content">
+        <div class="container">
+
+            <!-- ============================================== -->
+            <!-- 1. TOP SECTION: VENDOR HEADER / DP & PROFILE   -->
+            <!-- ============================================== -->
+            <div class="vendor-header-card bg-white rounded shadow-sm mb-5" 
+                 style="border: 1px solid #ebebeb; border-radius: 16px; overflow: hidden;">
+                
+                <!-- Decorative Cover Banner -->
+                <div class="vendor-banner position-relative p-4 d-flex justify-content-between align-items-start" 
+                     style="{% if vendor.cover_image %}background: linear-gradient(to bottom, rgba(0,0,0,0.25) 0%, rgba(0,0,0,0.65) 100%), url('{{ vendor.cover_image.url }}') center/cover no-repeat; min-height: 220px;{% else %}background: linear-gradient(135deg, #111827 0%, #1e3a8a 50%, #3b82f6 100%); min-height: 140px;{% endif %} border-radius: 16px 16px 0 0;">
+                    <div class="text-white">
+                        <span class="badge badge-light px-3 py-1 font-weight-bold shadow-sm" style="font-size: 1.2rem; border-radius: 20px; color: #1e3a8a;">
+                            <i class="icon-shield mr-1"></i> Official Store
+                        </span>
+                    </div>
+                    <div class="text-right">
+                        <a href="{% url 'core:vendors' %}" class="btn btn-sm btn-outline-light rounded-pill px-3 shadow-sm" style="font-size: 1.2rem; backdrop-filter: blur(4px); background: rgba(0,0,0,0.25);">
+                            <i class="icon-arrow-left mr-1"></i> All Vendors
+                        </a>
+                    </div>
+                </div><!-- End .vendor-banner -->
+
+                <!-- Vendor Main Info Bar (DP + Name + Bio + Contact) -->
+                <div class="vendor-profile-body p-4 p-md-5">
+                    <div class="row align-items-center">
+                        
+                        <!-- Left: Vendor DP / Image -->
+                        <div class="col-12 col-md-auto text-center text-md-left mb-4 mb-md-0" style="margin-top: -65px;">
+                            <div class="position-relative d-inline-block">
+                                {% if vendor.image %}
+                                <img src="{{ vendor.image.url }}" 
+                                     alt="{{ vendor.title }}" 
+                                     class="rounded-circle shadow" 
+                                     style="width: 130px; height: 130px; object-fit: cover; border: 5px solid #fff; background-color: #fff;">
+                                {% else %}
+                                <div class="rounded-circle shadow d-flex align-items-center justify-content-center mx-auto" 
+                                     style="width: 130px; height: 130px; border: 5px solid #fff; background: #eef5ff; color: #39f; font-size: 4.5rem;">
+                                    <i class="icon-user"></i>
+                                </div>
+                                {% endif %}
+                                <span class="position-absolute bg-success text-white rounded-circle d-flex align-items-center justify-content-center shadow" 
+                                      style="bottom: 8px; right: 8px; width: 30px; height: 30px; border: 2px solid #fff;" 
+                                      title="Verified Seller">
+                                    <i class="icon-check" style="font-size: 1.4rem;"></i>
+                                </span>
+                            </div>
+                        </div><!-- End col DP -->
+
+                        <!-- Center: Vendor Name, Badges, Details -->
+                        <div class="col-12 col-md text-center text-md-left mb-4 mb-md-0">
+                            <div class="d-flex flex-wrap align-items-center justify-content-center justify-content-md-start mb-2" style="gap: 10px;">
+                                <h1 class="vendor-name font-weight-bold m-0" style="font-size: 2.6rem; color: #222; letter-spacing: -0.5px;">
+                                    {{ vendor.title }}
+                                </h1>
+                                <span class="badge badge-success px-3 py-1" style="font-size: 1.2rem; border-radius: 14px;">
+                                    <i class="icon-check mr-1"></i> Verified Merchant
+                                </span>
+                                <span class="badge badge-primary px-3 py-1" style="font-size: 1.2rem; border-radius: 14px;">
+                                    {{ products.count }} Product{{ products.count|pluralize }}
+                                </span>
+                            </div>
+
+                            <!-- Description -->
+                            <p class="vendor-bio text-muted mb-3" style="font-size: 1.4rem; max-width: 750px; line-height: 1.6;">
+                                {{ vendor.description|default:"Welcome to our official store on MM Computer Store. We provide high performance computer components, laptops, peripherals, and reliable customer service with guaranteed warranty." }}
+                            </p>
+
+                            <!-- Address & Contact Info -->
+                            <div class="vendor-meta-list d-flex flex-wrap align-items-center justify-content-center justify-content-md-start text-muted" 
+                                 style="gap: 2rem; font-size: 1.3rem;">
+                                <div class="d-flex align-items-center">
+                                    <i class="icon-map-marker text-primary mr-2" style="font-size: 1.6rem;"></i>
+                                    <span><strong>Address:</strong> {{ vendor.address|default:"123 Main Street" }}</span>
+                                </div>
+                                <div class="d-flex align-items-center">
+                                    <i class="icon-phone text-primary mr-2" style="font-size: 1.6rem;"></i>
+                                    <span><strong>Contact:</strong> {{ vendor.contact|default:"+1234" }}</span>
+                                </div>
+                                {% if vendor.user.email %}
+                                <div class="d-flex align-items-center">
+                                    <i class="icon-envelope text-primary mr-2" style="font-size: 1.6rem;"></i>
+                                    <span><strong>Email:</strong> {{ vendor.user.email }}</span>
+                                </div>
+                                {% endif %}
+                                <div class="d-flex align-items-center">
+                                    <i class="icon-calendar text-primary mr-2" style="font-size: 1.6rem;"></i>
+                                    <span><strong>Member Since:</strong> {{ vendor.date|date:"F Y"|default:"2024" }}</span>
+                                </div>
+                            </div>
+                        </div><!-- End col Center -->
+
+                    </div><!-- End .row -->
+
+                    <hr class="my-4" style="border-top: 1px solid #f0f0f0;">
+
+                    <!-- Trust Metrics Grid (Chat, Shipping, Return, Warranty) -->
+                    <div class="row text-center">
+                        <div class="col-6 col-sm-4 col-lg-2 mb-3 mb-lg-0">
+                            <div class="p-3 rounded h-100" style="background: #f8fafc; border: 1px solid #edf2f7;">
+                                <i class="icon-comments text-primary mb-1 d-block" style="font-size: 2rem;"></i>
+                                <span class="font-weight-bold d-block text-dark" style="font-size: 1.6rem;">{{ vendor.chat_resp_time|default:"100" }}%</span>
+                                <span class="text-muted small" style="font-size: 1.15rem;">Chat Response</span>
+                            </div>
+                        </div>
+
+                        <div class="col-6 col-sm-4 col-lg-2 mb-3 mb-lg-0">
+                            <div class="p-3 rounded h-100" style="background: #f8fafc; border: 1px solid #edf2f7;">
+                                <i class="icon-truck text-success mb-1 d-block" style="font-size: 2rem;"></i>
+                                <span class="font-weight-bold d-block text-dark" style="font-size: 1.6rem;">{{ vendor.ship_on_time|default:"100" }}%</span>
+                                <span class="text-muted small" style="font-size: 1.15rem;">Ship On Time</span>
+                            </div>
+                        </div>
+
+                        <div class="col-6 col-sm-4 col-lg-2 mb-3 mb-lg-0">
+                            <div class="p-3 rounded h-100" style="background: #f8fafc; border: 1px solid #edf2f7;">
+                                <i class="icon-shield text-info mb-1 d-block" style="font-size: 2rem;"></i>
+                                <span class="font-weight-bold d-block text-dark" style="font-size: 1.6rem;">{{ vendor.authentication|default:"100" }}%</span>
+                                <span class="text-muted small" style="font-size: 1.15rem;">Authentic Goods</span>
+                            </div>
+                        </div>
+
+                        <div class="col-6 col-sm-4 col-lg-2 mb-3 mb-lg-0">
+                            <div class="p-3 rounded h-100" style="background: #f8fafc; border: 1px solid #edf2f7;">
+                                <i class="icon-refresh text-warning mb-1 d-block" style="font-size: 2rem;"></i>
+                                <span class="font-weight-bold d-block text-dark" style="font-size: 1.6rem;">{{ vendor.days_return|default:"30" }} Days</span>
+                                <span class="text-muted small" style="font-size: 1.15rem;">Returns Period</span>
+                            </div>
+                        </div>
+
+                        <div class="col-6 col-sm-4 col-lg-2 mb-3 mb-lg-0">
+                            <div class="p-3 rounded h-100" style="background: #f8fafc; border: 1px solid #edf2f7;">
+                                <i class="icon-award text-secondary mb-1 d-block" style="font-size: 2rem;"></i>
+                                <span class="font-weight-bold d-block text-dark" style="font-size: 1.6rem;">{{ vendor.warranty_period|default:"12" }} Mo</span>
+                                <span class="text-muted small" style="font-size: 1.15rem;">Warranty</span>
+                            </div>
+                        </div>
+
+                        <div class="col-6 col-sm-4 col-lg-2 mb-3 mb-lg-0">
+                            <div class="p-3 rounded h-100" style="background: #eef5ff; border: 1px solid #d0e4ff;">
+                                <i class="icon-shopping-cart text-primary mb-1 d-block" style="font-size: 2rem;"></i>
+                                <span class="font-weight-bold d-block text-primary" style="font-size: 1.6rem;">{{ products.count }}</span>
+                                <span class="text-primary small" style="font-size: 1.15rem;">Products Active</span>
+                            </div>
+                        </div>
+                    </div><!-- End .row stats -->
+
+                </div><!-- End .vendor-profile-body -->
+            </div><!-- End .vendor-header-card -->
+
+
+            <!-- ============================================== -->
+            <!-- 2. BOTTOM SECTION: VENDOR'S PRODUCTS LISTING   -->
+            <!-- ============================================== -->
+            <div class="vendor-products-section mb-6">
+                <!-- Section Heading -->
+                <div class="heading heading-flex mb-4 align-items-center justify-content-between p-3 bg-white rounded shadow-sm" style="border: 1px solid #ebebeb;">
+                    <div class="heading-left d-flex align-items-center">
+                        <h2 class="title font-weight-bold m-0 d-flex align-items-center" style="font-size: 2rem; color: #222;">
+                            <i class="icon-th-large text-primary mr-2"></i> Products by {{ vendor.title }}
+                        </h2>
+                        <span class="badge badge-pill badge-secondary ml-3 px-3 py-2" style="font-size: 1.2rem;">
+                            {{ products.count }} Item{{ products.count|pluralize }}
+                        </span>
+                    </div><!-- End .heading-left -->
+
+                    <div class="heading-right">
+                        <a href="{% url 'core:products' %}?vendor={{ vendor.vid }}" class="btn btn-outline-primary btn-sm rounded-pill" style="font-size: 1.2rem;">
+                            <i class="icon-filter mr-1"></i> Filter in Main Shop
+                        </a>
+                    </div><!-- End .heading-right -->
+                </div><!-- End .heading -->
+
+                <!-- Products Grid -->
+                <div class="products mb-4">
+                    <div class="row">
+                        {% for p in products %}
+                        <div class="col-6 col-md-4 col-lg-3 mb-4">
+                            <div class="product product-7 text-center h-100 shadow-sm rounded-lg" 
+                                 style="border: 1px solid #ebebeb; background: #fff; display: flex; flex-direction: column; justify-content: space-between; border-radius: 10px; overflow: hidden; transition: transform 0.25s ease, box-shadow 0.25s ease;">
+                                
+                                <!-- Product Media -->
+                                <figure class="product-media position-relative m-0" 
+                                        style="background: #fbfbfb; overflow: hidden; min-height: 230px; display: flex; align-items: center; justify-content: center;">
+                                    
+                                    {% if p.old_price and p.get_percentage %}
+                                    <span class="product-label label-new" style="top: 10px; left: 10px; background-color: #a6c76c; font-size: 1.1rem; padding: 2px 8px; border-radius: 4px;">
+                                        {{ p.get_percentage|floatformat:0 }}% Off
+                                    </span>
+                                    {% endif %}
+
+                                    {% if p.featured %}
+                                    <span class="product-label label-top" style="top: {% if p.old_price and p.get_percentage %}38px{% else %}10px{% endif %}; left: 10px; background-color: #39f; font-size: 1.1rem; padding: 2px 8px; border-radius: 4px;">
+                                        Featured
+                                    </span>
+                                    {% endif %}
+
+                                    <a href="{% url 'core:product-details' p.pid %}" style="width: 100%; display: block;">
+                                        {% if p.image %}
+                                        <img src="{{ p.image.url }}" alt="{{ p.title }}" class="product-image" style="height: 220px; object-fit: contain; width: 100%; padding: 15px;">
+                                        {% else %}
+                                        <div style="height: 220px; display: flex; align-items: center; justify-content: center; background: #eee;">
+                                            <i class="icon-camera text-muted" style="font-size: 3rem;"></i>
+                                        </div>
+                                        {% endif %}
+                                    </a>
+
+                                    <div class="product-action-vertical">
+                                        <a href="#" class="btn-product-icon btn-wishlist btn-expandable" title="Add to wishlist"><span>add to wishlist</span></a>
+                                        <a href="#" class="btn-product-icon btn-compare" title="Compare"><span>Compare</span></a>
+                                        <a href="{% static 'popup/quickView.html' %}" class="btn-product-icon btn-quickview" title="Quick view"><span>Quick view</span></a>
+                                    </div><!-- End .product-action-vertical -->
+
+                                    <div class="product-action">
+                                        <a href="#" class="btn-product btn-cart" title="Add to cart"><span>add to cart</span></a>
+                                    </div><!-- End .product-action -->
+                                </figure><!-- End .product-media -->
+
+                                <!-- Product Body -->
+                                <div class="product-body p-3 text-center" style="flex-grow: 1; display: flex; flex-direction: column; justify-content: space-between;">
+                                    <div>
+                                        <div class="product-cat text-muted mb-1" style="font-size: 1.2rem;">
+                                            <a href="{% url 'core:products' %}?category={{ p.category.cid }}" style="color: #999;">
+                                                {{ p.category.title|default:"General" }}
+                                            </a>
+                                        </div><!-- End .product-cat -->
+
+                                        <h3 class="product-title font-weight-normal mb-2" style="font-size: 1.5rem; line-height: 1.3;">
+                                            <a href="{% url 'core:product-details' p.pid %}" style="color: #333;" title="{{ p.title }}">{{ p.title }}</a>
+                                        </h3><!-- End .product-title -->
+                                    </div>
+
+                                    <div>
+                                        <!-- Price -->
+                                        <div class="product-price d-flex align-items-center justify-content-center mb-2" style="font-size: 1.6rem; font-weight: 600; color: #39f;">
+                                            ${{ p.price }}
+                                            {% if p.old_price %}
+                                            <span class="old-price ml-2" style="text-decoration: line-through; color: #ccc; font-size: 1.3rem; font-weight: 400;">
+                                                ${{ p.old_price }}
+                                            </span>
+                                            {% endif %}
+                                        </div><!-- End .product-price -->
+
+                                        <!-- Stock & Rating -->
+                                        <div class="d-flex align-items-center justify-content-center mb-1">
+                                            {% if p.in_stock %}
+                                            <span class="badge badge-success px-2 py-1 font-weight-normal" style="font-size: 1.05rem;">
+                                                <i class="icon-check"></i> In Stock
+                                            </span>
+                                            {% else %}
+                                            <span class="badge badge-danger px-2 py-1 font-weight-normal" style="font-size: 1.05rem;">
+                                                Out of Stock
+                                            </span>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                </div><!-- End .product-body -->
+                            </div><!-- End .product -->
+                        </div><!-- End .col -->
+                        {% empty %}
+                        <div class="col-12 text-center py-5">
+                            <div class="p-5 bg-white rounded shadow-sm mx-auto" style="max-width: 550px; border: 1px dashed #dbe8fa;">
+                                <i class="icon-shopping-cart text-primary" style="font-size: 4rem;"></i>
+                                <h4 class="mt-3 font-weight-bold text-dark" style="font-size: 1.8rem;">No Products Found</h4>
+                                <p class="text-muted mb-4" style="font-size: 1.35rem;">
+                                    {{ vendor.title }} does not have any active products listed at this moment.
+                                </p>
+                                <div class="d-flex justify-content-center" style="gap: 10px;">
+                                    <a href="{% url 'core:vendors' %}" class="btn btn-outline-primary rounded-pill px-4" style="font-size: 1.3rem;">
+                                        Browse Other Vendors
+                                    </a>
+                                    <a href="{% url 'core:products' %}" class="btn btn-primary rounded-pill px-4" style="font-size: 1.3rem;">
+                                        Explore All Products
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div><!-- End .row -->
+                </div><!-- End .products -->
+
+            </div><!-- End .vendor-products-section -->
+
+        </div><!-- End .container -->
+    </div><!-- End .page-content -->
+</main>
+
+<style>
+.product-7:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 10px 22px rgba(0,0,0,0.08) !important;
+}
+.vendor-header-card {
+    transition: box-shadow 0.3s ease;
+}
+.vendor-header-card:hover {
+    box-shadow: 0 8px 24px rgba(0,0,0,0.08) !important;
+}
+</style>
+{% endblock content %}
