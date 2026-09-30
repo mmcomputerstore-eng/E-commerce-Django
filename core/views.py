@@ -1,5 +1,5 @@
 from django.shortcuts import render, get_object_or_404
-from django.db.models import Count, Q,Avg
+from django.db.models import Count, Q, Avg, Min, Max
 from taggit.models import Tag
 from core.forms import ProductReviewForm
 from django.http import JsonResponse
@@ -74,11 +74,35 @@ def products_list_view(request, tag_slug=None):
             Q(tags__name__icontains=q_param)
         )
 
+    # Price Filtering
+    min_price_param = request.GET.get('min_price')
+    max_price_param = request.GET.get('max_price')
+
+    if min_price_param:
+        try:
+            base_products = base_products.filter(price__gte=float(min_price_param))
+        except (ValueError, TypeError):
+            min_price_param = None
+
+    if max_price_param:
+        try:
+            base_products = base_products.filter(price__lte=float(max_price_param))
+        except (ValueError, TypeError):
+            max_price_param = None
+
     base_products = base_products.distinct().prefetch_related('tags')
 
     featured_products = base_products.filter(featured=True).order_by('-id')
     unfeatured_products = base_products.filter(featured=False).order_by('-id')
     products = base_products.order_by('-featured', '-id')
+
+    # Get min & max price from database for slider bounds
+    price_stats = Products.objects.filter(product_status='published').aggregate(
+        min_p=Min('price'),
+        max_p=Max('price')
+    )
+    db_min_price = int(price_stats['min_p']) if price_stats['min_p'] is not None else 0
+    db_max_price = int(price_stats['max_p']) + 50 if price_stats['max_p'] is not None else 1000
 
     categories = Category.objects.annotate(
         product_count=Count('category', filter=Q(category__product_status='published'))
@@ -104,6 +128,10 @@ def products_list_view(request, tag_slug=None):
         'vendor_param': vendor_param,
         'tag_param': tag_param,
         'q_param': q_param,
+        'min_price_param': min_price_param,
+        'max_price_param': max_price_param,
+        'db_min_price': db_min_price,
+        'db_max_price': db_max_price,
     }
     return render(request, 'core/product_list.html', context)
 
@@ -216,6 +244,8 @@ def ajax_add_review(request, pid):
 def search_view(request):
     query = request.GET.get('q', '').strip()
     category_param = request.GET.get('category')
+    min_price_param = request.GET.get('min_price')
+    max_price_param = request.GET.get('max_price')
 
     if query:
         products = Products.objects.filter(
@@ -230,15 +260,38 @@ def search_view(request):
     if category_param:
         products = products.filter(Q(category__cid=category_param) | Q(category__id=category_param))
 
+    if min_price_param:
+        try:
+            products = products.filter(price__gte=float(min_price_param))
+        except (ValueError, TypeError):
+            min_price_param = None
+
+    if max_price_param:
+        try:
+            products = products.filter(price__lte=float(max_price_param))
+        except (ValueError, TypeError):
+            max_price_param = None
+
     products = products.distinct().annotate(
         avg_rating=Avg('productreview__rating'),
         review_count=Count('productreview')
     ).prefetch_related('tags').order_by('-featured', '-id')
 
+    price_stats = Products.objects.filter(product_status='published').aggregate(
+        min_p=Min('price'),
+        max_p=Max('price')
+    )
+    db_min_price = int(price_stats['min_p']) if price_stats['min_p'] is not None else 0
+    db_max_price = int(price_stats['max_p']) + 50 if price_stats['max_p'] is not None else 1000
+
     context = {
         'products': products,
         'query': query,
         'category_param': category_param,
+        'min_price_param': min_price_param,
+        'max_price_param': max_price_param,
+        'db_min_price': db_min_price,
+        'db_max_price': db_max_price,
     }
 
     return render(request, 'core/search.html', context)

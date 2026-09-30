@@ -235,7 +235,7 @@ $(document).ready(function () {
 	// Quantity Input - Cart page - Product Details pages
     function quantityInputs() {
         if ( $.fn.inputSpinner ) {
-            $("input[type='number']").inputSpinner({
+            $("input[type='number']:not(.price-num-field):not(.no-spinner)").inputSpinner({
                 decrementButton: '<i class="icon-minus"></i>',
                 incrementButton: '<i class="icon-plus"></i>',
                 groupClass: 'input-spinner',

@@ -1,5 +1,6 @@
 {% extends "partials/base.html" %}
 {% load static %}
+{% load product_tags %}
 
 {% block title %} All Products | MM Computer Store {% endblock title %}
 
@@ -33,16 +34,38 @@
             <div class="row">
 
                 <!-- ============================================== -->
-                <!-- SIDEBAR FILTERS (CATEGORIES & VENDORS)        -->
+                <!-- SIDEBAR FILTERS (CATEGORIES, PRICE, VENDORS)  -->
                 <!-- ============================================== -->
-                <aside class="col-lg-3 col-md-4 mb-4">
-                    <div class="sidebar sidebar-shop p-4 bg-white rounded shadow-sm" style="border: 1px solid #ebebeb;">
+                <!-- Mobile Filter Toggle Bar (Visible on mobile/tablet < 768px) -->
+                <div class="col-12 d-md-none mb-3">
+                    <button class="btn btn-outline-primary btn-block d-flex align-items-center justify-content-between p-3" 
+                            type="button" 
+                            id="mobileFilterToggleBtn"
+                            style="border-radius: 10px; font-size: 1.4rem; font-weight: 600; background: #fff; box-shadow: 0 2px 6px rgba(0,0,0,0.05);">
+                        <span>
+                            <i class="icon-filter mr-2 text-primary"></i> 
+                            <span id="mobileToggleText">
+                                {% if selected_category or selected_vendor or selected_tag or min_price_param or max_price_param %}
+                                    Filters Active (Tap to Edit)
+                                {% else %}
+                                    Filter by Price & Category
+                                {% endif %}
+                            </span>
+                        </span>
+                        <span class="badge badge-primary px-3 py-1" style="font-size: 1.15rem; border-radius: 12px;">
+                            <i class="icon-sliders mr-1"></i> Filters
+                        </span>
+                    </button>
+                </div>
+
+                <aside class="col-lg-3 col-md-4 mb-4 catalog-sidebar-wrapper" id="catalogSidebarWrapper">
+                    <div class="sidebar sidebar-shop px-3 py-4 bg-white rounded shadow-sm" style="border: 1px solid #ebebeb;">
                         <!-- Filter Clean / Header -->
                         <div class="widget-header d-flex align-items-center justify-content-between pb-3 mb-4" style="border-bottom: 2px solid #f4f4f4;">
                             <h4 class="m-0 font-weight-bold" style="font-size: 1.6rem; color: #333;">
                                 <i class="icon-filter mr-2 text-primary"></i>Filters
                             </h4>
-                            {% if selected_category or selected_vendor or selected_tag %}
+                            {% if selected_category or selected_vendor or selected_tag or min_price_param or max_price_param %}
                             <a href="{% url 'core:products' %}" class="btn btn-sm btn-outline-danger" style="border-radius: 20px; font-size: 1.1rem; padding: 2px 10px;">
                                 Clean All
                             </a>
@@ -54,14 +77,14 @@
                             <h5 class="widget-title mb-3 font-weight-bold d-flex align-items-center justify-content-between" style="font-size: 1.4rem; color: #222;">
                                 <span><i class="icon-th-list mr-2 text-primary"></i>Category</span>
                                 {% if selected_category %}
-                                <a href="{% url 'core:products' %}{% if selected_vendor %}?vendor={{ selected_vendor.vid }}{% endif %}" class="small text-danger" style="font-size: 1.1rem; font-weight: normal;">Clear</a>
+                                <a href="{% url 'core:products' %}{% filter_url category='' %}" class="small text-danger" style="font-size: 1.1rem; font-weight: normal;">Clear</a>
                                 {% endif %}
                             </h5>
                             <div class="widget-body">
                                 <ul class="list-unstyled mb-0 filter-category-list">
                                     <!-- All Categories item -->
                                     <li class="mb-2">
-                                        <a href="{% url 'core:products' %}{% if selected_vendor %}?vendor={{ selected_vendor.vid }}{% endif %}{% if selected_tag %}{% if selected_vendor %}&{% else %}?{% endif %}tag={{ selected_tag.slug }}{% endif %}"
+                                        <a href="{% url 'core:products' %}{% filter_url category='' %}"
                                            class="d-flex align-items-center justify-content-between p-2 rounded transition-all {% if not selected_category %}active-filter-item{% endif %}"
                                            style="text-decoration: none; color: #333; {% if not selected_category %}background: #eef5ff; font-weight: 600; color: #39f; border: 1px solid #b8daff;{% else %}border: 1px solid transparent;{% endif %}">
                                             <div class="d-flex align-items-center">
@@ -79,7 +102,7 @@
                                     {% for c in categories %}
                                     <li class="mb-2">
                                         <!-- Clicking active category toggles it off, otherwise activates it -->
-                                        <a href="{% if selected_category.id == c.id %}{% url 'core:products' %}{% if selected_vendor %}?vendor={{ selected_vendor.vid }}{% endif %}{% if selected_tag %}{% if selected_vendor %}&{% else %}?{% endif %}tag={{ selected_tag.slug }}{% endif %}{% else %}{% url 'core:products' %}?category={{ c.cid }}{% if selected_vendor %}&vendor={{ selected_vendor.vid }}{% endif %}{% if selected_tag %}&tag={{ selected_tag.slug }}{% endif %}{% endif %}"
+                                        <a href="{% url 'core:products' %}{% if selected_category.id == c.id %}{% filter_url category='' %}{% else %}{% filter_url category=c.cid %}{% endif %}"
                                            class="d-flex align-items-center justify-content-between p-2 rounded transition-all {% if selected_category.id == c.id %}active-filter-item{% endif %}"
                                            style="text-decoration: none; color: #333; {% if selected_category.id == c.id %}background: #eef5ff; font-weight: 600; color: #39f; border: 1px solid #b8daff;{% else %}border: 1px solid transparent;{% endif %}">
                                             <div class="d-flex align-items-center" style="min-width: 0;">
@@ -109,19 +132,92 @@
 
                         <hr style="border-top: 1px solid #eee; margin: 1.5rem 0;">
 
-                        <!-- 2. VENDOR FILTER -->
+                        <!-- 2. PRICE RANGE FILTER -->
+                        <div class="widget mb-4">
+                            <h5 class="widget-title mb-3 font-weight-bold d-flex align-items-center justify-content-between" style="font-size: 1.4rem; color: #222;">
+                                <span><i class="icon-dollar mr-2 text-primary"></i>Price Range</span>
+                                {% if min_price_param or max_price_param %}
+                                <a href="{% url 'core:products' %}{% filter_url min_price='' max_price='' %}" class="small text-danger" style="font-size: 1.1rem; font-weight: normal;">Clear</a>
+                                {% endif %}
+                            </h5>
+                            <div class="widget-body">
+                                <form method="get" action="{% url 'core:products' %}" id="priceFilterForm">
+                                    {% if selected_category %}<input type="hidden" name="category" value="{{ selected_category.cid }}">{% endif %}
+                                    {% if selected_vendor %}<input type="hidden" name="vendor" value="{{ selected_vendor.vid }}">{% endif %}
+                                    {% if selected_tag %}<input type="hidden" name="tag" value="{{ selected_tag.slug }}">{% endif %}
+                                    {% if q_param %}<input type="hidden" name="q" value="{{ q_param }}">{% endif %}
+
+                                    <!-- Live Range Display Badge -->
+                                    <div class="d-flex align-items-center justify-content-between mb-3">
+                                        <span class="text-muted" style="font-size: 1.25rem; font-weight: 500;">Current Range:</span>
+                                        <span class="price-range-badge" id="priceDisplayRange">
+                                            ${{ min_price_param|default:db_min_price }} &ndash; ${{ max_price_param|default:db_max_price }}
+                                        </span>
+                                    </div>
+
+                                    <!-- Dual Range Slider Track -->
+                                    <div class="price-slider-container position-relative">
+                                        <div class="price-slider-track">
+                                            <div class="price-slider-highlight" id="sliderHighlight"></div>
+                                        </div>
+                                        <input type="range" class="price-range-input" id="minPriceRange" name="min_price" 
+                                               min="{{ db_min_price }}" max="{{ db_max_price }}" 
+                                               value="{{ min_price_param|default:db_min_price }}" step="1" 
+                                               aria-label="Minimum price">
+                                        <input type="range" class="price-range-input" id="maxPriceRange" name="max_price" 
+                                               min="{{ db_min_price }}" max="{{ db_max_price }}" 
+                                               value="{{ max_price_param|default:db_max_price }}" step="1" 
+                                               aria-label="Maximum price">
+                                    </div>
+
+                                    <!-- Modern Min & Max Number Input Fields (No spinner arrows, sleek inputs) -->
+                                    <div class="price-inputs-row mb-3">
+                                        <div class="price-input-box">
+                                            <span class="price-currency-sign">$</span>
+                                            <input type="text" inputmode="numeric" pattern="[0-9]*" id="minPriceBox" class="price-num-field no-spinner" 
+                                                   value="{{ min_price_param|default:db_min_price }}" 
+                                                   placeholder="{{ db_min_price }}" aria-label="Min price" autocomplete="off">
+                                        </div>
+                                        <span class="price-inputs-dash">&ndash;</span>
+                                        <div class="price-input-box">
+                                            <span class="price-currency-sign">$</span>
+                                            <input type="text" inputmode="numeric" pattern="[0-9]*" id="maxPriceBox" class="price-num-field no-spinner" 
+                                                   value="{{ max_price_param|default:db_max_price }}" 
+                                                   placeholder="{{ db_max_price }}" aria-label="Max price" autocomplete="off">
+                                        </div>
+                                    </div>
+
+                                    <!-- Quick Preset Price Pills -->
+                                    <div class="price-presets-grid mb-3">
+                                        <button type="button" class="price-preset-btn" data-min="{{ db_min_price }}" data-max="100">Under $100</button>
+                                        <button type="button" class="price-preset-btn" data-min="100" data-max="250">$100 &ndash; $250</button>
+                                        <button type="button" class="price-preset-btn" data-min="250" data-max="500">$250 &ndash; $500</button>
+                                        <button type="button" class="price-preset-btn" data-min="500" data-max="{{ db_max_price }}">$500+</button>
+                                    </div>
+
+                                    <!-- Filter Button -->
+                                    <button type="submit" class="btn btn-primary btn-block price-apply-btn">
+                                        <i class="icon-filter mr-2"></i> Apply Price Filter
+                                    </button>
+                                </form>
+                            </div><!-- End .widget-body -->
+                        </div><!-- End .widget -->
+
+                        <hr style="border-top: 1px solid #eee; margin: 1.5rem 0;">
+
+                        <!-- 3. VENDOR FILTER -->
                         <div class="widget">
                             <h5 class="widget-title mb-3 font-weight-bold d-flex align-items-center justify-content-between" style="font-size: 1.4rem; color: #222;">
                                 <span><i class="icon-user mr-2 text-primary"></i>Vendor</span>
                                 {% if selected_vendor %}
-                                <a href="{% url 'core:products' %}{% if selected_category %}?category={{ selected_category.cid }}{% endif %}" class="small text-danger" style="font-size: 1.1rem; font-weight: normal;">Clear</a>
+                                <a href="{% url 'core:products' %}{% filter_url vendor='' %}" class="small text-danger" style="font-size: 1.1rem; font-weight: normal;">Clear</a>
                                 {% endif %}
                             </h5>
                             <div class="widget-body">
                                 <ul class="list-unstyled mb-0 filter-vendor-list">
                                     <!-- All Vendors item -->
                                     <li class="mb-2">
-                                        <a href="{% url 'core:products' %}{% if selected_category %}?category={{ selected_category.cid }}{% endif %}{% if selected_tag %}{% if selected_category %}&{% else %}?{% endif %}tag={{ selected_tag.slug }}{% endif %}"
+                                        <a href="{% url 'core:products' %}{% filter_url vendor='' %}"
                                            class="d-flex align-items-center justify-content-between p-2 rounded transition-all {% if not selected_vendor %}active-filter-item{% endif %}"
                                            style="text-decoration: none; color: #333; {% if not selected_vendor %}background: #eef5ff; font-weight: 600; color: #39f; border: 1px solid #b8daff;{% else %}border: 1px solid transparent;{% endif %}">
                                             <div class="d-flex align-items-center">
@@ -139,7 +235,7 @@
                                     {% for v in vendors %}
                                     <li class="mb-2">
                                         <!-- Clicking active vendor toggles it off, otherwise activates it -->
-                                        <a href="{% if selected_vendor.id == v.id %}{% url 'core:products' %}{% if selected_category %}?category={{ selected_category.cid }}{% endif %}{% if selected_tag %}{% if selected_category %}&{% else %}?{% endif %}tag={{ selected_tag.slug }}{% endif %}{% else %}{% url 'core:products' %}?vendor={{ v.vid }}{% if selected_category %}&category={{ selected_category.cid }}{% endif %}{% if selected_tag %}&tag={{ selected_tag.slug }}{% endif %}{% endif %}"
+                                        <a href="{% url 'core:products' %}{% if selected_vendor.id == v.id %}{% filter_url vendor='' %}{% else %}{% filter_url vendor=v.vid %}{% endif %}"
                                            class="d-flex align-items-center justify-content-between p-2 rounded transition-all {% if selected_vendor.id == v.id %}active-filter-item{% endif %}"
                                            style="text-decoration: none; color: #333; {% if selected_vendor.id == v.id %}background: #eef5ff; font-weight: 600; color: #39f; border: 1px solid #b8daff;{% else %}border: 1px solid transparent;{% endif %}">
                                             <div class="d-flex align-items-center" style="min-width: 0;">
@@ -169,24 +265,24 @@
 
                         <hr style="border-top: 1px solid #eee; margin: 1.5rem 0;">
 
-                        <!-- 3. TAGS FILTER (TAG CLOUD) -->
+                        <!-- 4. TAGS FILTER (TAG CLOUD) -->
                         <div class="widget">
                             <h5 class="widget-title mb-3 font-weight-bold d-flex align-items-center justify-content-between" style="font-size: 1.4rem; color: #222;">
                                 <span><i class="icon-tags mr-2 text-primary"></i>Tags</span>
                                 {% if selected_tag %}
-                                <a href="{% url 'core:products' %}{% if selected_category %}?category={{ selected_category.cid }}{% endif %}{% if selected_vendor %}{% if selected_category %}&{% else %}?{% endif %}vendor={{ selected_vendor.vid }}{% endif %}" class="small text-danger" style="font-size: 1.1rem; font-weight: normal;">Clear</a>
+                                <a href="{% url 'core:products' %}{% filter_url tag='' %}" class="small text-danger" style="font-size: 1.1rem; font-weight: normal;">Clear</a>
                                 {% endif %}
                             </h5>
                             <div class="widget-body">
                                 <div class="tagcloud d-flex flex-wrap" style="gap: 6px;">
-                                    <a href="{% url 'core:products' %}{% if selected_category %}?category={{ selected_category.cid }}{% endif %}{% if selected_vendor %}{% if selected_category %}&{% else %}?{% endif %}vendor={{ selected_vendor.vid }}{% endif %}"
+                                    <a href="{% url 'core:products' %}{% filter_url tag='' %}"
                                        class="tag-item badge px-3 py-2 rounded {% if not selected_tag %}tag-active text-white bg-primary{% else %}badge-light border text-dark{% endif %}"
                                        style="font-size: 1.2rem; text-decoration: none; transition: all 0.2s; font-weight: 500;">
                                         All Tags
                                     </a>
 
                                     {% for t in tags %}
-                                    <a href="{% if selected_tag.id == t.id %}{% url 'core:products' %}{% if selected_category %}?category={{ selected_category.cid }}{% endif %}{% if selected_vendor %}{% if selected_category %}&{% else %}?{% endif %}vendor={{ selected_vendor.vid }}{% endif %}{% else %}{% url 'core:products' %}?tag={{ t.slug }}{% if selected_category %}&category={{ selected_category.cid }}{% endif %}{% if selected_vendor %}&vendor={{ selected_vendor.vid }}{% endif %}{% endif %}"
+                                    <a href="{% url 'core:products' %}{% if selected_tag.id == t.id %}{% filter_url tag='' %}{% else %}{% filter_url tag=t.slug %}{% endif %}"
                                        class="tag-item badge px-3 py-2 rounded {% if selected_tag.id == t.id %}tag-active text-white bg-primary{% else %}badge-light border text-dark{% endif %}"
                                        style="font-size: 1.2rem; text-decoration: none; transition: all 0.2s; font-weight: 500;"
                                        title="{{ t.product_count }} product{{ t.product_count|pluralize }} tagged #{{ t.name }}">
@@ -208,30 +304,37 @@
                 <div class="col-lg-9 col-md-8">
 
                     <!-- Active Filters Indicator Bar -->
-                    {% if selected_category or selected_vendor or selected_tag %}
+                    {% if selected_category or selected_vendor or selected_tag or min_price_param or max_price_param %}
                     <div class="active-filters-bar p-3 mb-4 bg-light rounded d-flex align-items-center flex-wrap" style="border: 1px dashed #b8daff; background-color: #f8fbff !important;">
                         <span class="mr-2 font-weight-bold text-dark" style="font-size: 1.3rem;">
                             <i class="icon-sliders mr-1 text-primary"></i> Active Filters:
                         </span>
 
+                        {% if min_price_param or max_price_param %}
+                        <span class="badge badge-success px-3 py-2 mr-2 mb-1 d-inline-flex align-items-center" style="font-size: 1.2rem; border-radius: 20px; background-color: #28a745;">
+                            Price: ${{ min_price_param|default:db_min_price }} &ndash; ${{ max_price_param|default:db_max_price }}
+                            <a href="{% url 'core:products' %}{% filter_url min_price='' max_price='' %}" class="text-white ml-2" style="text-decoration: none; font-size: 1.4rem; line-height: 1;" title="Remove this price filter">&times;</a>
+                        </span>
+                        {% endif %}
+
                         {% if selected_category %}
                         <span class="badge badge-primary px-3 py-2 mr-2 mb-1 d-inline-flex align-items-center" style="font-size: 1.2rem; border-radius: 20px; background-color: #39f;">
                             Category: {{ selected_category.title }}
-                            <a href="{% url 'core:products' %}{% if selected_vendor %}?vendor={{ selected_vendor.vid }}{% endif %}{% if selected_tag %}{% if selected_vendor %}&{% else %}?{% endif %}tag={{ selected_tag.slug }}{% endif %}" class="text-white ml-2" style="text-decoration: none; font-size: 1.4rem; line-height: 1;" title="Remove this category filter">&times;</a>
+                            <a href="{% url 'core:products' %}{% filter_url category='' %}" class="text-white ml-2" style="text-decoration: none; font-size: 1.4rem; line-height: 1;" title="Remove this category filter">&times;</a>
                         </span>
                         {% endif %}
 
                         {% if selected_vendor %}
                         <span class="badge badge-info px-3 py-2 mr-2 mb-1 d-inline-flex align-items-center" style="font-size: 1.2rem; border-radius: 20px; background-color: #17a2b8;">
                             Vendor: {{ selected_vendor.title }}
-                            <a href="{% url 'core:products' %}{% if selected_category %}?category={{ selected_category.cid }}{% endif %}{% if selected_tag %}{% if selected_category %}&{% else %}?{% endif %}tag={{ selected_tag.slug }}{% endif %}" class="text-white ml-2" style="text-decoration: none; font-size: 1.4rem; line-height: 1;" title="Remove this vendor filter">&times;</a>
+                            <a href="{% url 'core:products' %}{% filter_url vendor='' %}" class="text-white ml-2" style="text-decoration: none; font-size: 1.4rem; line-height: 1;" title="Remove this vendor filter">&times;</a>
                         </span>
                         {% endif %}
 
                         {% if selected_tag %}
                         <span class="badge badge-warning text-dark px-3 py-2 mr-2 mb-1 d-inline-flex align-items-center" style="font-size: 1.2rem; border-radius: 20px; background-color: #ffc107;">
                             Tag: #{{ selected_tag.name }}
-                            <a href="{% url 'core:products' %}{% if selected_category %}?category={{ selected_category.cid }}{% endif %}{% if selected_vendor %}{% if selected_category %}&{% else %}?{% endif %}vendor={{ selected_vendor.vid }}{% endif %}" class="text-dark ml-2" style="text-decoration: none; font-size: 1.4rem; line-height: 1;" title="Remove this tag filter">&times;</a>
+                            <a href="{% url 'core:products' %}{% filter_url tag='' %}" class="text-dark ml-2" style="text-decoration: none; font-size: 1.4rem; line-height: 1;" title="Remove this tag filter">&times;</a>
                         </span>
                         {% endif %}
 
@@ -332,13 +435,13 @@
                                         <div class="product-body p-3 text-center" style="flex-grow: 1; display: flex; flex-direction: column; justify-content: space-between;">
                                             <div>
                                                 <div class="product-cat text-muted mb-1" style="font-size: 1.2rem;">
-                                                    <a href="{% url 'core:products' %}?category={{ p.category.cid }}" style="color: #999;">{{ p.category.title|default:"General" }}</a>
+                                                    <a href="{% url 'core:products' %}{% filter_url category=p.category.cid %}" style="color: #999;">{{ p.category.title|default:"General" }}</a>
                                                 </div><!-- End .product-cat -->
 
                                                 {% if p.tags.all %}
                                                 <div class="product-tags mb-1" style="font-size: 1.1rem; line-height: 1.2;">
                                                     {% for tag in p.tags.all|slice:":3" %}
-                                                    <a href="{% url 'core:products' %}?tag={{ tag.slug }}" class="badge badge-light border text-muted px-1 py-0 mr-1" style="font-size: 1rem; font-weight: normal; transition: all 0.2s;" onmouseover="this.style.color='#39f'; this.style.borderColor='#39f';" onmouseout="this.style.color='#777'; this.style.borderColor='#e0e0e0';">#{{ tag.name }}</a>
+                                                    <a href="{% url 'core:products' %}{% filter_url tag=tag.slug %}" class="badge badge-light border text-muted px-1 py-0 mr-1" style="font-size: 1rem; font-weight: normal; transition: all 0.2s;" onmouseover="this.style.color='#39f'; this.style.borderColor='#39f';" onmouseout="this.style.color='#777'; this.style.borderColor='#e0e0e0';">#{{ tag.name }}</a>
                                                     {% endfor %}
                                                 </div>
                                                 {% endif %}
@@ -444,13 +547,13 @@
                                         <div class="product-body p-3 text-center" style="flex-grow: 1; display: flex; flex-direction: column; justify-content: space-between;">
                                             <div>
                                                 <div class="product-cat text-muted mb-1" style="font-size: 1.2rem;">
-                                                    <a href="{% url 'core:products' %}?category={{ p.category.cid }}" style="color: #999;">{{ p.category.title|default:"General" }}</a>
+                                                    <a href="{% url 'core:products' %}{% filter_url category=p.category.cid %}" style="color: #999;">{{ p.category.title|default:"General" }}</a>
                                                 </div><!-- End .product-cat -->
 
                                                 {% if p.tags.all %}
                                                 <div class="product-tags mb-1" style="font-size: 1.1rem; line-height: 1.2;">
                                                     {% for tag in p.tags.all|slice:":3" %}
-                                                    <a href="{% url 'core:products' %}?tag={{ tag.slug }}" class="badge badge-light border text-muted px-1 py-0 mr-1" style="font-size: 1rem; font-weight: normal; transition: all 0.2s;" onmouseover="this.style.color='#39f'; this.style.borderColor='#39f';" onmouseout="this.style.color='#777'; this.style.borderColor='#e0e0e0';">#{{ tag.name }}</a>
+                                                    <a href="{% url 'core:products' %}{% filter_url tag=tag.slug %}" class="badge badge-light border text-muted px-1 py-0 mr-1" style="font-size: 1rem; font-weight: normal; transition: all 0.2s;" onmouseover="this.style.color='#39f'; this.style.borderColor='#39f';" onmouseout="this.style.color='#777'; this.style.borderColor='#e0e0e0';">#{{ tag.name }}</a>
                                                     {% endfor %}
                                                 </div>
                                                 {% endif %}
@@ -528,5 +631,416 @@
     background-color: #eef5ff !important;
     border-color: #b8daff !important;
 }
+
+/* ========================================================
+   MODERN DUAL PRICE RANGE SLIDER & SLEEK INPUTS
+   ======================================================== */
+
+/* Remove spinner buttons from number/text inputs across all browsers */
+input.price-num-field::-webkit-outer-spin-button,
+input.price-num-field::-webkit-inner-spin-button {
+    -webkit-appearance: none !important;
+    margin: 0 !important;
+}
+input.price-num-field {
+    -moz-appearance: textfield !important;
+    appearance: textfield !important;
+}
+
+/* Range Display Badge */
+.price-range-badge {
+    display: inline-block;
+    background: #eef5ff;
+    color: #1e70bf;
+    font-weight: 700;
+    font-size: 1.35rem;
+    padding: 3px 12px;
+    border-radius: 20px;
+    border: 1px solid #cce0ff;
+    letter-spacing: 0.3px;
+}
+
+/* Dual Range Slider Container */
+.price-slider-container {
+    position: relative;
+    height: 34px;
+    display: flex;
+    align-items: center;
+    margin: 4px 0 14px 0;
+}
+
+.price-slider-track {
+    position: absolute;
+    width: 100%;
+    height: 6px;
+    background: #e2e8f0;
+    border-radius: 999px;
+    overflow: hidden;
+}
+
+.price-slider-highlight {
+    position: absolute;
+    height: 100%;
+    background: linear-gradient(90deg, #3399ff, #1e70bf);
+    border-radius: 999px;
+    transition: background 0.2s;
+}
+
+.price-range-input {
+    position: absolute;
+    width: 100%;
+    top: 50%;
+    transform: translateY(-50%);
+    margin: 0;
+    pointer-events: none;
+    -webkit-appearance: none;
+    appearance: none;
+    background: transparent;
+    z-index: 5;
+    outline: none;
+}
+
+/* WebKit Thumbs (Chrome, Safari, Edge) */
+.price-range-input::-webkit-slider-thumb {
+    pointer-events: all;
+    -webkit-appearance: none;
+    appearance: none;
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    background: #ffffff;
+    border: 3.5px solid #3399ff;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.22);
+    cursor: pointer;
+    transition: transform 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.price-range-input::-webkit-slider-thumb:hover,
+.price-range-input::-webkit-slider-thumb:active {
+    transform: scale(1.15);
+    border-color: #1e70bf;
+    box-shadow: 0 3px 10px rgba(51, 153, 255, 0.45);
+}
+
+/* Firefox Thumbs */
+.price-range-input::-moz-range-thumb {
+    pointer-events: all;
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    background: #ffffff;
+    border: 3.5px solid #3399ff;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.22);
+    cursor: pointer;
+    transition: transform 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.price-range-input::-moz-range-thumb:hover,
+.price-range-input::-moz-range-thumb:active {
+    transform: scale(1.15);
+    border-color: #1e70bf;
+    box-shadow: 0 3px 10px rgba(51, 153, 255, 0.45);
+}
+
+/* Price Number Input Fields Row */
+.price-inputs-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 6px;
+    width: 100%;
+}
+
+.price-input-box {
+    flex: 1;
+    min-width: 0 !important;
+    display: flex;
+    align-items: center;
+    background: #f8fafc;
+    border: 1.5px solid #e2e8f0;
+    border-radius: 8px;
+    padding: 0 8px;
+    height: 38px;
+    box-sizing: border-box;
+    transition: all 0.2s ease;
+}
+
+.price-input-box:focus-within {
+    border-color: #3399ff;
+    background: #ffffff;
+    box-shadow: 0 0 0 3px rgba(51, 153, 255, 0.15);
+}
+
+.price-currency-sign {
+    font-size: 1.3rem;
+    font-weight: 600;
+    color: #64748b;
+    margin-right: 4px;
+    flex-shrink: 0;
+    user-select: none;
+}
+
+.price-num-field {
+    width: 100% !important;
+    min-width: 0 !important;
+    max-width: 100% !important;
+    border: none !important;
+    background: transparent !important;
+    font-size: 1.35rem !important;
+    font-weight: 600 !important;
+    color: #1e293b !important;
+    text-align: center !important;
+    outline: none !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    height: 100% !important;
+    box-shadow: none !important;
+}
+
+/* Force hide any theme input-spinner elements inside price-input-box */
+.price-input-box .input-spinner,
+.price-input-box .btn-spinner,
+.price-input-box .input-group,
+.price-input-box .input-group-prepend,
+.price-input-box .input-group-append {
+    display: none !important;
+}
+
+.price-inputs-dash {
+    color: #94a3b8;
+    font-size: 1.4rem;
+    font-weight: 600;
+    flex-shrink: 0;
+}
+
+/* Quick Preset Pills Grid (Strict 2x2 layout without overflowing) */
+.price-presets-grid {
+    display: grid !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 6px !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+}
+
+.price-preset-btn {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    width: 100% !important;
+    min-width: 0 !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+    background: #ffffff !important;
+    border: 1px solid #e2e8f0 !important;
+    color: #475569 !important;
+    border-radius: 6px !important;
+    font-size: 1.15rem !important;
+    font-weight: 500 !important;
+    padding: 7px 2px !important;
+    text-align: center !important;
+    line-height: 1.2 !important;
+    transition: all 0.2s ease !important;
+    cursor: pointer !important;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03) !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+}
+
+.price-preset-btn:hover {
+    background: #eff6ff !important;
+    border-color: #3399ff !important;
+    color: #1e70bf !important;
+}
+
+.price-preset-btn.active {
+    background: linear-gradient(135deg, #3399ff, #1e70bf) !important;
+    border-color: #1e70bf !important;
+    color: #ffffff !important;
+    font-weight: 600 !important;
+    box-shadow: 0 2px 6px rgba(51, 153, 255, 0.35) !important;
+}
+
+/* Apply Filter Button */
+.price-apply-btn {
+    height: 42px;
+    border-radius: 8px;
+    font-size: 1.35rem;
+    font-weight: 600;
+    background: linear-gradient(135deg, #3399ff 0%, #1e70bf 100%);
+    border: none;
+    color: #ffffff;
+    box-shadow: 0 3px 8px rgba(51, 153, 255, 0.25);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+}
+
+.price-apply-btn:hover {
+    background: linear-gradient(135deg, #1e70bf 0%, #165696 100%);
+    box-shadow: 0 5px 14px rgba(51, 153, 255, 0.35);
+    transform: translateY(-1px);
+    color: #ffffff;
+}
+
+.price-apply-btn:active {
+    transform: translateY(0);
+}
+
+/* Mobile Filter Collapsible on < 768px */
+@media (max-width: 767.98px) {
+    .catalog-sidebar-wrapper {
+        display: none;
+    }
+    .catalog-sidebar-wrapper.show-mobile {
+        display: block !important;
+        animation: slideDownSidebar 0.3s ease;
+    }
+    @keyframes slideDownSidebar {
+        from { opacity: 0; transform: translateY(-10px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+}
 </style>
 {% endblock content %}
+
+{% block extra_js %}
+<script>
+    $(document).ready(function() {
+        // 1. Mobile Filter Toggle Handler
+        $('#mobileFilterToggleBtn').on('click', function() {
+            var $wrapper = $('#catalogSidebarWrapper');
+            $wrapper.toggleClass('show-mobile');
+            var isShown = $wrapper.hasClass('show-mobile');
+            $('#mobileToggleText').text(isShown ? 'Hide Filters & Price' : 'Filter by Price & Category');
+            if (isShown) {
+                $('html, body').animate({
+                    scrollTop: $wrapper.offset().top - 20
+                }, 350);
+            }
+        });
+
+        // 2. Dual Range Price Slider Logic
+        var $minSlider = $('#minPriceRange');
+        var $maxSlider = $('#maxPriceRange');
+        var $minBox = $('#minPriceBox');
+        var $maxBox = $('#maxPriceBox');
+        var $display = $('#priceDisplayRange');
+        var $highlight = $('#sliderHighlight');
+
+        if ($minSlider.length && $maxSlider.length) {
+            var minLimit = parseFloat($minSlider.attr('min')) || 0;
+            var maxLimit = parseFloat($maxSlider.attr('max')) || 1000;
+            var rangeSpread = maxLimit - minLimit;
+            if (rangeSpread <= 0) rangeSpread = 1;
+
+            function checkActivePreset(curMin, curMax) {
+                $('.price-preset-btn').each(function() {
+                    var pMin = parseFloat($(this).data('min'));
+                    var pMax = parseFloat($(this).data('max'));
+                    if (Math.round(curMin) === Math.round(pMin) && Math.round(curMax) === Math.round(pMax)) {
+                        $(this).addClass('active');
+                    } else {
+                        $(this).removeClass('active');
+                    }
+                });
+            }
+
+            function updateSliderVisuals(fromSource) {
+                var minVal = parseFloat($minSlider.val());
+                var maxVal = parseFloat($maxSlider.val());
+
+                if (minVal > maxVal) {
+                    if (fromSource === 'min') {
+                        $minSlider.val(maxVal);
+                        minVal = maxVal;
+                    } else {
+                        $maxSlider.val(minVal);
+                        maxVal = minVal;
+                    }
+                }
+
+                // Dynamic z-index so min slider handle remains reachable when sliders meet near max
+                if (minVal > minLimit + rangeSpread * 0.85) {
+                    $minSlider.css('z-index', 6);
+                } else {
+                    $minSlider.css('z-index', 5);
+                }
+
+                var leftPercent = Math.max(0, Math.min(100, ((minVal - minLimit) / rangeSpread) * 100));
+                var widthPercent = Math.max(0, Math.min(100 - leftPercent, ((maxVal - minVal) / rangeSpread) * 100));
+
+                $highlight.css({
+                    'left': leftPercent + '%',
+                    'width': widthPercent + '%'
+                });
+
+                $display.html('$' + Math.round(minVal) + ' &ndash; $' + Math.round(maxVal));
+                checkActivePreset(minVal, maxVal);
+            }
+
+            function syncSliderAndBoxes(fromSource) {
+                updateSliderVisuals(fromSource);
+                $minBox.val(Math.round(parseFloat($minSlider.val())));
+                $maxBox.val(Math.round(parseFloat($maxSlider.val())));
+            }
+
+            // Slider drag events
+            $minSlider.on('input change', function() {
+                syncSliderAndBoxes('min');
+            });
+            $maxSlider.on('input change', function() {
+                syncSliderAndBoxes('max');
+            });
+
+            // Number box direct editing: live visual update on input, strict sync on change/blur
+            $minBox.on('input', function() {
+                var raw = $(this).val().replace(/[^0-9]/g, '');
+                var v = parseFloat(raw);
+                if (!isNaN(v) && v <= maxLimit) {
+                    $minSlider.val(v);
+                    updateSliderVisuals('min');
+                }
+            }).on('change blur', function() {
+                var raw = $(this).val().replace(/[^0-9]/g, '');
+                var v = parseFloat(raw);
+                var curMax = parseFloat($maxSlider.val());
+                if (isNaN(v) || v < minLimit) v = minLimit;
+                if (v > curMax) v = curMax;
+                $minSlider.val(v);
+                syncSliderAndBoxes('min');
+            });
+
+            $maxBox.on('input', function() {
+                var raw = $(this).val().replace(/[^0-9]/g, '');
+                var v = parseFloat(raw);
+                if (!isNaN(v) && v >= minLimit) {
+                    $maxSlider.val(v);
+                    updateSliderVisuals('max');
+                }
+            }).on('change blur', function() {
+                var raw = $(this).val().replace(/[^0-9]/g, '');
+                var v = parseFloat(raw);
+                var curMin = parseFloat($minSlider.val());
+                if (isNaN(v) || v > maxLimit) v = maxLimit;
+                if (v < curMin) v = curMin;
+                $maxSlider.val(v);
+                syncSliderAndBoxes('max');
+            });
+
+            // Quick preset pills click
+            $('.price-preset-btn').on('click', function() {
+                var pMin = parseFloat($(this).data('min'));
+                var pMax = parseFloat($(this).data('max'));
+                $minSlider.val(pMin);
+                $maxSlider.val(pMax);
+                syncSliderAndBoxes('preset');
+            });
+
+            // Initial render
+            syncSliderAndBoxes('init');
+        }
+    });
+</script>
+{% endblock extra_js %}
