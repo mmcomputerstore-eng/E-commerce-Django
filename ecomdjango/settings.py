@@ -151,6 +151,7 @@ JAZZMIN_SETTINGS = {
 }
 
 AUTH_USER_MODEL = 'userauth.User'
+LOGIN_URL = 'userauth:login'
 
 CKEDITOR_UPLOAD_PATH = 'uploads/'
 

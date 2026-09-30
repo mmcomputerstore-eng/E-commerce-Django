@@ -3,6 +3,8 @@ from django.db.models import Count, Q, Avg, Min, Max
 from taggit.models import Tag
 from core.forms import ProductReviewForm
 from django.http import JsonResponse
+from django.contrib.auth.decorators import login_required
+from django.contrib import messages
 
 from core.models import (
     Category,
@@ -441,3 +443,230 @@ def clear_cart(request):
         return JsonResponse({'status': 'success', 'cart_count': 0, 'cart_total': '0.00'})
 
     return redirect('core:cart')
+
+
+@login_required
+def checkout_view(request):
+    cart_data = request.session.get('cart_data_obj', {})
+    if not cart_data:
+        messages.warning(request, "Your cart is empty. Please add items before checking out.")
+        return redirect('core:cart')
+
+    cart_count = sum(int(item.get('qty', 1)) for item in cart_data.values())
+    cart_total_amount = sum(float(item.get('price', 0)) * int(item.get('qty', 1)) for item in cart_data.values())
+
+    addresses = Address.objects.filter(user=request.user).order_by('-status', '-id')
+    active_address = Address.objects.filter(user=request.user, status=True).first()
+
+    # If user has addresses but none marked active, activate the first one
+    if not active_address and addresses.exists():
+        active_address = addresses.first()
+        active_address.status = True
+        active_address.save()
+
+    if request.method == 'POST':
+        selected_address_id = request.POST.get('selected_address_id')
+        new_address_text = request.POST.get('new_address', '').strip()
+
+        # Handle newly entered address during checkout
+        if new_address_text:
+            Address.objects.filter(user=request.user).update(status=False)
+            active_address = Address.objects.create(
+                user=request.user,
+                address=new_address_text,
+                status=True
+            )
+        elif selected_address_id:
+            chosen_addr = Address.objects.filter(id=selected_address_id, user=request.user).first()
+            if chosen_addr:
+                Address.objects.filter(user=request.user).update(status=False)
+                chosen_addr.status = True
+                chosen_addr.save()
+                active_address = chosen_addr
+
+        # Validate that an active address exists
+        if not active_address:
+            messages.error(request, "Please enter or select an active shipping address to place your order.")
+            return redirect('core:checkout')
+
+        # Create CartOrders record
+        order = CartOrders.objects.create(
+            user=request.user,
+            price=round(cart_total_amount, 2),
+            paid_status=False,
+            product_status='processing'
+        )
+
+        # Create CartOrdersItems records
+        for pid, item in cart_data.items():
+            CartOrdersItems.objects.create(
+                order=order,
+                product_status='processing',
+                items=item['title'],
+                quantity=int(item['qty']),
+                price=float(item['price']),
+                total=float(item['total_price']),
+            )
+
+        # Clear cart session
+        if 'cart_data_obj' in request.session:
+            del request.session['cart_data_obj']
+            request.session.modified = True
+
+        messages.success(request, f"Order #{order.id} has been placed successfully!")
+        return redirect('core:order-completed', oid=order.id)
+
+    context = {
+        'cart_data': cart_data,
+        'cart_count': cart_count,
+        'cart_total_amount': f"{cart_total_amount:.2f}",
+        'addresses': addresses,
+        'active_address': active_address,
+    }
+    return render(request, 'core/checkout.html', context)
+
+
+@login_required
+def make_address_default(request):
+    addr_id = request.POST.get('id') or request.GET.get('id')
+    if not addr_id:
+        return JsonResponse({'status': 'error', 'message': 'Address ID missing.'}, status=400)
+
+    addr = Address.objects.filter(id=addr_id, user=request.user).first()
+    if not addr:
+        return JsonResponse({'status': 'error', 'message': 'Address not found.'}, status=404)
+
+    Address.objects.filter(user=request.user).update(status=False)
+    addr.status = True
+    addr.save()
+
+    return JsonResponse({
+        'status': 'success',
+        'message': 'Active shipping address updated!',
+        'address_id': addr.id,
+        'address_text': addr.address,
+    })
+
+
+@login_required
+def save_address(request):
+    address_text = request.POST.get('address', '').strip()
+    if not address_text:
+        return JsonResponse({'status': 'error', 'message': 'Address cannot be empty.'}, status=400)
+
+    Address.objects.filter(user=request.user).update(status=False)
+    new_addr = Address.objects.create(
+        user=request.user,
+        address=address_text,
+        status=True
+    )
+
+    return JsonResponse({
+        'status': 'success',
+        'message': 'New address saved and set as active!',
+        'address_id': new_addr.id,
+        'address_text': new_addr.address,
+    })
+
+
+@login_required
+def order_completed_view(request, oid):
+    order = get_object_or_404(CartOrders, id=oid, user=request.user)
+    order_items = CartOrdersItems.objects.filter(order=order)
+    active_address = Address.objects.filter(user=request.user, status=True).first()
+
+    context = {
+        'order': order,
+        'order_items': order_items,
+        'active_address': active_address,
+    }
+    return render(request, 'core/order_completed.html', context)
+
+
+@login_required
+def customer_dashboard(request):
+    orders = CartOrders.objects.filter(user=request.user).order_by('-order_date', '-id').prefetch_related('cartordersitems_set')
+    orders_processing = [o for o in orders if o.product_status == 'processing']
+    orders_shipped = [o for o in orders if o.product_status == 'shipped']
+    orders_delivered = [o for o in orders if o.product_status == 'delivered']
+
+    total_orders_count = len(orders)
+    processing_count = len(orders_processing)
+    shipped_count = len(orders_shipped)
+    delivered_count = len(orders_delivered)
+    total_spent = sum(float(o.price) for o in orders)
+
+    addresses = Address.objects.filter(user=request.user).order_by('-status', '-id')
+    active_address = Address.objects.filter(user=request.user, status=True).first()
+
+    if not active_address and addresses.exists():
+        active_address = addresses.first()
+        active_address.status = True
+        active_address.save()
+
+    # Handle profile bio update
+    if request.method == 'POST' and 'update_profile' in request.POST:
+        bio = request.POST.get('bio', '').strip()
+        request.user.bio = bio
+        request.user.save()
+        messages.success(request, 'Your account details have been updated.')
+        return redirect('core:customer-dashboard')
+
+    context = {
+        'orders': orders,
+        'orders_processing': orders_processing,
+        'orders_shipped': orders_shipped,
+        'orders_delivered': orders_delivered,
+        'total_orders_count': total_orders_count,
+        'processing_count': processing_count,
+        'shipped_count': shipped_count,
+        'delivered_count': delivered_count,
+        'total_spent': f"{total_spent:.2f}",
+        'addresses': addresses,
+        'active_address': active_address,
+    }
+    return render(request, 'core/dashboard.html', context)
+
+
+@login_required
+def order_detail_view(request, oid):
+    order = get_object_or_404(CartOrders, id=oid, user=request.user)
+    order_items = CartOrdersItems.objects.filter(order=order)
+    active_address = Address.objects.filter(user=request.user, status=True).first()
+
+    context = {
+        'order': order,
+        'order_items': order_items,
+        'active_address': active_address,
+    }
+    return render(request, 'core/order_detail.html', context)
+
+
+@login_required
+def order_detail_ajax(request, oid):
+    order = get_object_or_404(CartOrders, id=oid, user=request.user)
+    order_items = CartOrdersItems.objects.filter(order=order)
+    active_address = Address.objects.filter(user=request.user, status=True).first()
+
+    items_list = []
+    for item in order_items:
+        items_list.append({
+            'title': item.items,
+            'qty': item.quantity,
+            'price': str(item.price),
+            'total': str(item.total),
+        })
+
+    return JsonResponse({
+        'status': 'success',
+        'order': {
+            'id': order.id,
+            'date': order.order_date.strftime('%B %d, %Y - %I:%M %p'),
+            'price': str(order.price),
+            'status': order.product_status,
+            'address': active_address.address if active_address else 'Not specified',
+            'items': items_list,
+        }
+    })
+
+

@@ -1,0 +1,149 @@
+{% extends "partials/base.html" %}
+{% load static %}
+
+{% block title %}Order #ORD-{{ order.id }} Details | MM Computer Store{% endblock title %}
+
+{% block content %}
+<main class="main">
+    <!-- Breadcrumb Navigation -->
+    <nav aria-label="breadcrumb" class="breadcrumb-nav mb-4">
+        <div class="container">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{% url 'core:home' %}">Home</a></li>
+                <li class="breadcrumb-item"><a href="{% url 'core:customer-dashboard' %}">My Account</a></li>
+                <li class="breadcrumb-item active" aria-current="page">Order #ORD-{{ order.id }}</li>
+            </ol>
+        </div><!-- End .container -->
+    </nav><!-- End .breadcrumb-nav -->
+
+    <div class="page-content pb-6">
+        <div class="container">
+            <div class="row justify-content-center">
+                <div class="col-lg-10">
+                    <div class="bg-white rounded shadow-sm border p-5 mb-4">
+                        <!-- Header banner -->
+                        <div class="d-flex align-items-center justify-content-between pb-3 mb-4 border-bottom flex-wrap">
+                            <div>
+                                <h1 class="font-weight-bold mb-1" style="font-size: 2.6rem; color: #222;">
+                                    Order #ORD-{{ order.id }}
+                                </h1>
+                                <span class="text-muted" style="font-size: 1.35rem;">
+                                    Placed on <strong class="text-dark">{{ order.order_date|date:"F d, Y" }}</strong> at {{ order.order_date|date:"h:i A" }}
+                                </span>
+                            </div>
+
+                            <div class="mt-2 mt-sm-0 text-sm-right">
+                                {% if order.product_status == 'processing' %}
+                                    <span class="badge badge-warning text-white px-3 py-2" style="font-size: 1.35rem; font-weight: 500; border-radius: 20px;">
+                                        <i class="icon-refresh mr-1"></i>In Process
+                                    </span>
+                                {% elif order.product_status == 'shipped' %}
+                                    <span class="badge badge-info px-3 py-2" style="font-size: 1.35rem; font-weight: 500; border-radius: 20px;">
+                                        <i class="icon-truck mr-1"></i>Shipped
+                                    </span>
+                                {% elif order.product_status == 'delivered' %}
+                                    <span class="badge badge-success px-3 py-2" style="font-size: 1.35rem; font-weight: 500; border-radius: 20px;">
+                                        <i class="icon-check mr-1"></i>Delivered
+                                    </span>
+                                {% else %}
+                                    <span class="badge badge-secondary px-3 py-2" style="font-size: 1.35rem; border-radius: 20px;">
+                                        {{ order.product_status|title }}
+                                    </span>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <!-- Info Grid -->
+                        <div class="row mb-4">
+                            <div class="col-md-6 mb-3 mb-md-0">
+                                <div class="p-3 bg-light rounded border h-100">
+                                    <h4 class="font-weight-bold mb-2 text-dark" style="font-size: 1.5rem;">
+                                        <i class="icon-map-marker text-success mr-1"></i> Delivery Address
+                                    </h4>
+                                    <p class="mb-0 font-weight-500" style="font-size: 1.4rem; color: #333; line-height: 1.5;">
+                                        {% if active_address %}
+                                            {{ active_address.address }}
+                                        {% else %}
+                                            <span class="text-muted">Standard Customer Address</span>
+                                        {% endif %}
+                                    </p>
+                                </div>
+                            </div>
+
+                            <div class="col-md-6">
+                                <div class="p-3 bg-light rounded border h-100">
+                                    <h4 class="font-weight-bold mb-2 text-dark" style="font-size: 1.5rem;">
+                                        <i class="icon-info-circle text-primary mr-1"></i> Order Details
+                                    </h4>
+                                    <div style="font-size: 1.35rem; line-height: 1.6;">
+                                        <div>Customer: <strong class="text-dark">{{ request.user.username.title }}</strong></div>
+                                        <div>Email: <span class="text-muted">{{ request.user.email }}</span></div>
+                                        <div>Payment Method: <span class="badge badge-light border">Cash on Delivery</span></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Items Table -->
+                        <h3 class="font-weight-bold mb-3" style="font-size: 1.8rem; color: #333;">Order Items</h3>
+                        <div class="table-responsive mb-4">
+                            <table class="table table-bordered mb-0">
+                                <thead style="background-color: #f7f8f9;">
+                                    <tr>
+                                        <th style="font-size: 1.35rem;">Item Description</th>
+                                        <th class="text-center" style="font-size: 1.35rem; width: 100px;">Quantity</th>
+                                        <th class="text-right" style="font-size: 1.35rem; width: 120px;">Unit Price</th>
+                                        <th class="text-right" style="font-size: 1.35rem; width: 130px;">Line Total</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for item in order_items %}
+                                    <tr>
+                                        <td class="font-weight-500" style="font-size: 1.4rem; color: #222;">
+                                            {{ item.items }}
+                                        </td>
+                                        <td class="text-center" style="font-size: 1.4rem; color: #555;">
+                                            {{ item.quantity }}
+                                        </td>
+                                        <td class="text-right" style="font-size: 1.4rem; color: #555;">
+                                            ${{ item.price }}
+                                        </td>
+                                        <td class="text-right font-weight-bold" style="font-size: 1.45rem; color: #333;">
+                                            ${{ item.total }}
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                    <tr style="background-color: #fbfbfb;">
+                                        <td colspan="3" class="text-right font-weight-bold" style="font-size: 1.5rem; color: #333;">
+                                            Order Grand Total:
+                                        </td>
+                                        <td class="text-right font-weight-bold text-primary" style="font-size: 1.9rem;">
+                                            ${{ order.price }}
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <!-- Actions -->
+                        <div class="d-flex justify-content-between align-items-center flex-wrap pt-3 border-top" style="gap: 15px;">
+                            <a href="{% url 'core:customer-dashboard' %}" class="btn btn-outline-dark rounded px-4 py-2 font-weight-500" style="font-size: 1.35rem;">
+                                <i class="icon-long-arrow-left mr-2"></i>Back to Dashboard
+                            </a>
+
+                            <div class="d-flex" style="gap: 10px;">
+                                <button type="button" onclick="window.print();" class="btn btn-outline-primary rounded px-4 py-2" style="font-size: 1.35rem;">
+                                    <i class="icon-print mr-1"></i> Print Receipt
+                                </button>
+                                <a href="{% url 'core:products' %}" class="btn btn-primary rounded px-4 py-2 font-weight-bold" style="font-size: 1.35rem;">
+                                    <span>Continue Shopping</span>
+                                </a>
+                            </div>
+                        </div>
+                    </div><!-- End Card -->
+                </div>
+            </div><!-- End .row -->
+        </div><!-- End .container -->
+    </div><!-- End .page-content -->
+</main>
+{% endblock content %}

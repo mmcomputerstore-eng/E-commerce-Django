@@ -79,7 +79,7 @@
                                     </li>
                                     {% if request.user.is_authenticated %}
                                         <li class="login">
-                                            <a href="#"><i class="icon-user"></i>Hello, {{ request.user.username|title }}</a>
+                                            <a href="{% url 'core:customer-dashboard' %}"><i class="icon-user"></i>Hello, {{ request.user.username|title }}</a>
                                         </li>
                                         <li class="login">
                                             <a href="{% url 'userauth:logout' %}"><i class="icon-long-arrow-right"></i>Log Out</a>
@@ -536,9 +536,9 @@
                                                             <!-- End .menu-title -->
                                                             <ul>
                                                                 <li><a href="{% url 'core:cart' %}">Cart</a></li>
-                                                                <li><a href="checkout.html">Checkout</a></li>
+                                                                <li><a href="{% url 'core:checkout' %}">Checkout</a></li>
                                                                 <li><a href="wishlist.html">Wishlist</a></li>
-                                                                <li><a href="dashboard.html">My Account</a></li>
+                                                                <li><a href="{% url 'core:customer-dashboard' %}">My Account</a></li>
                                                                 <li><a href="#">Lookbook</a></li>
                                                             </ul>
                                                         </div><!-- End .col-md-6 -->
@@ -848,6 +848,7 @@
 
                                 <ul class="widget-list">
                                     {% if request.user.is_authenticated %}
+                                        <li><a href="{% url 'core:customer-dashboard' %}">Customer Dashboard</a></li>
                                         <li><a href="{% url 'userauth:logout' %}">Log Out</a></li>
                                     {% else %}
                                         <li><a href="{% url 'userauth:login' %}">Sign In</a></li>
@@ -966,7 +967,7 @@
                                     <li><a href="product-category-fullwidth.html"><span>Product Category Fullwidth<span
                                                     class="tip tip-new">New</span></span></a></li>
                                     <li><a href="{% url 'core:cart' %}">Cart</a></li>
-                                    <li><a href="checkout.html">Checkout</a></li>
+                                    <li><a href="{% url 'core:checkout' %}">Checkout</a></li>
                                     <li><a href="wishlist.html">Wishlist</a></li>
                                     <li><a href="#">Lookbook</a></li>
                                 </ul>

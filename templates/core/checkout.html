@@ -1,0 +1,387 @@
+{% extends "partials/base.html" %}
+{% load static %}
+
+{% block title %}Checkout | MM Computer Store{% endblock title %}
+
+{% block content %}
+<main class="main">
+    <!-- Page Header -->
+    <div class="page-header text-center" style="background-image: url('{% static 'assets/images/page-header-bg.jpg' %}'); background-size: cover; background-position: center; padding: 4rem 0;">
+        <div class="container">
+            <h1 class="page-title text-white font-weight-bold" style="font-size: 3.2rem; letter-spacing: -0.5px;">
+                Checkout
+                <span class="text-white-50 mt-1" style="font-size: 1.5rem; font-weight: normal; display: block;">Complete your order with your active shipping address</span>
+            </h1>
+        </div><!-- End .container -->
+    </div><!-- End .page-header -->
+
+    <!-- Breadcrumb Navigation -->
+    <nav aria-label="breadcrumb" class="breadcrumb-nav mb-4">
+        <div class="container">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{% url 'core:home' %}">Home</a></li>
+                <li class="breadcrumb-item"><a href="{% url 'core:products' %}">Shop</a></li>
+                <li class="breadcrumb-item"><a href="{% url 'core:cart' %}">Cart</a></li>
+                <li class="breadcrumb-item active" aria-current="page">Checkout</li>
+            </ol>
+        </div><!-- End .container -->
+    </nav><!-- End .breadcrumb-nav -->
+
+    <div class="page-content pb-6">
+        <div class="checkout">
+            <div class="container">
+                {% if messages %}
+                <div class="mb-4">
+                    {% for message in messages %}
+                    <div class="alert alert-{{ message.tags|default:'info' }} alert-dismissible fade show" role="alert">
+                        {{ message }}
+                        <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% endif %}
+
+                <form action="{% url 'core:checkout' %}" method="POST" id="checkoutOrderForm">
+                    {% csrf_token %}
+                    <div class="row">
+                        <!-- Left Column: Shipping Address & Customer Details -->
+                        <div class="col-lg-8">
+                            <div class="bg-white rounded shadow-sm border p-4 mb-4">
+                                <h2 class="checkout-title font-weight-bold mb-3 pb-2 border-bottom" style="font-size: 2rem; color: #222;">
+                                    <i class="icon-user text-primary mr-2"></i>Customer Information
+                                </h2>
+
+                                <div class="row">
+                                    <div class="col-sm-6 mb-3">
+                                        <label style="font-size: 1.3rem; font-weight: 500; color: #666;">Full Name</label>
+                                        <input type="text" class="form-control" value="{{ request.user.username.title }}" readonly style="background-color: #f8f9fa; font-weight: 500; font-size: 1.4rem;">
+                                    </div>
+                                    <div class="col-sm-6 mb-3">
+                                        <label style="font-size: 1.3rem; font-weight: 500; color: #666;">Email Address</label>
+                                        <input type="email" class="form-control" value="{{ request.user.email }}" readonly style="background-color: #f8f9fa; font-weight: 500; font-size: 1.4rem;">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Active Shipping Address Section -->
+                            <div class="bg-white rounded shadow-sm border p-4 mb-4">
+                                <div class="d-flex align-items-center justify-content-between mb-3 pb-2 border-bottom">
+                                    <h2 class="checkout-title font-weight-bold mb-0" style="font-size: 2rem; color: #222;">
+                                        <i class="icon-map-marker text-success mr-2"></i>Active Shipping Address
+                                    </h2>
+                                    <span class="badge badge-success px-3 py-1 font-weight-500" style="font-size: 1.2rem; border-radius: 20px;">
+                                        DELIVERY TARGET
+                                    </span>
+                                </div>
+
+                                <!-- Current Active Address Box -->
+                                <div id="activeAddressDisplayContainer" class="p-4 mb-4 rounded" style="border: 2px solid #28a745; background-color: #f9fdfa; transition: all 0.3s ease;">
+                                    <div class="d-flex align-items-center justify-content-between mb-2">
+                                        <span class="text-success font-weight-bold" style="font-size: 1.4rem;">
+                                            <i class="icon-check-circle mr-1"></i> Current Active Address
+                                        </span>
+                                        <span class="badge badge-pill badge-success" style="font-size: 1.15rem; padding: 0.4rem 1rem;">ACTIVE</span>
+                                    </div>
+                                    <p id="activeAddressText" class="mb-0 font-weight-500" style="font-size: 1.55rem; color: #222; line-height: 1.5;">
+                                        {% if active_address %}
+                                            {{ active_address.address }}
+                                        {% else %}
+                                            <span class="text-muted font-italic">No active address found. Please enter an address below.</span>
+                                        {% endif %}
+                                    </p>
+                                </div>
+
+                                <!-- Saved Addresses List (if user has existing addresses) -->
+                                {% if addresses %}
+                                <div class="mb-4">
+                                    <h4 class="font-weight-600 mb-2" style="font-size: 1.5rem; color: #444;">
+                                        Saved Addresses ({{ addresses.count }}):
+                                    </h4>
+                                    <div class="list-group" id="savedAddressesList">
+                                        {% for addr in addresses %}
+                                        <div class="list-group-item d-flex align-items-center justify-content-between p-3 mb-2 rounded border address-item-row" id="address-row-{{ addr.id }}" style="background-color: {% if addr.status %}#f0fff4{% else %}#ffffff{% endif %}; border-color: {% if addr.status %}#28a745{% else %}#e0e0e0{% endif %} !important;">
+                                            <div class="custom-control custom-radio d-flex align-items-center flex-grow-1">
+                                                <input type="radio" id="addr_radio_{{ addr.id }}" name="selected_address_id" value="{{ addr.id }}" class="custom-control-input address-radio" {% if addr.status %}checked{% endif %} data-id="{{ addr.id }}">
+                                                <label class="custom-control-label font-weight-normal mb-0 ml-2" for="addr_radio_{{ addr.id }}" style="font-size: 1.4rem; color: #333; cursor: pointer;">
+                                                    {{ addr.address }}
+                                                </label>
+                                            </div>
+
+                                            <div class="address-status-col text-right ml-3" style="flex-shrink: 0;">
+                                                {% if addr.status %}
+                                                <span class="badge badge-success px-2 py-1 active-badge" id="badge-{{ addr.id }}" style="font-size: 1.15rem;">Active</span>
+                                                {% else %}
+                                                <button type="button" class="btn btn-outline-primary btn-sm rounded-pill btn-activate-address" data-id="{{ addr.id }}" style="font-size: 1.2rem; padding: 0.3rem 1.2rem;">
+                                                    Deliver Here
+                                                </button>
+                                                {% endif %}
+                                            </div>
+                                        </div>
+                                        {% endfor %}
+                                    </div>
+                                </div>
+                                {% endif %}
+
+                                <!-- Add New Shipping Address Input -->
+                                <div class="mt-4 pt-3 border-top">
+                                    <h4 class="font-weight-600 mb-2" style="font-size: 1.5rem; color: #333;">
+                                        <i class="icon-plus-circle text-primary mr-1"></i> Add / Use New Address
+                                    </h4>
+                                    <p class="text-muted mb-2" style="font-size: 1.3rem;">
+                                        Enter a new address below. It will automatically be saved and set as your active delivery address.
+                                    </p>
+                                    <div class="form-group mb-2">
+                                        <textarea name="new_address" id="newAddressField" class="form-control" rows="3" placeholder="Enter street address, building/flat no., city, state, postal code..." style="font-size: 1.4rem; padding: 1.2rem; border-radius: 6px;"></textarea>
+                                    </div>
+                                    <button type="button" id="saveAndActivateAddressBtn" class="btn btn-outline-success rounded" style="font-size: 1.3rem; padding: 0.8rem 1.8rem;">
+                                        <i class="icon-check mr-1"></i> Save & Set as Active Address
+                                    </button>
+                                </div>
+                            </div><!-- End Shipping Address Section -->
+
+                            <!-- Order Notes -->
+                            <div class="bg-white rounded shadow-sm border p-4 mb-4">
+                                <h3 class="font-weight-600 mb-2" style="font-size: 1.6rem; color: #333;">Order Notes (Optional)</h3>
+                                <textarea class="form-control" name="order_notes" rows="2" placeholder="Special notes or instructions for delivery..." style="font-size: 1.35rem;"></textarea>
+                            </div>
+                        </div><!-- End .col-lg-8 -->
+
+                        <!-- Right Column: Order Summary & Place Order -->
+                        <aside class="col-lg-4">
+                            <div class="summary bg-white rounded shadow-sm border p-4">
+                                <h3 class="summary-title font-weight-bold mb-3 pb-3 border-bottom" style="font-size: 1.8rem; color: #222;">
+                                    Your Order ({{ cart_count }} item{{ cart_count|pluralize }})
+                                </h3>
+
+                                <!-- Items List -->
+                                <div class="checkout-items-list mb-3" style="max-height: 280px; overflow-y: auto; padding-right: 5px;">
+                                    {% for pid, item in cart_data.items %}
+                                    <div class="d-flex align-items-center justify-content-between py-2 border-bottom">
+                                        <div class="d-flex align-items-center" style="max-width: 70%;">
+                                            <div style="width: 48px; height: 48px; border-radius: 4px; overflow: hidden; border: 1px solid #eee; margin-right: 12px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; background: #fff;">
+                                                {% if item.image %}
+                                                <img src="{{ item.image }}" alt="{{ item.title }}" style="max-height: 100%; max-width: 100%; object-fit: contain;">
+                                                {% else %}
+                                                <img src="{% static 'assets/images/demos/demo-13/products/product-1.jpg' %}" alt="{{ item.title }}" style="max-height: 100%; max-width: 100%; object-fit: contain;">
+                                                {% endif %}
+                                            </div>
+                                            <div>
+                                                <a href="{% url 'core:product-details' pid %}" class="text-dark font-weight-500 d-block text-truncate" style="font-size: 1.35rem; max-width: 180px;" title="{{ item.title }}">
+                                                    {{ item.title }}
+                                                </a>
+                                                <span class="text-muted" style="font-size: 1.2rem;">Qty: {{ item.qty }} &times; ${{ item.price }}</span>
+                                            </div>
+                                        </div>
+                                        <div class="font-weight-600 text-right" style="font-size: 1.45rem; color: #333;">
+                                            ${{ item.total_price }}
+                                        </div>
+                                    </div>
+                                    {% endfor %}
+                                </div>
+
+                                <!-- Summary Totals -->
+                                <table class="table table-summary mb-3">
+                                    <tbody>
+                                        <tr class="summary-subtotal" style="border-bottom: 1px solid #f4f4f4;">
+                                            <td style="font-size: 1.4rem; color: #666; padding: 1rem 0;">Subtotal:</td>
+                                            <td class="text-right font-weight-bold" style="font-size: 1.55rem; color: #222; padding: 1rem 0;">${{ cart_total_amount }}</td>
+                                        </tr>
+                                        <tr class="summary-shipping" style="border-bottom: 1px solid #f4f4f4;">
+                                            <td style="font-size: 1.4rem; color: #666; padding: 1rem 0;">Shipping:</td>
+                                            <td class="text-right font-weight-500 text-success" style="font-size: 1.4rem; padding: 1rem 0;">Free Delivery</td>
+                                        </tr>
+                                        <tr class="summary-total" style="border-bottom: none;">
+                                            <td style="font-size: 1.7rem; font-weight: 700; color: #222; padding: 1.2rem 0 0.5rem;">Grand Total:</td>
+                                            <td class="text-right font-weight-bold" style="font-size: 2.2rem; color: #39f; padding: 1.2rem 0 0.5rem;">${{ cart_total_amount }}</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+
+                                <!-- Payment Method -->
+                                <div class="payment-options mb-4 p-3 rounded" style="background-color: #f8f9fa; border: 1px solid #e9ecef;">
+                                    <h4 class="font-weight-bold mb-2" style="font-size: 1.45rem; color: #333;">Payment Method</h4>
+                                    <div class="custom-control custom-radio mb-2">
+                                        <input type="radio" id="payment_cod" name="payment_method" value="cod" class="custom-control-input" checked>
+                                        <label class="custom-control-label font-weight-500" for="payment_cod" style="font-size: 1.35rem; color: #222; cursor: pointer;">
+                                            Cash on Delivery (COD)
+                                        </label>
+                                        <small class="d-block text-muted ml-0 mt-1" style="font-size: 1.2rem;">Pay easily in cash when your order arrives at your active address.</small>
+                                    </div>
+                                    <div class="custom-control custom-radio">
+                                        <input type="radio" id="payment_bank" name="payment_method" value="bank" class="custom-control-input">
+                                        <label class="custom-control-label font-weight-500" for="payment_bank" style="font-size: 1.35rem; color: #222; cursor: pointer;">
+                                            Direct Bank Transfer
+                                        </label>
+                                    </div>
+                                </div>
+
+                                <!-- Place Order Button -->
+                                <button type="submit" id="placeOrderBtn" class="btn btn-primary btn-order btn-block rounded shadow py-3 font-weight-bold" style="font-size: 1.5rem; letter-spacing: 0.5px;">
+                                    <span>PLACE ORDER</span><i class="icon-long-arrow-right ml-2"></i>
+                                </button>
+
+                                <div class="mt-4 pt-3 border-top text-center text-muted" style="font-size: 1.2rem;">
+                                    <div class="mb-1"><i class="icon-shield text-success mr-1"></i> Encrypted 256-Bit SSL Checkout</div>
+                                    <div><i class="icon-truck mr-1 text-primary"></i> Fast Doorstep Delivery</div>
+                                </div>
+                            </div><!-- End .summary -->
+                        </aside><!-- End .col-lg-4 -->
+                    </div><!-- End .row -->
+                </form>
+            </div><!-- End .container -->
+        </div><!-- End .checkout -->
+    </div><!-- End .page-content -->
+</main>
+{% endblock content %}
+
+{% block extra_js %}
+<script>
+$(document).ready(function() {
+    const csrfToken = $('input[name="csrfmiddlewaretoken"]').val();
+
+    // 1. Activate an existing saved address
+    $(document).on('click', '.btn-activate-address', function(e) {
+        e.preventDefault();
+        const $btn = $(this);
+        const addrId = $btn.data('id');
+
+        $btn.prop('disabled', true).text('Activating...');
+
+        $.ajax({
+            url: "{% url 'core:make-default-address' %}",
+            type: "POST",
+            data: {
+                id: addrId,
+                csrfmiddlewaretoken: csrfToken
+            },
+            dataType: "json",
+            success: function(response) {
+                if (response.status === 'success') {
+                    // Update Active Address Display box
+                    $('#activeAddressText').text(response.address_text);
+                    $('#activeAddressDisplayContainer').css('background-color', '#e6fffa');
+                    setTimeout(() => {
+                        $('#activeAddressDisplayContainer').css('background-color', '#f9fdfa');
+                    }, 600);
+
+                    // Update radio check
+                    $('#addr_radio_' + addrId).prop('checked', true);
+
+                    // Update rows styling and badges
+                    $('.address-item-row').each(function() {
+                        const rowId = $(this).attr('id').replace('address-row-', '');
+                        if (rowId == addrId) {
+                            $(this).css({'background-color': '#f0fff4', 'border-color': '#28a745'});
+                            $(this).find('.address-status-col').html('<span class="badge badge-success px-2 py-1 active-badge" style="font-size: 1.15rem;">Active</span>');
+                        } else {
+                            $(this).css({'background-color': '#ffffff', 'border-color': '#e0e0e0'});
+                            $(this).find('.address-status-col').html(
+                                '<button type="button" class="btn btn-outline-primary btn-sm rounded-pill btn-activate-address" data-id="' + rowId + '" style="font-size: 1.2rem; padding: 0.3rem 1.2rem;">Deliver Here</button>'
+                            );
+                        }
+                    });
+
+                    showCartToast("Active shipping address updated!");
+                }
+            },
+            error: function() {
+                $btn.prop('disabled', false).text('Deliver Here');
+                showCartToast("Failed to update active address.", "error");
+            }
+        });
+    });
+
+    // 2. Radio button change triggers activation
+    $(document).on('change', '.address-radio', function() {
+        const addrId = $(this).data('id');
+        const $btn = $('#address-row-' + addrId).find('.btn-activate-address');
+        if ($btn.length) {
+            $btn.trigger('click');
+        }
+    });
+
+    // 3. Save new address and activate immediately via AJAX
+    $('#saveAndActivateAddressBtn').on('click', function(e) {
+        e.preventDefault();
+        const addressText = $('#newAddressField').val().trim();
+        if (!addressText) {
+            alert("Please enter an address before saving.");
+            $('#newAddressField').focus();
+            return;
+        }
+
+        const $btn = $(this);
+        $btn.prop('disabled', true).html('<i class="icon-refresh"></i> Saving...');
+
+        $.ajax({
+            url: "{% url 'core:save-address' %}",
+            type: "POST",
+            data: {
+                address: addressText,
+                csrfmiddlewaretoken: csrfToken
+            },
+            dataType: "json",
+            success: function(response) {
+                $btn.prop('disabled', false).html('<i class="icon-check mr-1"></i> Save & Set as Active Address');
+                if (response.status === 'success') {
+                    // Update Active address display
+                    $('#activeAddressText').text(response.address_text);
+                    $('#newAddressField').val('');
+
+                    // Prepend new address to saved addresses list
+                    const newRowHtml = `
+                        <div class="list-group-item d-flex align-items-center justify-content-between p-3 mb-2 rounded border address-item-row" id="address-row-${response.address_id}" style="background-color: #f0fff4; border-color: #28a745 !important;">
+                            <div class="custom-control custom-radio d-flex align-items-center flex-grow-1">
+                                <input type="radio" id="addr_radio_${response.address_id}" name="selected_address_id" value="${response.address_id}" class="custom-control-input address-radio" checked data-id="${response.address_id}">
+                                <label class="custom-control-label font-weight-normal mb-0 ml-2" for="addr_radio_${response.address_id}" style="font-size: 1.4rem; color: #333; cursor: pointer;">
+                                    ${response.address_text}
+                                </label>
+                            </div>
+                            <div class="address-status-col text-right ml-3" style="flex-shrink: 0;">
+                                <span class="badge badge-success px-2 py-1 active-badge" style="font-size: 1.15rem;">Active</span>
+                            </div>
+                        </div>
+                    `;
+
+                    // Update existing rows
+                    $('.address-item-row').each(function() {
+                        const rowId = $(this).attr('id').replace('address-row-', '');
+                        $(this).css({'background-color': '#ffffff', 'border-color': '#e0e0e0'});
+                        $(this).find('.address-status-col').html(
+                            '<button type="button" class="btn btn-outline-primary btn-sm rounded-pill btn-activate-address" data-id="' + rowId + '" style="font-size: 1.2rem; padding: 0.3rem 1.2rem;">Deliver Here</button>'
+                        );
+                    });
+
+                    if ($('#savedAddressesList').length) {
+                        $('#savedAddressesList').prepend(newRowHtml);
+                    }
+
+                    showCartToast("New address saved and set as active!");
+                }
+            },
+            error: function() {
+                $btn.prop('disabled', false).html('<i class="icon-check mr-1"></i> Save & Set as Active Address');
+                showCartToast("Failed to save address.", "error");
+            }
+        });
+    });
+
+    // 4. Form submission validation
+    $('#checkoutOrderForm').on('submit', function(e) {
+        const activeText = $('#activeAddressText').text().trim();
+        const newText = $('#newAddressField').val().trim();
+
+        if ((!activeText || activeText.indexOf('No active address found') !== -1) && !newText) {
+            e.preventDefault();
+            alert("Please enter or select a valid active shipping address to place your order.");
+            $('#newAddressField').focus();
+            return false;
+        }
+
+        $('#placeOrderBtn').prop('disabled', true).html('<span>Processing Order...</span> <i class="icon-refresh"></i>');
+    });
+});
+</script>
+{% endblock extra_js %}

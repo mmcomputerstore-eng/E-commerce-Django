@@ -1,0 +1,702 @@
+{% extends "partials/base.html" %}
+{% load static %}
+
+{% block title %}Customer Dashboard | MM Computer Store{% endblock title %}
+
+{% block content %}
+<main class="main">
+    <!-- Page Header -->
+    <div class="page-header text-center" style="background-image: url('{% static 'assets/images/page-header-bg.jpg' %}'); background-size: cover; background-position: center; padding: 4rem 0;">
+        <div class="container">
+            <h1 class="page-title text-white font-weight-bold" style="font-size: 3.2rem; letter-spacing: -0.5px;">
+                Customer Dashboard
+                <span class="text-white-50 mt-1" style="font-size: 1.5rem; font-weight: normal; display: block;">Track orders, view history, and manage your delivery addresses</span>
+            </h1>
+        </div><!-- End .container -->
+    </div><!-- End .page-header -->
+
+    <!-- Breadcrumb Navigation -->
+    <nav aria-label="breadcrumb" class="breadcrumb-nav mb-4">
+        <div class="container">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{% url 'core:home' %}">Home</a></li>
+                <li class="breadcrumb-item active" aria-current="page">My Account / Dashboard</li>
+            </ol>
+        </div><!-- End .container -->
+    </nav><!-- End .breadcrumb-nav -->
+
+    <div class="page-content pb-6">
+        <div class="dashboard">
+            <div class="container">
+                {% if messages %}
+                <div class="mb-4">
+                    {% for message in messages %}
+                    <div class="alert alert-{{ message.tags|default:'info' }} alert-dismissible fade show" role="alert">
+                        {{ message }}
+                        <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% endif %}
+
+                <div class="row">
+                    <!-- Left Sidebar Menu -->
+                    <aside class="col-md-4 col-lg-3 mb-4 mb-md-0">
+                        <!-- Profile Brief Card -->
+                        <div class="bg-white rounded shadow-sm border p-4 mb-4 text-center">
+                            <div class="mb-3 mx-auto" style="width: 80px; height: 80px; border-radius: 50%; background: linear-gradient(135deg, #1cc0a0, #007bff); color: #fff; display: flex; align-items: center; justify-content: center; font-size: 3rem; font-weight: 700; box-shadow: 0 4px 15px rgba(0, 123, 255, 0.25);">
+                                {{ request.user.username|make_list|first|upper }}
+                            </div>
+                            <h3 class="font-weight-bold mb-1" style="font-size: 1.8rem; color: #333;">
+                                {{ request.user.username|title }}
+                            </h3>
+                            <p class="text-muted mb-2" style="font-size: 1.3rem;">
+                                {{ request.user.email }}
+                            </p>
+                            <span class="badge badge-light border text-muted px-3 py-1" style="font-size: 1.15rem; border-radius: 12px;">
+                                <i class="icon-calendar mr-1"></i>Member since {{ request.user.date_joined|date:"M Y" }}
+                            </span>
+                        </div>
+
+                        <!-- Dashboard Navigation Tabs -->
+                        <div class="bg-white rounded shadow-sm border p-3">
+                            <ul class="nav nav-dashboard flex-column mb-0" id="dashboard-tab" role="tablist">
+                                <li class="nav-item">
+                                    <a class="nav-link active" id="tab-dashboard-link" data-toggle="tab" href="#tab-dashboard" role="tab" aria-controls="tab-dashboard" aria-selected="true" style="font-size: 1.45rem; padding: 1.2rem 1.5rem;">
+                                        <i class="icon-home mr-2 text-primary"></i> Overview
+                                    </a>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="nav-link d-flex align-items-center justify-content-between" id="tab-orders-link" data-toggle="tab" href="#tab-orders" role="tab" aria-controls="tab-orders" aria-selected="false" style="font-size: 1.45rem; padding: 1.2rem 1.5rem;">
+                                        <span><i class="icon-shopping-cart mr-2 text-primary"></i> Orders History</span>
+                                        <span class="badge badge-primary badge-pill ml-auto" style="font-size: 1.1rem;">{{ total_orders_count }}</span>
+                                    </a>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="nav-link" id="tab-address-link" data-toggle="tab" href="#tab-address" role="tab" aria-controls="tab-address" aria-selected="false" style="font-size: 1.45rem; padding: 1.2rem 1.5rem;">
+                                        <i class="icon-map-marker mr-2 text-primary"></i> Delivery Addresses
+                                    </a>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="nav-link" id="tab-account-link" data-toggle="tab" href="#tab-account" role="tab" aria-controls="tab-account" aria-selected="false" style="font-size: 1.45rem; padding: 1.2rem 1.5rem;">
+                                        <i class="icon-user mr-2 text-primary"></i> Account Profile
+                                    </a>
+                                </li>
+                                <li class="nav-item border-top mt-2 pt-2">
+                                    <a class="nav-link text-danger" href="{% url 'userauth:logout' %}" style="font-size: 1.45rem; padding: 1.2rem 1.5rem;">
+                                        <i class="icon-sign-out mr-2"></i> Log Out
+                                    </a>
+                                </li>
+                            </ul>
+                        </div>
+                    </aside><!-- End .col-md-4 col-lg-3 -->
+
+                    <!-- Right Tab Content -->
+                    <div class="col-md-8 col-lg-9">
+                        <div class="tab-content">
+                            <!-- TAB 1: OVERVIEW -->
+                            <div class="tab-pane fade show active" id="tab-dashboard" role="tabpanel" aria-labelledby="tab-dashboard-link">
+                                <!-- Welcome Greeting Card -->
+                                <div class="bg-white rounded shadow-sm border p-4 mb-4">
+                                    <h2 class="font-weight-bold mb-2" style="font-size: 2.2rem; color: #222;">
+                                        Welcome, {{ request.user.username|title }}! 👋
+                                    </h2>
+                                    <p class="text-muted mb-0" style="font-size: 1.45rem; line-height: 1.6;">
+                                        From your account dashboard, you can track your recent orders, review in-process and delivered shipments, and manage your delivery addresses.
+                                    </p>
+                                </div>
+
+                                <!-- Key Metrics Cards Grid -->
+                                <div class="row mb-4">
+                                    <!-- Total Orders -->
+                                    <div class="col-sm-6 col-lg-3 mb-3">
+                                        <div class="card p-3 rounded shadow-sm border text-center h-100" style="background: linear-gradient(135deg, #fdfbfb 0%, #ebedee 100%);">
+                                            <div class="text-primary mb-2" style="font-size: 2.6rem;">
+                                                <i class="icon-shopping-bag"></i>
+                                            </div>
+                                            <div class="font-weight-bold" style="font-size: 2.4rem; color: #222;">
+                                                {{ total_orders_count }}
+                                            </div>
+                                            <div class="text-muted" style="font-size: 1.3rem; font-weight: 500;">
+                                                Total Orders
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- In Process -->
+                                    <div class="col-sm-6 col-lg-3 mb-3">
+                                        <div class="card p-3 rounded shadow-sm border text-center h-100" style="background: linear-gradient(135deg, #fffbf0 0%, #fff3cd 100%); border-color: #ffeeba !important;">
+                                            <div class="text-warning mb-2" style="font-size: 2.6rem;">
+                                                <i class="icon-refresh"></i>
+                                            </div>
+                                            <div class="font-weight-bold text-warning" style="font-size: 2.4rem;">
+                                                {{ processing_count }}
+                                            </div>
+                                            <div class="text-muted" style="font-size: 1.3rem; font-weight: 500;">
+                                                In Process
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Shipped -->
+                                    <div class="col-sm-6 col-lg-3 mb-3">
+                                        <div class="card p-3 rounded shadow-sm border text-center h-100" style="background: linear-gradient(135deg, #f0f7ff 0%, #d1ecf1 100%); border-color: #bee5eb !important;">
+                                            <div class="text-info mb-2" style="font-size: 2.6rem;">
+                                                <i class="icon-truck"></i>
+                                            </div>
+                                            <div class="font-weight-bold text-info" style="font-size: 2.4rem;">
+                                                {{ shipped_count }}
+                                            </div>
+                                            <div class="text-muted" style="font-size: 1.3rem; font-weight: 500;">
+                                                Shipped
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Delivered -->
+                                    <div class="col-sm-6 col-lg-3 mb-3">
+                                        <div class="card p-3 rounded shadow-sm border text-center h-100" style="background: linear-gradient(135deg, #f0fff4 0%, #d4edda 100%); border-color: #c3e6cb !important;">
+                                            <div class="text-success mb-2" style="font-size: 2.6rem;">
+                                                <i class="icon-check-circle"></i>
+                                            </div>
+                                            <div class="font-weight-bold text-success" style="font-size: 2.4rem;">
+                                                {{ delivered_count }}
+                                            </div>
+                                            <div class="text-muted" style="font-size: 1.3rem; font-weight: 500;">
+                                                Delivered
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div><!-- End Metrics Row -->
+
+                                <!-- Active Address Snapshot -->
+                                <div class="bg-white rounded shadow-sm border p-4 mb-4">
+                                    <div class="d-flex align-items-center justify-content-between mb-3 pb-2 border-bottom">
+                                        <h3 class="font-weight-bold mb-0" style="font-size: 1.8rem; color: #333;">
+                                            <i class="icon-map-marker text-success mr-2"></i>Active Delivery Address
+                                        </h3>
+                                        <a href="#tab-address" class="btn btn-outline-primary btn-sm rounded-pill switch-to-tab" data-target="#tab-address-link" style="font-size: 1.2rem; padding: 0.3rem 1.2rem;">
+                                            Manage Addresses
+                                        </a>
+                                    </div>
+                                    {% if active_address %}
+                                    <div class="p-3 rounded border" style="background-color: #f9fdfa; border-left: 4px solid #28a745 !important;">
+                                        <div class="d-flex align-items-center justify-content-between mb-1">
+                                            <span class="badge badge-success px-2 py-1" style="font-size: 1.15rem;">ACTIVE FOR DELIVERIES</span>
+                                        </div>
+                                        <p class="mb-0 font-weight-500" style="font-size: 1.5rem; color: #222;">
+                                            {{ active_address.address }}
+                                        </p>
+                                    </div>
+                                    {% else %}
+                                    <div class="alert alert-warning mb-0" style="font-size: 1.35rem;">
+                                        No active delivery address configured. <a href="#tab-address" class="alert-link switch-to-tab" data-target="#tab-address-link">Add your delivery address</a> to speed up future checkouts.
+                                    </div>
+                                    {% endif %}
+                                </div>
+
+                                <!-- Recent Orders (Top 3) -->
+                                <div class="bg-white rounded shadow-sm border p-4">
+                                    <div class="d-flex align-items-center justify-content-between mb-3 pb-2 border-bottom">
+                                        <h3 class="font-weight-bold mb-0" style="font-size: 1.8rem; color: #333;">
+                                            <i class="icon-clock text-primary mr-2"></i>Recent Orders
+                                        </h3>
+                                        <a href="#tab-orders" class="btn btn-outline-dark btn-sm rounded-pill switch-to-tab" data-target="#tab-orders-link" style="font-size: 1.2rem; padding: 0.3rem 1.2rem;">
+                                            View All ({{ total_orders_count }})
+                                        </a>
+                                    </div>
+
+                                    {% if orders %}
+                                    <div class="table-responsive">
+                                        <table class="table table-bordered mb-0">
+                                            <thead class="thead-light">
+                                                <tr>
+                                                    <th style="font-size: 1.3rem;">Order ID</th>
+                                                    <th style="font-size: 1.3rem;">Date</th>
+                                                    <th style="font-size: 1.3rem;">Status</th>
+                                                    <th style="font-size: 1.3rem;">Total</th>
+                                                    <th style="font-size: 1.3rem; text-align: center;">Action</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                {% for o in orders|slice:":3" %}
+                                                <tr>
+                                                    <td class="font-weight-bold" style="font-size: 1.35rem;">#ORD-{{ o.id }}</td>
+                                                    <td class="text-muted" style="font-size: 1.3rem;">{{ o.order_date|date:"M d, Y" }}</td>
+                                                    <td>
+                                                        {% if o.product_status == 'processing' %}
+                                                        <span class="badge badge-warning text-white px-2 py-1" style="font-size: 1.15rem;"><i class="icon-refresh mr-1"></i>In Process</span>
+                                                        {% elif o.product_status == 'shipped' %}
+                                                        <span class="badge badge-info px-2 py-1" style="font-size: 1.15rem;"><i class="icon-truck mr-1"></i>Shipped</span>
+                                                        {% elif o.product_status == 'delivered' %}
+                                                        <span class="badge badge-success px-2 py-1" style="font-size: 1.15rem;"><i class="icon-check mr-1"></i>Delivered</span>
+                                                        {% else %}
+                                                        <span class="badge badge-secondary px-2 py-1" style="font-size: 1.15rem;">{{ o.product_status|title }}</span>
+                                                        {% endif %}
+                                                    </td>
+                                                    <td class="font-weight-bold text-primary" style="font-size: 1.4rem;">${{ o.price }}</td>
+                                                    <td class="text-center">
+                                                        <button type="button" class="btn btn-outline-primary btn-sm rounded btn-view-order-modal" data-id="{{ o.id }}" style="font-size: 1.2rem; padding: 0.3rem 1rem;">
+                                                            View Details
+                                                        </button>
+                                                    </td>
+                                                </tr>
+                                                {% endfor %}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                    {% else %}
+                                    <div class="text-center py-4 text-muted">
+                                        <i class="icon-shopping-bag mb-2" style="font-size: 3rem; opacity: 0.4;"></i>
+                                        <p class="mb-0" style="font-size: 1.4rem;">You haven't placed any orders yet.</p>
+                                    </div>
+                                    {% endif %}
+                                </div>
+                            </div><!-- End #tab-dashboard -->
+
+                            <!-- TAB 2: ORDERS HISTORY (ALL, IN PROCESS, SHIPPED, DELIVERED) -->
+                            <div class="tab-pane fade" id="tab-orders" role="tabpanel" aria-labelledby="tab-orders-link">
+                                <div class="bg-white rounded shadow-sm border p-4">
+                                    <div class="d-flex align-items-center justify-content-between mb-4 pb-2 border-bottom flex-wrap">
+                                        <h2 class="font-weight-bold mb-2 mb-sm-0" style="font-size: 2.2rem; color: #222;">
+                                            <i class="icon-shopping-cart text-primary mr-2"></i>Orders History
+                                        </h2>
+                                        <span class="text-muted" style="font-size: 1.35rem;">
+                                            Total Spent: <strong class="text-primary">${{ total_spent }}</strong>
+                                        </span>
+                                    </div>
+
+                                    <!-- Filter Navigation Pills -->
+                                    <ul class="nav nav-pills mb-4" id="orders-filter-pills" role="tablist">
+                                        <li class="nav-item mr-2 mb-2">
+                                            <a class="nav-link active rounded-pill px-4 py-2 font-weight-500" id="pill-all-tab" data-toggle="pill" href="#pill-all" role="tab" aria-selected="true" style="font-size: 1.35rem;">
+                                                All Orders <span class="badge badge-light ml-1">{{ total_orders_count }}</span>
+                                            </a>
+                                        </li>
+                                        <li class="nav-item mr-2 mb-2">
+                                            <a class="nav-link rounded-pill px-4 py-2 font-weight-500" id="pill-processing-tab" data-toggle="pill" href="#pill-processing" role="tab" aria-selected="false" style="font-size: 1.35rem;">
+                                                <i class="icon-refresh mr-1 text-warning"></i>In Process <span class="badge badge-warning text-white ml-1">{{ processing_count }}</span>
+                                            </a>
+                                        </li>
+                                        <li class="nav-item mr-2 mb-2">
+                                            <a class="nav-link rounded-pill px-4 py-2 font-weight-500" id="pill-shipped-tab" data-toggle="pill" href="#pill-shipped" role="tab" aria-selected="false" style="font-size: 1.35rem;">
+                                                <i class="icon-truck mr-1 text-info"></i>Shipped <span class="badge badge-info ml-1">{{ shipped_count }}</span>
+                                            </a>
+                                        </li>
+                                        <li class="nav-item mb-2">
+                                            <a class="nav-link rounded-pill px-4 py-2 font-weight-500" id="pill-delivered-tab" data-toggle="pill" href="#pill-delivered" role="tab" aria-selected="false" style="font-size: 1.35rem;">
+                                                <i class="icon-check mr-1 text-success"></i>Delivered <span class="badge badge-success ml-1">{{ delivered_count }}</span>
+                                            </a>
+                                        </li>
+                                    </ul>
+
+                                    <!-- Filter Tab Content -->
+                                    <div class="tab-content" id="orders-pills-content">
+                                        <!-- ALL ORDERS -->
+                                        <div class="tab-pane fade show active" id="pill-all" role="tabpanel">
+                                            {% if orders %}
+                                                {% include "core/partials/orders_table.html" with order_list=orders table_id="all-orders" %}
+                                            {% else %}
+                                                <div class="text-center py-5 text-muted">
+                                                    <i class="icon-shopping-cart mb-3" style="font-size: 4rem; opacity: 0.3;"></i>
+                                                    <h3 style="font-size: 1.8rem; color: #555;">No Orders Found</h3>
+                                                    <p style="font-size: 1.4rem;">You haven't placed any orders yet.</p>
+                                                    <a href="{% url 'core:products' %}" class="btn btn-primary rounded mt-2 px-4 py-2">Start Shopping</a>
+                                                </div>
+                                            {% endif %}
+                                        </div>
+
+                                        <!-- IN PROCESS ORDERS -->
+                                        <div class="tab-pane fade" id="pill-processing" role="tabpanel">
+                                            {% if orders_processing %}
+                                                {% include "core/partials/orders_table.html" with order_list=orders_processing table_id="processing-orders" %}
+                                            {% else %}
+                                                <div class="text-center py-5 text-muted">
+                                                    <i class="icon-refresh mb-3 text-warning" style="font-size: 4rem; opacity: 0.5;"></i>
+                                                    <h3 style="font-size: 1.8rem; color: #555;">No In-Process Orders</h3>
+                                                    <p style="font-size: 1.4rem;">You have no orders currently being processed.</p>
+                                                </div>
+                                            {% endif %}
+                                        </div>
+
+                                        <!-- SHIPPED ORDERS -->
+                                        <div class="tab-pane fade" id="pill-shipped" role="tabpanel">
+                                            {% if orders_shipped %}
+                                                {% include "core/partials/orders_table.html" with order_list=orders_shipped table_id="shipped-orders" %}
+                                            {% else %}
+                                                <div class="text-center py-5 text-muted">
+                                                    <i class="icon-truck mb-3 text-info" style="font-size: 4rem; opacity: 0.5;"></i>
+                                                    <h3 style="font-size: 1.8rem; color: #555;">No Shipped Orders</h3>
+                                                    <p style="font-size: 1.4rem;">You have no orders currently out for delivery.</p>
+                                                </div>
+                                            {% endif %}
+                                        </div>
+
+                                        <!-- DELIVERED ORDERS -->
+                                        <div class="tab-pane fade" id="pill-delivered" role="tabpanel">
+                                            {% if orders_delivered %}
+                                                {% include "core/partials/orders_table.html" with order_list=orders_delivered table_id="delivered-orders" %}
+                                            {% else %}
+                                                <div class="text-center py-5 text-muted">
+                                                    <i class="icon-check-circle mb-3 text-success" style="font-size: 4rem; opacity: 0.5;"></i>
+                                                    <h3 style="font-size: 1.8rem; color: #555;">No Delivered Orders Yet</h3>
+                                                    <p style="font-size: 1.4rem;">Orders you receive will show up here as delivered.</p>
+                                                </div>
+                                            {% endif %}
+                                        </div>
+                                    </div><!-- End Filter Tab Content -->
+                                </div>
+                            </div><!-- End #tab-orders -->
+
+                            <!-- TAB 3: ADDRESSES -->
+                            <div class="tab-pane fade" id="tab-address" role="tabpanel" aria-labelledby="tab-address-link">
+                                <div class="bg-white rounded shadow-sm border p-4 mb-4">
+                                    <h2 class="font-weight-bold mb-3 pb-2 border-bottom" style="font-size: 2.2rem; color: #222;">
+                                        <i class="icon-map-marker text-success mr-2"></i>Delivery Addresses
+                                    </h2>
+
+                                    <!-- Active Address Highlight Card -->
+                                    <div class="p-4 mb-4 rounded border" style="background-color: #f9fdfa; border: 2px solid #28a745 !important;">
+                                        <div class="d-flex align-items-center justify-content-between mb-2">
+                                            <h4 class="mb-0 text-success font-weight-bold" style="font-size: 1.6rem;">
+                                                <i class="icon-check-circle mr-1"></i> Active Shipping Address
+                                            </h4>
+                                            <span class="badge badge-success px-3 py-1 font-weight-500" style="font-size: 1.2rem; border-radius: 20px;">
+                                                DEFAULT
+                                            </span>
+                                        </div>
+                                        <p id="dashboardActiveAddrText" class="mb-0 font-weight-500" style="font-size: 1.55rem; color: #222;">
+                                            {% if active_address %}
+                                                {{ active_address.address }}
+                                            {% else %}
+                                                <span class="text-muted">No active address selected yet.</span>
+                                            {% endif %}
+                                        </p>
+                                    </div>
+
+                                    <!-- Saved Addresses List -->
+                                    <h4 class="font-weight-600 mb-3" style="font-size: 1.6rem; color: #333;">All Saved Addresses</h4>
+                                    <div class="list-group mb-4" id="dashboardAddressList">
+                                        {% for addr in addresses %}
+                                        <div class="list-group-item d-flex align-items-center justify-content-between p-3 mb-2 rounded border dashboard-addr-row" id="dash-addr-row-{{ addr.id }}" style="background-color: {% if addr.status %}#f0fff4{% else %}#ffffff{% endif %}; border-color: {% if addr.status %}#28a745{% else %}#e5e5e5{% endif %} !important;">
+                                            <div class="d-flex align-items-center flex-grow-1 mr-3">
+                                                <i class="icon-map-marker mr-3 {% if addr.status %}text-success{% else %}text-muted{% endif %}" style="font-size: 2rem;"></i>
+                                                <span style="font-size: 1.45rem; color: #333;">{{ addr.address }}</span>
+                                            </div>
+
+                                            <div class="dash-addr-action" style="flex-shrink: 0;">
+                                                {% if addr.status %}
+                                                <span class="badge badge-success px-3 py-2" style="font-size: 1.2rem;">Active</span>
+                                                {% else %}
+                                                <button type="button" class="btn btn-outline-primary btn-sm rounded-pill btn-dash-activate-addr" data-id="{{ addr.id }}" style="font-size: 1.2rem; padding: 0.35rem 1.4rem;">
+                                                    Set As Active
+                                                </button>
+                                                {% endif %}
+                                            </div>
+                                        </div>
+                                        {% empty %}
+                                        <div class="text-muted py-3 text-center">No addresses saved yet.</div>
+                                        {% endfor %}
+                                    </div>
+
+                                    <!-- Add New Address Form -->
+                                    <div class="p-4 rounded border bg-light">
+                                        <h4 class="font-weight-600 mb-2" style="font-size: 1.6rem; color: #333;">
+                                            <i class="icon-plus-circle text-primary mr-1"></i> Add New Address
+                                        </h4>
+                                        <div class="form-group mb-3">
+                                            <textarea id="dashboardNewAddrField" class="form-control" rows="3" placeholder="Enter complete delivery address..." style="font-size: 1.4rem; padding: 1.2rem;"></textarea>
+                                        </div>
+                                        <button type="button" id="dashboardSaveAddrBtn" class="btn btn-success rounded px-4 py-2 font-weight-500" style="font-size: 1.35rem;">
+                                            <i class="icon-check mr-1"></i> Save & Make Active
+                                        </button>
+                                    </div>
+                                </div>
+                            </div><!-- End #tab-address -->
+
+                            <!-- TAB 4: ACCOUNT DETAILS -->
+                            <div class="tab-pane fade" id="tab-account" role="tabpanel" aria-labelledby="tab-account-link">
+                                <div class="bg-white rounded shadow-sm border p-4">
+                                    <h2 class="font-weight-bold mb-3 pb-2 border-bottom" style="font-size: 2.2rem; color: #222;">
+                                        <i class="icon-user text-primary mr-2"></i>Account Details
+                                    </h2>
+
+                                    <form method="POST" action="{% url 'core:customer-dashboard' %}">
+                                        {% csrf_token %}
+                                        <input type="hidden" name="update_profile" value="1">
+
+                                        <div class="row">
+                                            <div class="col-sm-6 mb-3">
+                                                <label style="font-size: 1.35rem; font-weight: 500;">Username</label>
+                                                <input type="text" class="form-control" value="{{ request.user.username }}" readonly style="background-color: #f8f9fa; font-size: 1.4rem;">
+                                            </div>
+
+                                            <div class="col-sm-6 mb-3">
+                                                <label style="font-size: 1.35rem; font-weight: 500;">Email Address</label>
+                                                <input type="email" class="form-control" value="{{ request.user.email }}" readonly style="background-color: #f8f9fa; font-size: 1.4rem;">
+                                            </div>
+                                        </div>
+
+                                        <div class="form-group mb-4">
+                                            <label style="font-size: 1.35rem; font-weight: 500;">Bio / Notes</label>
+                                            <textarea class="form-control" name="bio" rows="3" placeholder="Tell us a little about yourself or add delivery notes..." style="font-size: 1.4rem;">{{ request.user.bio }}</textarea>
+                                        </div>
+
+                                        <button type="submit" class="btn btn-primary rounded px-5 py-3 font-weight-bold" style="font-size: 1.4rem;">
+                                            <span>SAVE CHANGES</span><i class="icon-long-arrow-right ml-2"></i>
+                                        </button>
+                                    </form>
+                                </div>
+                            </div><!-- End #tab-account -->
+                        </div><!-- End .tab-content -->
+                    </div><!-- End .col-md-8 col-lg-9 -->
+                </div><!-- End .row -->
+            </div><!-- End .container -->
+        </div><!-- End .dashboard -->
+    </div><!-- End .page-content -->
+</main>
+
+<!-- Order Details Modal -->
+<div class="modal fade" id="orderDetailModal" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
+        <div class="modal-content" style="border-radius: 8px; overflow: hidden; border: none; box-shadow: 0 15px 50px rgba(0,0,0,0.25);">
+            <div class="modal-header bg-dark text-white p-4">
+                <h4 class="modal-title font-weight-bold text-white mb-0" id="modalOrderTitle" style="font-size: 1.8rem;">
+                    Order Details
+                </h4>
+                <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close" style="opacity: 0.8;">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body p-4" id="modalOrderContent">
+                <div class="text-center py-4">
+                    <i class="icon-refresh" style="font-size: 3rem; animation: spin 1s infinite linear; display: inline-block;"></i>
+                    <p class="mt-2">Loading order details...</p>
+                </div>
+            </div>
+            <div class="modal-footer p-3 bg-light">
+                <button type="button" class="btn btn-outline-dark rounded" data-dismiss="modal" style="font-size: 1.3rem;">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock content %}
+
+{% block extra_js %}
+<script>
+$(document).ready(function() {
+    const csrfToken = $('input[name="csrfmiddlewaretoken"]').val();
+
+    // Switch tabs on button click
+    $(document).on('click', '.switch-to-tab', function(e) {
+        e.preventDefault();
+        const targetTab = $(this).data('target');
+        $(targetTab).tab('show');
+    });
+
+    // 1. View Order Details via AJAX Modal
+    $(document).on('click', '.btn-view-order-modal', function(e) {
+        e.preventDefault();
+        const orderId = $(this).data('id');
+        $('#modalOrderTitle').text('Order Details #ORD-' + orderId);
+        $('#modalOrderContent').html(`
+            <div class="text-center py-4">
+                <i class="icon-refresh" style="font-size: 3rem; animation: spin 1s infinite linear; display: inline-block;"></i>
+                <p class="mt-2 text-muted" style="font-size: 1.3rem;">Loading order data...</p>
+            </div>
+        `);
+        $('#orderDetailModal').modal('show');
+
+        $.ajax({
+            url: '/ajax-order-detail/' + orderId + '/',
+            type: 'GET',
+            dataType: 'json',
+            success: function(response) {
+                if (response.status === 'success') {
+                    const order = response.order;
+                    let statusBadge = '';
+                    if (order.status === 'processing') {
+                        statusBadge = '<span class="badge badge-warning text-white px-2 py-1"><i class="icon-refresh mr-1"></i>In Process</span>';
+                    } else if (order.status === 'shipped') {
+                        statusBadge = '<span class="badge badge-info px-2 py-1"><i class="icon-truck mr-1"></i>Shipped</span>';
+                    } else if (order.status === 'delivered') {
+                        statusBadge = '<span class="badge badge-success px-2 py-1"><i class="icon-check mr-1"></i>Delivered</span>';
+                    } else {
+                        statusBadge = '<span class="badge badge-secondary px-2 py-1">' + order.status + '</span>';
+                    }
+
+                    let itemsRows = '';
+                    order.items.forEach(function(item) {
+                        itemsRows += `
+                            <tr>
+                                <td style="font-size: 1.35rem; color: #222; font-weight: 500;">${item.title}</td>
+                                <td class="text-center" style="font-size: 1.35rem;">${item.qty}</td>
+                                <td class="text-right" style="font-size: 1.35rem;">$${item.price}</td>
+                                <td class="text-right font-weight-bold" style="font-size: 1.4rem; color: #333;">$${item.total}</td>
+                            </tr>
+                        `;
+                    });
+
+                    const html = `
+                        <!-- Metadata summary -->
+                        <div class="p-3 bg-light rounded border mb-4">
+                            <div class="row">
+                                <div class="col-sm-6 mb-2">
+                                    <span class="text-muted d-block" style="font-size: 1.2rem;">Order Placed:</span>
+                                    <strong style="font-size: 1.35rem; color: #333;">${order.date}</strong>
+                                </div>
+                                <div class="col-sm-6 mb-2">
+                                    <span class="text-muted d-block" style="font-size: 1.2rem;">Status:</span>
+                                    <div>${statusBadge}</div>
+                                </div>
+                                <div class="col-12 mt-2 pt-2 border-top">
+                                    <span class="text-muted d-block" style="font-size: 1.2rem;">
+                                        <i class="icon-map-marker text-success mr-1"></i>Delivery Target (Active Address):
+                                    </span>
+                                    <strong style="font-size: 1.35rem; color: #222;">${order.address}</strong>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Items Table -->
+                        <div class="table-responsive">
+                            <table class="table table-bordered mb-0">
+                                <thead style="background-color: #f7f8f9;">
+                                    <tr>
+                                        <th style="font-size: 1.3rem;">Product</th>
+                                        <th class="text-center" style="font-size: 1.3rem; width: 90px;">Qty</th>
+                                        <th class="text-right" style="font-size: 1.3rem; width: 110px;">Price</th>
+                                        <th class="text-right" style="font-size: 1.3rem; width: 120px;">Subtotal</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    ${itemsRows}
+                                    <tr style="background-color: #fcfcfc;">
+                                        <td colspan="3" class="text-right font-weight-bold" style="font-size: 1.45rem;">Grand Total:</td>
+                                        <td class="text-right font-weight-bold text-primary" style="font-size: 1.7rem;">$${order.price}</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    `;
+                    $('#modalOrderContent').html(html);
+                }
+            },
+            error: function() {
+                $('#modalOrderContent').html('<div class="alert alert-danger">Failed to load order details.</div>');
+            }
+        });
+    });
+
+    // 2. Activate Address from Dashboard Addresses Tab
+    $(document).on('click', '.btn-dash-activate-addr', function(e) {
+        e.preventDefault();
+        const $btn = $(this);
+        const addrId = $btn.data('id');
+
+        $btn.prop('disabled', true).text('Activating...');
+
+        $.ajax({
+            url: "{% url 'core:make-default-address' %}",
+            type: "POST",
+            data: {
+                id: addrId,
+                csrfmiddlewaretoken: csrfToken
+            },
+            dataType: "json",
+            success: function(response) {
+                if (response.status === 'success') {
+                    // Update Active Address Text in display cards
+                    $('#dashboardActiveAddrText').text(response.address_text);
+                    $('#activeAddressText').text(response.address_text);
+
+                    // Update styling
+                    $('.dashboard-addr-row').each(function() {
+                        const rowId = $(this).attr('id').replace('dash-addr-row-', '');
+                        if (rowId == addrId) {
+                            $(this).css({'background-color': '#f0fff4', 'border-color': '#28a745'});
+                            $(this).find('.dash-addr-action').html('<span class="badge badge-success px-3 py-2" style="font-size: 1.2rem;">Active</span>');
+                            $(this).find('.icon-map-marker').removeClass('text-muted').addClass('text-success');
+                        } else {
+                            $(this).css({'background-color': '#ffffff', 'border-color': '#e5e5e5'});
+                            $(this).find('.dash-addr-action').html(
+                                '<button type="button" class="btn btn-outline-primary btn-sm rounded-pill btn-dash-activate-addr" data-id="' + rowId + '" style="font-size: 1.2rem; padding: 0.35rem 1.4rem;">Set As Active</button>'
+                            );
+                            $(this).find('.icon-map-marker').removeClass('text-success').addClass('text-muted');
+                        }
+                    });
+
+                    showCartToast("Active delivery address updated!");
+                }
+            },
+            error: function() {
+                $btn.prop('disabled', false).text('Set As Active');
+                showCartToast("Failed to update active address.", "error");
+            }
+        });
+    });
+
+    // 3. Save new address from Dashboard tab
+    $('#dashboardSaveAddrBtn').on('click', function(e) {
+        e.preventDefault();
+        const addressText = $('#dashboardNewAddrField').val().trim();
+        if (!addressText) {
+            alert("Please enter an address.");
+            $('#dashboardNewAddrField').focus();
+            return;
+        }
+
+        const $btn = $(this);
+        $btn.prop('disabled', true).html('<i class="icon-refresh"></i> Saving...');
+
+        $.ajax({
+            url: "{% url 'core:save-address' %}",
+            type: "POST",
+            data: {
+                address: addressText,
+                csrfmiddlewaretoken: csrfToken
+            },
+            dataType: "json",
+            success: function(response) {
+                $btn.prop('disabled', false).html('<i class="icon-check mr-1"></i> Save & Make Active');
+                if (response.status === 'success') {
+                    $('#dashboardActiveAddrText').text(response.address_text);
+                    $('#dashboardNewAddrField').val('');
+
+                    const newRowHtml = `
+                        <div class="list-group-item d-flex align-items-center justify-content-between p-3 mb-2 rounded border dashboard-addr-row" id="dash-addr-row-${response.address_id}" style="background-color: #f0fff4; border-color: #28a745 !important;">
+                            <div class="d-flex align-items-center flex-grow-1 mr-3">
+                                <i class="icon-map-marker mr-3 text-success" style="font-size: 2rem;"></i>
+                                <span style="font-size: 1.45rem; color: #333;">${response.address_text}</span>
+                            </div>
+                            <div class="dash-addr-action" style="flex-shrink: 0;">
+                                <span class="badge badge-success px-3 py-2" style="font-size: 1.2rem;">Active</span>
+                            </div>
+                        </div>
+                    `;
+
+                    // Reset existing rows
+                    $('.dashboard-addr-row').each(function() {
+                        const rowId = $(this).attr('id').replace('dash-addr-row-', '');
+                        $(this).css({'background-color': '#ffffff', 'border-color': '#e5e5e5'});
+                        $(this).find('.dash-addr-action').html(
+                            '<button type="button" class="btn btn-outline-primary btn-sm rounded-pill btn-dash-activate-addr" data-id="' + rowId + '" style="font-size: 1.2rem; padding: 0.35rem 1.4rem;">Set As Active</button>'
+                        );
+                        $(this).find('.icon-map-marker').removeClass('text-success').addClass('text-muted');
+                    });
+
+                    $('#dashboardAddressList').prepend(newRowHtml);
+                    showCartToast("New address saved and set as active!");
+                }
+            },
+            error: function() {
+                $btn.prop('disabled', false).html('<i class="icon-check mr-1"></i> Save & Make Active');
+                showCartToast("Failed to save address.", "error");
+            }
+        });
+    });
+});
+</script>
+{% endblock extra_js %}

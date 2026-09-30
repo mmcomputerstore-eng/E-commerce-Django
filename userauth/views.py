@@ -55,8 +55,11 @@ def loginView(request):
             msg = f'Welcome back, {user.username.title()}!'
             messages.success(request, msg)
 
+            next_url = request.GET.get('next') or request.POST.get('next')
             if is_ajax:
-                return JsonResponse({'status': 'success', 'message': msg})
+                return JsonResponse({'status': 'success', 'message': msg, 'next': next_url or '/'})
+            if next_url:
+                return redirect(next_url)
             return redirect('core:home')
         else:
             msg = 'Invalid username/email or password. Please try again.'

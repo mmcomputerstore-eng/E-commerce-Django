@@ -22,4 +22,15 @@ urlpatterns = [
     path('delete-from-cart/', views.delete_from_cart, name='delete-from-cart'),
     path('update-cart/', views.update_cart, name='update-cart'),
     path('clear-cart/', views.clear_cart, name='clear-cart'),
+
+    # checkout & orders
+    path('checkout/', views.checkout_view, name='checkout'),
+    path('checkout/make-default-address/', views.make_address_default, name='make-default-address'),
+    path('checkout/save-address/', views.save_address, name='save-address'),
+    path('order-completed/<int:oid>/', views.order_completed_view, name='order-completed'),
+
+    # customer dashboard & history
+    path('dashboard/', views.customer_dashboard, name='customer-dashboard'),
+    path('order-detail/<int:oid>/', views.order_detail_view, name='order-detail'),
+    path('ajax-order-detail/<int:oid>/', views.order_detail_ajax, name='ajax-order-detail'),
 ]
