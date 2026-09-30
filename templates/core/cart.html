@@ -1,0 +1,272 @@
+{% extends "partials/base.html" %}
+{% load static %}
+
+{% block title %}Shopping Cart | MM Computer Store{% endblock title %}
+
+{% block content %}
+<main class="main">
+    <!-- Page Header -->
+    <div class="page-header text-center" style="background-image: url('{% static 'assets/images/page-header-bg.jpg' %}'); background-size: cover; background-position: center; padding: 4rem 0;">
+        <div class="container">
+            <h1 class="page-title text-white font-weight-bold" style="font-size: 3.2rem; letter-spacing: -0.5px;">
+                Shopping Cart
+                <span class="text-white-50 mt-1" style="font-size: 1.5rem; font-weight: normal; display: block;">Review your selected items before proceeding to checkout</span>
+            </h1>
+        </div><!-- End .container -->
+    </div><!-- End .page-header -->
+
+    <!-- Breadcrumb Navigation -->
+    <nav aria-label="breadcrumb" class="breadcrumb-nav mb-4">
+        <div class="container">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{% url 'core:home' %}">Home</a></li>
+                <li class="breadcrumb-item"><a href="{% url 'core:products' %}">Shop</a></li>
+                <li class="breadcrumb-item active" aria-current="page">Shopping Cart</li>
+            </ol>
+        </div><!-- End .container -->
+    </nav><!-- End .breadcrumb-nav -->
+
+    <div class="page-content pb-6">
+        <div class="cart">
+            <div class="container">
+                <div id="cartFilledSection" {% if not cart_data %}style="display: none;"{% endif %}>
+                    <div class="row">
+                        <div class="col-lg-9">
+                            <div class="table-responsive bg-white rounded shadow-sm border p-3 mb-4">
+                                <table class="table table-cart table-mobile mb-0">
+                                    <thead>
+                                        <tr style="border-bottom: 2px solid #f4f4f4;">
+                                            <th style="font-size: 1.4rem; font-weight: 600; color: #333; padding-bottom: 1.5rem;">Product</th>
+                                            <th style="font-size: 1.4rem; font-weight: 600; color: #333; padding-bottom: 1.5rem;">Price</th>
+                                            <th style="font-size: 1.4rem; font-weight: 600; color: #333; padding-bottom: 1.5rem;">Quantity</th>
+                                            <th style="font-size: 1.4rem; font-weight: 600; color: #333; padding-bottom: 1.5rem;">Total</th>
+                                            <th style="padding-bottom: 1.5rem;"></th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="cartTableBody">
+                                        {% for pid, item in cart_data.items %}
+                                        <tr class="cart-item-row" id="cart-item-row-{{ pid }}" data-pid="{{ pid }}" style="vertical-align: middle;">
+                                            <td class="product-col" style="padding: 1.5rem 0.5rem;">
+                                                <div class="product d-flex align-items-center">
+                                                    <figure class="product-media mr-3 mb-0" style="flex-shrink: 0; width: 75px; height: 75px; border-radius: 6px; overflow: hidden; border: 1px solid #eee; display: flex; align-items: center; justify-content: center; background: #fff;">
+                                                        <a href="{% url 'core:product-details' pid %}">
+                                                            {% if item.image %}
+                                                            <img src="{{ item.image }}" alt="{{ item.title }}" style="max-height: 100%; max-width: 100%; object-fit: contain;">
+                                                            {% else %}
+                                                            <img src="{% static 'assets/images/demos/demo-13/products/product-1.jpg' %}" alt="{{ item.title }}" style="max-height: 100%; max-width: 100%; object-fit: contain;">
+                                                            {% endif %}
+                                                        </a>
+                                                    </figure>
+
+                                                    <h3 class="product-title mb-0" style="font-size: 1.5rem; font-weight: 500; line-height: 1.4;">
+                                                        <a href="{% url 'core:product-details' pid %}" class="text-dark">{{ item.title }}</a>
+                                                    </h3>
+                                                </div><!-- End .product -->
+                                            </td>
+                                            <td class="price-col" style="font-size: 1.6rem; color: #333; font-weight: 500;">
+                                                ${{ item.price }}
+                                            </td>
+                                            <td class="quantity-col" style="width: 140px;">
+                                                <div class="cart-product-quantity" style="width: 120px;">
+                                                    <input type="number" class="form-control cart-qty-input" data-pid="{{ pid }}" value="{{ item.qty }}" min="1" max="100" step="1" data-decimals="0" required style="text-align: center; font-weight: 600;">
+                                                </div><!-- End .cart-product-quantity -->
+                                            </td>
+                                            <td class="total-col" style="font-size: 1.7rem; font-weight: 600; color: #39f;">
+                                                <span class="item-subtotal-val" id="item-subtotal-{{ pid }}">${{ item.total_price }}</span>
+                                            </td>
+                                            <td class="remove-col text-center" style="width: 50px;">
+                                                <button class="btn-remove btn-cart-remove" data-pid="{{ pid }}" title="Remove Product" style="border: none; background: transparent; cursor: pointer; color: #ccc; font-size: 1.8rem; transition: color 0.2s;" onmouseover="this.style.color='#ef3b2c';" onmouseout="this.style.color='#ccc';">
+                                                    <i class="icon-close"></i>
+                                                </button>
+                                            </td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div><!-- End .table-responsive -->
+
+                            <div class="cart-bottom d-flex align-items-center justify-content-between flex-wrap p-3 bg-white rounded shadow-sm border mb-4">
+                                <div class="cart-actions-left mb-2 mb-sm-0">
+                                    <a href="{% url 'core:products' %}" class="btn btn-outline-dark rounded" style="font-size: 1.3rem; padding: 1rem 2rem;">
+                                        <i class="icon-refresh mr-2"></i><span>CONTINUE SHOPPING</span>
+                                    </a>
+                                </div>
+                                <div class="cart-actions-right">
+                                    <button type="button" id="cartClearAllBtn" class="btn btn-outline-danger rounded" style="font-size: 1.3rem; padding: 1rem 2rem;">
+                                        <i class="icon-trash mr-2"></i><span>CLEAR CART</span>
+                                    </button>
+                                </div>
+                            </div><!-- End .cart-bottom -->
+                        </div><!-- End .col-lg-9 -->
+
+                        <aside class="col-lg-3">
+                            <div class="summary summary-cart bg-white rounded shadow-sm border p-4">
+                                <h3 class="summary-title font-weight-bold mb-3 pb-3 border-bottom" style="font-size: 1.8rem; color: #222;">Cart Total</h3>
+
+                                <table class="table table-summary mb-3">
+                                    <tbody>
+                                        <tr class="summary-subtotal" style="border-bottom: 1px solid #f4f4f4;">
+                                            <td style="font-size: 1.4rem; color: #666; padding: 1.2rem 0;">Subtotal:</td>
+                                            <td class="text-right font-weight-bold" id="cartPageSubtotal" style="font-size: 1.6rem; color: #222; padding: 1.2rem 0;">${{ cart_total_amount }}</td>
+                                        </tr>
+                                        <tr class="summary-shipping" style="border-bottom: 1px solid #f4f4f4;">
+                                            <td style="font-size: 1.4rem; color: #666; padding: 1.2rem 0;">Shipping:</td>
+                                            <td class="text-right font-weight-500 text-success" style="font-size: 1.4rem; padding: 1.2rem 0;">Free Delivery</td>
+                                        </tr>
+                                        <tr class="summary-total" style="border-bottom: none;">
+                                            <td style="font-size: 1.8rem; font-weight: 700; color: #222; padding: 1.5rem 0 0.5rem;">Total:</td>
+                                            <td class="text-right font-weight-bold" id="cartPageTotal" style="font-size: 2.2rem; color: #39f; padding: 1.5rem 0 0.5rem;">${{ cart_total_amount }}</td>
+                                        </tr>
+                                    </tbody>
+                                </table><!-- End .table table-summary -->
+
+                                <a href="javascript:void(0);" onclick="alert('Checkout process will be available soon!');" class="btn btn-primary btn-order btn-block rounded shadow-sm font-weight-bold" style="font-size: 1.4rem; padding: 1.3rem; letter-spacing: 0.5px;">
+                                    PROCEED TO CHECKOUT
+                                </a>
+
+                                <div class="mt-4 pt-3 border-top text-center text-muted" style="font-size: 1.2rem;">
+                                    <div class="mb-1"><i class="icon-shield text-success mr-1"></i> Secure 256-Bit SSL Checkout</div>
+                                    <div><i class="icon-rotate-left mr-1"></i> 30-Day Money Back Guarantee</div>
+                                </div>
+                            </div><!-- End .summary -->
+                        </aside><!-- End .col-lg-3 -->
+                    </div><!-- End .row -->
+                </div><!-- End #cartFilledSection -->
+
+                <!-- Empty State -->
+                <div id="cartEmptySection" class="p-5 text-center bg-white rounded shadow-sm border" {% if cart_data %}style="display: none;"{% endif %}>
+                    <div class="py-5">
+                        <div class="mb-4" style="display: inline-flex; align-items: center; justify-content: center; width: 120px; height: 120px; border-radius: 50%; background-color: #f7f9fa; color: #999;">
+                            <i class="icon-shopping-cart" style="font-size: 5rem; opacity: 0.6;"></i>
+                        </div>
+                        <h2 class="font-weight-bold mb-2" style="font-size: 2.4rem; color: #333;">Your Shopping Cart is Empty</h2>
+                        <p class="text-muted mb-4 mx-auto" style="font-size: 1.5rem; max-width: 480px; line-height: 1.6;">
+                            You haven't added any products to your cart yet. Explore our curated catalog and find your next favorite tech gear!
+                        </p>
+                        <a href="{% url 'core:products' %}" class="btn btn-primary btn-round px-5 py-3 shadow" style="font-size: 1.4rem; font-weight: 600;">
+                            <span>START SHOPPING NOW</span><i class="icon-long-arrow-right ml-2"></i>
+                        </a>
+                    </div>
+                </div><!-- End #cartEmptySection -->
+
+            </div><!-- End .container -->
+        </div><!-- End .cart -->
+    </div><!-- End .page-content -->
+</main>
+{% endblock content %}
+
+{% block extra_js %}
+<script>
+$(document).ready(function() {
+    // Handle Quantity Change in Cart Page
+    $(document).on('change', '.cart-qty-input', function() {
+        var $input = $(this);
+        var pid = $input.data('pid');
+        var qty = parseInt($input.val()) || 1;
+
+        if (qty < 1) {
+            qty = 1;
+            $input.val(1);
+        }
+
+        $.ajax({
+            url: "{% url 'core:update-cart' %}",
+            type: "POST",
+            data: {
+                id: pid,
+                qty: qty,
+                csrfmiddlewaretoken: '{{ csrf_token }}'
+            },
+            dataType: "json",
+            success: function(response) {
+                if (response.status === 'success') {
+                    // Update item subtotal
+                    $('#item-subtotal-' + pid).text('$' + response.item_total);
+                    // Update page totals
+                    $('#cartPageSubtotal').text('$' + response.cart_total);
+                    $('#cartPageTotal').text('$' + response.cart_total);
+                    // Update header cart
+                    updateHeaderCartState(response);
+                    showToastNotification("Cart updated successfully!");
+                }
+            },
+            error: function(xhr, status, error) {
+                console.error("Cart update error:", error);
+            }
+        });
+    });
+
+    // Handle Remove Item from Cart Page
+    $(document).on('click', '.btn-cart-remove', function(e) {
+        e.preventDefault();
+        var $btn = $(this);
+        var pid = $btn.data('pid');
+        var $row = $('#cart-item-row-' + pid);
+
+        $row.css('opacity', '0.4');
+
+        $.ajax({
+            url: "{% url 'core:delete-from-cart' %}",
+            type: "POST",
+            data: {
+                id: pid,
+                csrfmiddlewaretoken: '{{ csrf_token }}'
+            },
+            dataType: "json",
+            success: function(response) {
+                if (response.status === 'success') {
+                    $row.fadeOut(300, function() {
+                        $(this).remove();
+                        if (response.cart_count === 0) {
+                            $('#cartFilledSection').hide();
+                            $('#cartEmptySection').fadeIn(300);
+                        }
+                    });
+                    // Update page totals
+                    $('#cartPageSubtotal').text('$' + response.cart_total);
+                    $('#cartPageTotal').text('$' + response.cart_total);
+                    // Update header cart
+                    updateHeaderCartState(response);
+                    showToastNotification("Item removed from cart.");
+                }
+            },
+            error: function(xhr, status, error) {
+                $row.css('opacity', '1');
+                console.error("Cart remove error:", error);
+            }
+        });
+    });
+
+    // Handle Clear All Cart
+    $('#cartClearAllBtn').on('click', function(e) {
+        e.preventDefault();
+        if (confirm("Are you sure you want to remove all items from your cart?")) {
+            $.ajax({
+                url: "{% url 'core:clear-cart' %}",
+                type: "GET",
+                headers: {'X-Requested-With': 'XMLHttpRequest'},
+                dataType: "json",
+                success: function(response) {
+                    $('#cartTableBody').empty();
+                    $('#cartFilledSection').hide();
+                    $('#cartEmptySection').fadeIn(300);
+                    // Update header
+                    $('#headerCartCount').text('0');
+                    $('#headerCartTotal').text('$0.00');
+                    $('#headerCartProducts').html(
+                        '<div class="p-4 text-center text-muted" id="headerEmptyNotice" style="font-size: 1.3rem;">' +
+                        '<i class="icon-shopping-cart d-block mb-2" style="font-size: 2.5rem; opacity: 0.4;"></i>' +
+                        'Your cart is empty.' +
+                        '</div>'
+                    );
+                    showToastNotification("Your cart has been cleared.");
+                },
+                error: function() {
+                    window.location.href = "{% url 'core:clear-cart' %}";
+                }
+            });
+        }
+    });
+});
+</script>
+{% endblock extra_js %}

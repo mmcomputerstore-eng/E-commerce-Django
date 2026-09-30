@@ -1,4 +1,4 @@
-from django.shortcuts import render, get_object_or_404
+from django.shortcuts import render, get_object_or_404, redirect
 from django.db.models import Count, Q, Avg, Min, Max
 from taggit.models import Tag
 from core.forms import ProductReviewForm
@@ -295,3 +295,149 @@ def search_view(request):
     }
 
     return render(request, 'core/search.html', context)
+
+
+def cart_view(request):
+    cart_data = request.session.get('cart_data_obj', {})
+    cart_count = sum(int(item.get('qty', 1)) for item in cart_data.values()) if cart_data else 0
+    cart_total_amount = sum(float(item.get('price', 0)) * int(item.get('qty', 1)) for item in cart_data.values()) if cart_data else 0.0
+    context = {
+        'cart_data': cart_data,
+        'cart_count': cart_count,
+        'cart_total_amount': f"{cart_total_amount:.2f}",
+    }
+    return render(request, 'core/cart.html', context)
+
+
+def add_to_cart(request):
+    p_id = str(request.POST.get('id') or request.GET.get('id') or request.POST.get('pid') or request.GET.get('pid') or '').strip()
+    try:
+        qty = int(request.POST.get('qty') or request.GET.get('qty') or 1)
+        if qty < 1:
+            qty = 1
+    except (ValueError, TypeError):
+        qty = 1
+
+    if not p_id:
+        return JsonResponse({'status': 'error', 'message': 'Product ID is missing.'}, status=400)
+
+    product = Products.objects.filter(pid=p_id).first()
+    if not product and p_id.isdigit():
+        product = Products.objects.filter(id=int(p_id)).first()
+
+    if not product:
+        return JsonResponse({'status': 'error', 'message': 'Product not found.'}, status=404)
+
+    cart_data = request.session.get('cart_data_obj', {})
+    pid_key = str(product.pid)
+
+    if pid_key in cart_data:
+        cart_data[pid_key]['qty'] = int(cart_data[pid_key]['qty']) + qty
+        cart_data[pid_key]['total_price'] = round(float(cart_data[pid_key]['price']) * cart_data[pid_key]['qty'], 2)
+    else:
+        image_url = product.image.url if product.image else ''
+        cart_data[pid_key] = {
+            'pid': product.pid,
+            'id': product.id,
+            'title': product.title,
+            'qty': qty,
+            'price': str(product.price),
+            'image': image_url,
+            'total_price': round(float(product.price) * qty, 2),
+        }
+
+    request.session['cart_data_obj'] = cart_data
+    request.session.modified = True
+
+    cart_count = sum(int(item['qty']) for item in cart_data.values())
+    cart_total = sum(float(item['price']) * int(item['qty']) for item in cart_data.values())
+
+    return JsonResponse({
+        'status': 'success',
+        'message': f"Added '{product.title}' to cart!",
+        'cart_count': cart_count,
+        'cart_total': f"{cart_total:.2f}",
+        'item': cart_data[pid_key],
+        'cart_data': cart_data,
+    })
+
+
+def delete_from_cart(request):
+    p_id = str(request.POST.get('id') or request.GET.get('id') or request.POST.get('pid') or request.GET.get('pid') or '').strip()
+    cart_data = request.session.get('cart_data_obj', {})
+
+    matched_key = None
+    if p_id in cart_data:
+        matched_key = p_id
+    else:
+        for k, v in cart_data.items():
+            if str(v.get('id')) == p_id or str(v.get('pid')) == p_id:
+                matched_key = k
+                break
+
+    if matched_key and matched_key in cart_data:
+        del cart_data[matched_key]
+        request.session['cart_data_obj'] = cart_data
+        request.session.modified = True
+
+    cart_count = sum(int(item['qty']) for item in cart_data.values()) if cart_data else 0
+    cart_total = sum(float(item['price']) * int(item['qty']) for item in cart_data.values()) if cart_data else 0.0
+
+    return JsonResponse({
+        'status': 'success',
+        'cart_count': cart_count,
+        'cart_total': f"{cart_total:.2f}",
+        'cart_data': cart_data,
+    })
+
+
+def update_cart(request):
+    p_id = str(request.POST.get('id') or request.GET.get('id') or request.POST.get('pid') or request.GET.get('pid') or '').strip()
+    try:
+        qty = int(request.POST.get('qty') or request.GET.get('qty') or 1)
+    except (ValueError, TypeError):
+        qty = 1
+
+    cart_data = request.session.get('cart_data_obj', {})
+    matched_key = None
+    if p_id in cart_data:
+        matched_key = p_id
+    else:
+        for k, v in cart_data.items():
+            if str(v.get('id')) == p_id or str(v.get('pid')) == p_id:
+                matched_key = k
+                break
+
+    item_total = 0.0
+    if matched_key and matched_key in cart_data:
+        if qty <= 0:
+            del cart_data[matched_key]
+        else:
+            cart_data[matched_key]['qty'] = qty
+            cart_data[matched_key]['total_price'] = round(float(cart_data[matched_key]['price']) * qty, 2)
+            item_total = cart_data[matched_key]['total_price']
+
+        request.session['cart_data_obj'] = cart_data
+        request.session.modified = True
+
+    cart_count = sum(int(item['qty']) for item in cart_data.values()) if cart_data else 0
+    cart_total = sum(float(item['price']) * int(item['qty']) for item in cart_data.values()) if cart_data else 0.0
+
+    return JsonResponse({
+        'status': 'success',
+        'cart_count': cart_count,
+        'cart_total': f"{cart_total:.2f}",
+        'item_total': f"{item_total:.2f}",
+        'cart_data': cart_data,
+    })
+
+
+def clear_cart(request):
+    if 'cart_data_obj' in request.session:
+        del request.session['cart_data_obj']
+        request.session.modified = True
+
+    if request.headers.get('x-requested-with') == 'XMLHttpRequest' or request.GET.get('ajax'):
+        return JsonResponse({'status': 'success', 'cart_count': 0, 'cart_total': '0.00'})
+
+    return redirect('core:cart')

@@ -39,6 +39,7 @@
 </head>
 
 <body>
+    {% csrf_token %}
     <div class="page-wrapper">
         <header class="header header-10 header-intro-clearance">
             <div class="header-top">
@@ -174,71 +175,57 @@
                             </a>
 
                             <div class="dropdown cart-dropdown">
-                                <a href="#" class="dropdown-toggle" role="button" data-toggle="dropdown"
+                                <a href="{% url 'core:cart' %}" class="dropdown-toggle" role="button" data-toggle="dropdown"
                                     aria-haspopup="true" aria-expanded="false" data-display="static">
                                     <i class="icon-shopping-cart"></i>
-                                    <span class="cart-count">2</span>
+                                    <span class="cart-count" id="headerCartCount">{{ cart_count }}</span>
                                     <span class="cart-txt">Cart</span>
                                 </a>
 
-                                <div class="dropdown-menu dropdown-menu-right">
-                                    <div class="dropdown-cart-products">
-                                        <div class="product">
-                                            <div class="product-cart-details">
-                                                <h4 class="product-title">
-                                                    <a href="product.html">Beige knitted elastic runner shoes</a>
-                                                </h4>
+                                <div class="dropdown-menu dropdown-menu-right" style="min-width: 310px; box-shadow: 0 10px 30px rgba(0,0,0,0.12);">
+                                    <div class="dropdown-cart-products" id="headerCartProducts" style="max-height: 350px; overflow-y: auto;">
+                                        {% if cart_data %}
+                                            {% for pid, item in cart_data.items %}
+                                            <div class="product header-cart-item" id="header-cart-item-{{ pid }}">
+                                                <div class="product-cart-details">
+                                                    <h4 class="product-title">
+                                                        <a href="{% url 'core:product-details' pid %}">{{ item.title }}</a>
+                                                    </h4>
 
-                                                <span class="cart-product-info">
-                                                    <span class="cart-product-qty">1</span>
-                                                    x $84.00
-                                                </span>
-                                            </div><!-- End .product-cart-details -->
+                                                    <span class="cart-product-info">
+                                                        <span class="cart-product-qty">{{ item.qty }}</span>
+                                                        x ${{ item.price }}
+                                                    </span>
+                                                </div><!-- End .product-cart-details -->
 
-                                            <figure class="product-image-container">
-                                                <a href="product.html" class="product-image">
-                                                    <img src="{% static 'assets/images/products/cart/product-1.jpg' %}"
-                                                        alt="product">
-                                                </a>
-                                            </figure>
-                                            <a href="#" class="btn-remove" title="Remove Product"><i
-                                                    class="icon-close"></i></a>
-                                        </div><!-- End .product -->
-
-                                        <div class="product">
-                                            <div class="product-cart-details">
-                                                <h4 class="product-title">
-                                                    <a href="product.html">Blue utility pinafore denim dress</a>
-                                                </h4>
-
-                                                <span class="cart-product-info">
-                                                    <span class="cart-product-qty">1</span>
-                                                    x $76.00
-                                                </span>
-                                            </div><!-- End .product-cart-details -->
-
-                                            <figure class="product-image-container">
-                                                <a href="product.html" class="product-image">
-                                                    <img src="{% static 'assets/images/products/cart/product-2.jpg' %}"
-                                                        alt="product">
-                                                </a>
-                                            </figure>
-                                            <a href="#" class="btn-remove" title="Remove Product"><i
-                                                    class="icon-close"></i></a>
-                                        </div><!-- End .product -->
+                                                <figure class="product-image-container">
+                                                    <a href="{% url 'core:product-details' pid %}" class="product-image">
+                                                        {% if item.image %}
+                                                        <img src="{{ item.image }}" alt="{{ item.title }}" style="width: 60px; height: 60px; object-fit: contain; padding: 2px;">
+                                                        {% else %}
+                                                        <img src="{% static 'assets/images/demos/demo-13/products/product-1.jpg' %}" alt="{{ item.title }}" style="width: 60px; height: 60px; object-fit: contain; padding: 2px;">
+                                                        {% endif %}
+                                                    </a>
+                                                </figure>
+                                                <a href="javascript:void(0);" class="btn-remove header-cart-remove" data-pid="{{ pid }}" title="Remove Product"><i
+                                                        class="icon-close"></i></a>
+                                            </div><!-- End .product -->
+                                            {% endfor %}
+                                        {% else %}
+                                            <div class="p-4 text-center text-muted" id="headerEmptyNotice" style="font-size: 1.3rem;">
+                                                <i class="icon-shopping-cart d-block mb-2" style="font-size: 2.5rem; opacity: 0.35;"></i>
+                                                Your cart is empty.
+                                            </div>
+                                        {% endif %}
                                     </div><!-- End .cart-product -->
 
-                                    <div class="dropdown-cart-total">
-                                        <span>Total</span>
-
-                                        <span class="cart-total-price">$160.00</span>
+                                    <div class="dropdown-cart-total border-top pt-2 pb-2">
+                                        <span class="font-weight-bold">Total</span>
+                                        <span class="cart-total-price font-weight-bold" id="headerCartTotal" style="color: #39f;">${{ cart_total_amount }}</span>
                                     </div><!-- End .dropdown-cart-total -->
 
                                     <div class="dropdown-cart-action">
-                                        <a href="cart.html" class="btn btn-primary">View Cart</a>
-                                        <a href="checkout.html"
-                                            class="btn btn-outline-primary-2"><span>Checkout</span><i
-                                                class="icon-long-arrow-right"></i></a>
+                                        <a href="{% url 'core:cart' %}" class="btn btn-primary btn-block rounded" style="font-size: 1.3rem; font-weight: 600;">View Cart</a>
                                     </div><!-- End .dropdown-cart-total -->
                                 </div><!-- End .dropdown-menu -->
                             </div><!-- End .cart-dropdown -->
@@ -548,7 +535,7 @@
                                                             <div class="menu-title">Shop Pages</div>
                                                             <!-- End .menu-title -->
                                                             <ul>
-                                                                <li><a href="cart.html">Cart</a></li>
+                                                                <li><a href="{% url 'core:cart' %}">Cart</a></li>
                                                                 <li><a href="checkout.html">Checkout</a></li>
                                                                 <li><a href="wishlist.html">Wishlist</a></li>
                                                                 <li><a href="dashboard.html">My Account</a></li>
@@ -865,7 +852,7 @@
                                     {% else %}
                                         <li><a href="{% url 'userauth:login' %}">Sign In</a></li>
                                     {% endif %}
-                                    <li><a href="cart.html">View Cart</a></li>
+                                    <li><a href="{% url 'core:cart' %}">View Cart</a></li>
                                     <li><a href="#">My Wishlist</a></li>
                                     <li><a href="#">Track My Order</a></li>
                                     <li><a href="#">Help</a></li>
@@ -978,7 +965,7 @@
                                     <li><a href="product-category-boxed.html">Product Category Boxed</a></li>
                                     <li><a href="product-category-fullwidth.html"><span>Product Category Fullwidth<span
                                                     class="tip tip-new">New</span></span></a></li>
-                                    <li><a href="cart.html">Cart</a></li>
+                                    <li><a href="{% url 'core:cart' %}">Cart</a></li>
                                     <li><a href="checkout.html">Checkout</a></li>
                                     <li><a href="wishlist.html">Wishlist</a></li>
                                     <li><a href="#">Lookbook</a></li>
@@ -1311,6 +1298,9 @@
 
     <!-- Custom Authentication Script -->
     <script src="{% static 'assets/js/auth.js' %}"></script>
+
+    <!-- Shopping Cart Script -->
+    <script src="{% static 'assets/js/cart.js' %}"></script>
 
     {% block extra_js %}{% endblock extra_js %}
 </body>
