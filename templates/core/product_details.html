@@ -97,10 +97,10 @@
                             <!-- Rating & Reviews -->
                             <div class="ratings-container mt-2">
                                 <div class="ratings">
-                                    <div class="ratings-val" style="width: 90%;"></div><!-- End .ratings-val -->
+                                    <div class="ratings-val main-product-ratings-val" style="width: {{avrage_rating}}%;"></div><!-- End .ratings-val -->
                                 </div><!-- End .ratings -->
                                 <a class="ratings-text" href="#product-review-link" id="review-link">
-                                    ( {{ reviews.count }} {% if reviews.count == 1 %}Review{% else %}Reviews{% endif %} )
+                                    ( <span class="reviews-count-text">{{ reviews.count }}</span> {% if reviews.count == 1 %}Review{% else %}Reviews{% endif %} )
                                 </a>
                             </div><!-- End .ratings-container -->
 
@@ -238,7 +238,7 @@
                     {% endif %}
                     <li class="nav-item">
                         <a class="nav-link font-weight-bold" id="product-review-link" data-toggle="tab" href="#product-review-tab" role="tab" aria-controls="product-review-tab" aria-selected="false" style="font-size: 1.5rem;">
-                            Reviews ({{ reviews.count }})
+                            Reviews (<span class="reviews-count-text">{{ reviews.count }}</span>)
                         </a>
                     </li>
                 </ul>
@@ -371,36 +371,84 @@
                     <!-- Reviews Tab -->
                     <div class="tab-pane fade" id="product-review-tab" role="tabpanel" aria-labelledby="product-review-link">
                         <div class="reviews px-4 py-2">
-                            <h3 class="font-weight-bold mb-4" style="color: #333;">Customer Reviews ({{ reviews.count }})</h3>
+                            <div class="d-flex align-items-center justify-content-between mb-4 flex-wrap pb-2 border-bottom">
+                                <h3 class="font-weight-bold mb-0" style="color: #333;">Customer Reviews (<span class="reviews-count-text">{{ reviews.count }}</span>)</h3>
+                                <a href="#add-review-form-wrapper" class="btn btn-outline-primary btn-round btn-sm mt-2 mt-md-0" style="font-size: 1.25rem;">
+                                    <i class="icon-edit mr-1"></i> Write a Review
+                                </a>
+                            </div>
 
-                            {% if reviews %}
-                                {% for rev in reviews %}
-                                <div class="review mb-4 p-3" style="background: #fdfdfd; border: 1px solid #eee; border-radius: 8px;">
-                                    <div class="row no-gutters">
-                                        <div class="col-auto pr-4">
-                                            <h4 class="font-weight-bold mb-1" style="font-size: 1.5rem; color: #333;">{{ rev.user.username|title }}</h4>
-                                            <div class="ratings-container mb-1">
-                                                <div class="ratings">
-                                                    <div class="ratings-val" style="width: {% widthratio rev.rating 5 100 %}%;"></div>
+                            <div id="reviews-list-container">
+                                {% if reviews %}
+                                    {% for rev in reviews %}
+                                    <div class="review mb-4 p-3 shadow-sm" style="background: #ffffff; border: 1px solid #ebebeb; border-radius: 8px;">
+                                        <div class="row no-gutters">
+                                            <div class="col-auto pr-4">
+                                                <h4 class="font-weight-bold mb-1" style="font-size: 1.5rem; color: #333;">{{ rev.user.username|default:"Guest User"|title }}</h4>
+                                                <div class="ratings-container mb-1">
+                                                    <div class="ratings">
+                                                        <div class="ratings-val" style="width: {% widthratio rev.rating 5 100 %}%;"></div>
+                                                    </div>
                                                 </div>
-                                            </div>
-                                            <span class="review-date text-muted" style="font-size: 1.2rem;">{{ rev.date|date:"F d, Y" }}</span>
-                                        </div><!-- End .col-auto -->
-                                        <div class="col">
-                                            <div class="review-content" style="font-size: 1.4rem; color: #555; line-height: 1.6;">
-                                                <p>{{ rev.review }}</p>
-                                            </div>
-                                        </div><!-- End .col -->
-                                    </div><!-- End .row -->
-                                </div><!-- End .review -->
-                                {% endfor %}
-                            {% else %}
-                                <div class="text-center py-5" style="background: #fbfbfb; border-radius: 8px;">
-                                    <i class="icon-comments-o text-muted mb-3" style="font-size: 4rem; display: block;"></i>
-                                    <h4 class="text-muted font-weight-normal">There are no reviews for this product yet.</h4>
-                                    <p class="text-muted" style="font-size: 1.3rem;">Be the first to share your thoughts on this item!</p>
-                                </div>
-                            {% endif %}
+                                                <span class="review-date text-muted" style="font-size: 1.2rem;">{{ rev.date|date:"F d, Y" }}</span>
+                                            </div><!-- End .col-auto -->
+                                            <div class="col">
+                                                <div class="review-content" style="font-size: 1.4rem; color: #555; line-height: 1.6;">
+                                                    <p class="mb-0">{{ rev.review }}</p>
+                                                </div>
+                                            </div><!-- End .col -->
+                                        </div><!-- End .row -->
+                                    </div><!-- End .review -->
+                                    {% endfor %}
+                                {% else %}
+                                    <div id="no-review-msg" class="text-center py-5" style="background: #fbfbfb; border-radius: 8px;">
+                                        <i class="icon-comments-o text-muted mb-3" style="font-size: 4rem; display: block; color: #ccc;"></i>
+                                        <h4 class="text-muted font-weight-normal">There are no reviews for this product yet.</h4>
+                                        <p class="text-muted" style="font-size: 1.3rem;">Be the first to share your thoughts on this item!</p>
+                                    </div>
+                                {% endif %}
+                            </div><!-- End #reviews-list-container -->
+
+                            <!-- Add Review Form Section (No order condition required) -->
+                            <div class="add-review-section mt-5 pt-4 border-top" id="add-review-form-wrapper">
+                                <h3 class="font-weight-bold mb-1" style="color: #333; font-size: 2rem;">Add a Review</h3>
+                                <p class="text-muted mb-4" style="font-size: 1.3rem;">
+                                    {% if request.user.is_authenticated %}
+                                        Reviewing as <strong>{{ request.user.username|title }}</strong>.
+                                    {% else %}
+                                        You are reviewing as a <strong>Guest</strong>. (<a href="{% url 'userauth:login' %}?next={{ request.path }}" style="color: #39f;">Sign in</a> if you have an account).
+                                    {% endif %}
+                                </p>
+
+                                <div id="review-res" style="display: none;"></div>
+
+                                <form action="{% url 'core:ajax_add_review' product.pid %}" id="commentForm" method="POST" class="review-form">
+                                    {% csrf_token %}
+                                    
+                                    <div class="row">
+                                        <div class="col-md-5 col-12 mb-3">
+                                            <label for="rating-select" class="font-weight-bold text-dark mb-1" style="font-size: 1.35rem;">Rating *</label>
+                                            <select name="rating" id="rating-select" class="form-control" style="height: 44px; border-radius: 6px; font-size: 1.35rem;" required>
+                                                <option value="5" selected>⭐⭐⭐⭐⭐ (5/5 - Excellent)</option>
+                                                <option value="4">⭐⭐⭐⭐☆ (4/5 - Very Good)</option>
+                                                <option value="3">⭐⭐⭐☆☆ (3/5 - Average)</option>
+                                                <option value="2">⭐⭐☆☆☆ (2/5 - Poor)</option>
+                                                <option value="1">⭐☆☆☆☆ (1/5 - Terrible)</option>
+                                            </select>
+                                        </div>
+                                    </div>
+
+                                    <div class="form-group mb-3">
+                                        <label for="review-textarea" class="font-weight-bold text-dark mb-1" style="font-size: 1.35rem;">Your Review *</label>
+                                        <textarea name="review" id="review-textarea" rows="4" class="form-control" placeholder="Write your thoughts and feedback about this product..." style="border-radius: 6px; font-size: 1.35rem; padding: 12px; resize: vertical;" required></textarea>
+                                    </div>
+
+                                    <button type="submit" id="review-submit-btn" class="btn btn-primary btn-round px-4 py-2" style="font-size: 1.35rem; min-width: 170px;">
+                                        <span>Submit Review</span><i class="icon-long-arrow-right ml-2"></i>
+                                    </button>
+                                </form>
+                            </div><!-- End .add-review-section -->
+
                         </div><!-- End .reviews -->
                     </div><!-- .End .tab-pane -->
                 </div><!-- End .tab-content -->
@@ -457,12 +505,18 @@
                                 <h3 class="product-title font-weight-normal mb-2" style="font-size: 1.4rem; line-height: 1.3;">
                                     <a href="{% url 'core:product-details' p.pid %}" style="color: #333;">{{ p.title }}</a>
                                 </h3><!-- End .product-title -->
-                                <div class="product-price justify-content-center" style="font-size: 1.6rem;">
+                                <div class="product-price justify-content-center mb-1" style="font-size: 1.6rem;">
                                     <span class="new-price font-weight-bold" style="color: #fcb941;">${{ p.price }}</span>
                                     {% if p.old_price %}
                                     <span class="old-price text-muted ml-2" style="text-decoration: line-through; font-size: 1.3rem;">${{ p.old_price }}</span>
                                     {% endif %}
                                 </div><!-- End .product-price -->
+                                <div class="ratings-container justify-content-center mb-1">
+                                    <div class="ratings">
+                                        <div class="ratings-val" style="width: {{ p.get_rating_percent }}%;"></div>
+                                    </div>
+                                    <span class="ratings-text">( {{ p.get_review_count }} {% if p.get_review_count == 1 %}Review{% else %}Reviews{% endif %} )</span>
+                                </div>
                             </div><!-- End .product-body -->
                         </div><!-- End .product -->
                     </div><!-- End .col-6 col-md-4 col-lg-3 -->
@@ -579,6 +633,104 @@
                     mainClass: 'mfp-fade'
                 }, 0);
             }
+        });
+
+        // 5. Review Link Click: Switch to Reviews Tab & Smooth Scroll
+        $('#review-link').on('click', function(e) {
+            e.preventDefault();
+            $('#product-review-link').tab('show');
+            $('html, body').animate({
+                scrollTop: $('#product-review-tab').offset().top - 80
+            }, 500);
+        });
+
+        // 6. AJAX Add Review Form Submission
+        $('#commentForm').on('submit', function(e) {
+            e.preventDefault();
+
+            var $form = $(this);
+            var $submitBtn = $('#review-submit-btn');
+            var $resContainer = $('#review-res');
+
+            $submitBtn.prop('disabled', true).html('<i class="icon-refresh icon-spin mr-2"></i> Submitting...');
+            $resContainer.slideUp();
+
+            $.ajax({
+                url: $form.attr('action'),
+                type: 'POST',
+                data: $form.serialize(),
+                dataType: 'json',
+                success: function(response) {
+                    if (response.bool === true) {
+                        // Success alert
+                        $resContainer.html(
+                            '<div class="alert alert-success py-2 px-3 mb-3" style="font-size: 1.35rem; border-radius: 6px;">' +
+                            '<i class="icon-check mr-2"></i> Review submitted successfully! Thank you for your feedback.' +
+                            '</div>'
+                        ).slideDown();
+
+                        // Reset form
+                        $form[0].reset();
+
+                        // Remove empty state message if it exists
+                        $('#no-review-msg').remove();
+
+                        // Build review card HTML
+                        var starPercent = Math.round((response.context.rating / 5) * 100);
+                        var newReviewHtml =
+                            '<div class="review mb-4 p-3 shadow-sm" style="background: #ffffff; border: 1px solid #ebebeb; border-radius: 8px; animation: fadeIn 0.4s ease;">' +
+                                '<div class="row no-gutters">' +
+                                    '<div class="col-auto pr-4">' +
+                                        '<h4 class="font-weight-bold mb-1" style="font-size: 1.5rem; color: #333;">' + response.context.user + '</h4>' +
+                                        '<div class="ratings-container mb-1">' +
+                                            '<div class="ratings">' +
+                                                '<div class="ratings-val" style="width: ' + starPercent + '%;"></div>' +
+                                            '</div>' +
+                                        '</div>' +
+                                        '<span class="review-date text-muted" style="font-size: 1.2rem;">' + response.context.date + '</span>' +
+                                    '</div>' +
+                                    '<div class="col">' +
+                                        '<div class="review-content" style="font-size: 1.4rem; color: #555; line-height: 1.6;">' +
+                                            '<p class="mb-0">' + response.context.review + '</p>' +
+                                        '</div>' +
+                                    '</div>' +
+                                '</div>' +
+                            '</div>';
+
+                        // Prepend the new review to the list
+                        $('#reviews-list-container').prepend(newReviewHtml);
+
+                        // Update review count everywhere on the page
+                        var count = response.reviews_count;
+                        $('.reviews-count-text').text(count);
+
+                        // Update main product star percentage
+                        if (response.rating_percent !== undefined) {
+                            $('.main-product-ratings-val').css('width', response.rating_percent + '%');
+                        }
+                    } else {
+                        $resContainer.html(
+                            '<div class="alert alert-danger py-2 px-3 mb-3" style="font-size: 1.35rem; border-radius: 6px;">' +
+                            '<i class="icon-exclamation-circle mr-2"></i> ' + (response.error || 'Failed to submit review.') +
+                            '</div>'
+                        ).slideDown();
+                    }
+                },
+                error: function(xhr) {
+                    var errorMsg = 'An error occurred while submitting your review. Please try again.';
+                    if (xhr.responseJSON && xhr.responseJSON.error) {
+                        errorMsg = xhr.responseJSON.error;
+                    }
+                    $resContainer.html(
+                        '<div class="alert alert-danger py-2 px-3 mb-3" style="font-size: 1.35rem; border-radius: 6px;">' +
+                        '<i class="icon-exclamation-circle mr-2"></i> ' + errorMsg +
+                        '</div>'
+                    ).slideDown();
+                },
+                complete: function() {
+                    $submitBtn.prop('disabled', false).html('<span>Submit Review</span><i class="icon-long-arrow-right ml-2"></i>');
+                }
+            });
         });
     });
 </script>

@@ -268,7 +268,15 @@
                                             {% endif %}
                                         </div><!-- End .product-price -->
 
-                                        <!-- Stock & Rating -->
+                                        <!-- Rating -->
+                                        <div class="ratings-container justify-content-center mb-2">
+                                            <div class="ratings">
+                                                <div class="ratings-val" style="width: {{ p.get_rating_percent }}%;"></div><!-- End .ratings-val -->
+                                            </div><!-- End .ratings -->
+                                            <span class="ratings-text">( {{ p.get_review_count }} {% if p.get_review_count == 1 %}Review{% else %}Reviews{% endif %} )</span>
+                                        </div><!-- End .ratings-container -->
+
+                                        <!-- Stock -->
                                         <div class="d-flex align-items-center justify-content-center mb-1">
                                             {% if p.in_stock %}
                                             <span class="badge badge-success px-2 py-1 font-weight-normal" style="font-size: 1.05rem;">

@@ -3,6 +3,7 @@ from shortuuid.django_fields import ShortUUIDField
 from django.utils.html import mark_safe
 from userauth.models import User
 from taggit.managers import TaggableManager
+from ckeditor_uploader.fields import RichTextUploadingField
 
 
 def user_directory_path(instance, filename):
@@ -69,7 +70,7 @@ class Vendor(models.Model):
     title = models.CharField(max_length=100)
     image = models.ImageField(upload_to=user_directory_path)
     cover_image = models.ImageField(upload_to=user_directory_path, default=None, null=True, blank=True)
-    description = models.TextField(null=True, blank=True)
+    description = RichTextUploadingField(null=True, blank=True)
 
     address = models.CharField(
         max_length=100,
@@ -145,7 +146,7 @@ class Products(models.Model):
         default='product.jpg'
     )
 
-    description = models.TextField(
+    description = RichTextUploadingField(
         null=True,
         blank=True,
         default='No Description'
@@ -164,7 +165,7 @@ class Products(models.Model):
         blank=True
     )
 
-    specifications = models.TextField(
+    specifications = RichTextUploadingField(
         null=True,
         blank=True,
         default='No Description'
@@ -236,6 +237,27 @@ class Products(models.Model):
         if self.old_price and self.old_price > 0:
             return (self.price / self.old_price) * 100
         return 0
+
+    def get_rating_percent(self):
+        if hasattr(self, 'avg_rating') and self.avg_rating is not None:
+            return round((self.avg_rating / 5) * 100, 1)
+        avg = self.productreview_set.aggregate(avg_rating=models.Avg('rating'))['avg_rating']
+        if avg is not None:
+            return round((avg / 5) * 100, 1)
+        return 0
+
+    def get_rating_avg(self):
+        if hasattr(self, 'avg_rating') and self.avg_rating is not None:
+            return round(self.avg_rating, 1)
+        avg = self.productreview_set.aggregate(avg_rating=models.Avg('rating'))['avg_rating']
+        if avg is not None:
+            return round(avg, 1)
+        return 0
+
+    def get_review_count(self):
+        if hasattr(self, 'review_count'):
+            return self.review_count
+        return self.productreview_set.count()
 
 
 class ProductImage(models.Model):

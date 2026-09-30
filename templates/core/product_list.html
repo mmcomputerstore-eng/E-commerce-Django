@@ -358,9 +358,9 @@
 
                                                 <div class="ratings-container justify-content-center mb-2">
                                                     <div class="ratings">
-                                                        <div class="ratings-val" style="width: 80%;"></div><!-- End .ratings-val -->
+                                                        <div class="ratings-val" style="width: {{ p.get_rating_percent }}%;"></div><!-- End .ratings-val -->
                                                     </div><!-- End .ratings -->
-                                                    <span class="ratings-text">( 12 Reviews )</span>
+                                                    <span class="ratings-text">( {{ p.get_review_count }} {% if p.get_review_count == 1 %}Review{% else %}Reviews{% endif %} )</span>
                                                 </div><!-- End .rating-container -->
 
                                                 {% if p.vendor %}
@@ -470,9 +470,9 @@
 
                                                 <div class="ratings-container justify-content-center mb-2">
                                                     <div class="ratings">
-                                                        <div class="ratings-val" style="width: 80%;"></div><!-- End .ratings-val -->
+                                                        <div class="ratings-val" style="width: {{ p.get_rating_percent }}%;"></div><!-- End .ratings-val -->
                                                     </div><!-- End .ratings -->
-                                                    <span class="ratings-text">( 12 Reviews )</span>
+                                                    <span class="ratings-text">( {{ p.get_review_count }} {% if p.get_review_count == 1 %}Review{% else %}Reviews{% endif %} )</span>
                                                 </div><!-- End .rating-container -->
 
                                                 {% if p.vendor %}

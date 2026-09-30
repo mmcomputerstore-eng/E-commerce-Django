@@ -1,6 +1,8 @@
 from django.shortcuts import render, get_object_or_404
-from django.db.models import Count, Q
+from django.db.models import Count, Q,Avg
 from taggit.models import Tag
+from core.forms import ProductReviewForm
+from django.http import JsonResponse
 
 from core.models import (
     Category,
@@ -15,9 +17,13 @@ from core.models import (
 )
 
 
-# Create your views here.
 def index(request):
-    products = Products.objects.filter(featured=True, product_status='published').prefetch_related('tags')
+    products = Products.objects.filter(
+        featured=True, product_status='published'
+    ).annotate(
+        avg_rating=Avg('productreview__rating'),
+        review_count=Count('productreview')
+    ).prefetch_related('tags')
     context = {
         'products': products
     }
@@ -30,7 +36,10 @@ def products_list_view(request, tag_slug=None):
     tag_param = tag_slug or request.GET.get('tag')
     q_param = request.GET.get('q')
 
-    base_products = Products.objects.filter(product_status='published')
+    base_products = Products.objects.filter(product_status='published').annotate(
+        avg_rating=Avg('productreview__rating'),
+        review_count=Count('productreview')
+    )
     selected_category = None
     selected_vendor = None
     selected_tag = None
@@ -115,7 +124,12 @@ def vendor_list_view(request):
 
 def vendor_details_view(request, vid):
     vendor = get_object_or_404(Vendor, vid=vid)
-    products = Products.objects.filter(vendor=vendor, product_status='published').prefetch_related('tags').order_by('-featured', '-id')
+    products = Products.objects.filter(
+        vendor=vendor, product_status='published'
+    ).annotate(
+        avg_rating=Avg('productreview__rating'),
+        review_count=Count('productreview')
+    ).prefetch_related('tags').order_by('-featured', '-id')
     context = {
         'vendor': vendor,
         'products': products,
@@ -140,14 +154,63 @@ def product_details_view(request, pid):
                 product_status='published'
             ).exclude(pid=pid).order_by('-featured', '-id')[:4]
 
+    review_form = ProductReviewForm()
     reviews = ProductReview.objects.filter(product=product).order_by('-date')
-
+    rating_agg = ProductReview.objects.filter(product=product).aggregate(rating=Avg('rating'))
+    avrage_rating = ((rating_agg['rating'] or 0) / 5) * 100
     context = {
         'product': product,
+        'review_form': review_form,
         'p_images': p_images,
         'related_products': related_products,
         'reviews': reviews,
+        'avrage_rating': avrage_rating,
     }
     return render(request, 'core/product_details.html', context)
+
+
+def ajax_add_review(request, pid):
+    product = get_object_or_404(Products, pid=pid)
+    user = request.user if request.user.is_authenticated else None
+
+    review_text = request.POST.get('review', '').strip()
+    rating_val = request.POST.get('rating', '5')
+
+    if not review_text:
+        return JsonResponse({'bool': False, 'error': 'Review cannot be empty.'}, status=400)
+
+    try:
+        rating_int = int(rating_val)
+    except (ValueError, TypeError):
+        rating_int = 5
+
+    review = ProductReview.objects.create(
+        user=user,
+        product=product,
+        review=review_text,
+        rating=rating_int
+    )
+
+    avg_data = ProductReview.objects.filter(product=product).aggregate(rating=Avg('rating'))
+    avg_rating = avg_data['rating'] or 0
+    rating_percent = round((avg_rating / 5) * 100, 1)
+    reviews_count = ProductReview.objects.filter(product=product).count()
+
+    context = {
+        'user': user.username.title() if user else 'Anonymous Guest',
+        'review': review.review,
+        'rating': review.rating,
+        'date': review.date.strftime("%B %d, %Y"),
+    }
+
+    return JsonResponse({
+        'bool': True,
+        'context': context,
+        'average_reviews': avg_data,
+        'rating_percent': rating_percent,
+        'reviews_count': reviews_count,
+        'avg_rating': round(avg_rating, 1),
+    })
+
 
 
