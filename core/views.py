@@ -213,4 +213,32 @@ def ajax_add_review(request, pid):
     })
 
 
+def search_view(request):
+    query = request.GET.get('q', '').strip()
+    category_param = request.GET.get('category')
 
+    if query:
+        products = Products.objects.filter(
+            Q(title__icontains=query) |
+            Q(description__icontains=query) |
+            Q(tags__name__icontains=query),
+            product_status='published'
+        )
+    else:
+        products = Products.objects.filter(product_status='published')
+
+    if category_param:
+        products = products.filter(Q(category__cid=category_param) | Q(category__id=category_param))
+
+    products = products.distinct().annotate(
+        avg_rating=Avg('productreview__rating'),
+        review_count=Count('productreview')
+    ).prefetch_related('tags').order_by('-featured', '-id')
+
+    context = {
+        'products': products,
+        'query': query,
+        'category_param': category_param,
+    }
+
+    return render(request, 'core/search.html', context)

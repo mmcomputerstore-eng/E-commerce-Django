@@ -1,0 +1,212 @@
+{% extends "partials/base.html" %}
+{% load static %}
+
+{% block title %}
+    {% if query %}Search: "{{ query }}"{% else %}Search Products{% endif %} | MM Computer Store
+{% endblock title %}
+
+{% block content %}
+<main class="main">
+    <!-- Page Header -->
+    <div class="page-header text-center" style="background-image: url('{% static 'assets/images/page-header-bg.jpg' %}')">
+        <div class="container">
+            {% if query %}
+            <h1 class="page-title">Search Results<span>for &ldquo;{{ query }}&rdquo;</span></h1>
+            {% else %}
+            <h1 class="page-title">Search Products<span>Discover everything you need</span></h1>
+            {% endif %}
+        </div><!-- End .container -->
+    </div><!-- End .page-header -->
+
+    <!-- Breadcrumb Navigation -->
+    <nav aria-label="breadcrumb" class="breadcrumb-nav mb-4">
+        <div class="container">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{% url 'core:home' %}">Home</a></li>
+                <li class="breadcrumb-item"><a href="{% url 'core:products' %}">Products</a></li>
+                <li class="breadcrumb-item active" aria-current="page">Search Results</li>
+                {% if query %}
+                <li class="breadcrumb-item active text-primary" aria-current="page">&ldquo;{{ query }}&rdquo;</li>
+                {% endif %}
+            </ol>
+        </div><!-- End .container -->
+    </nav><!-- End .breadcrumb-nav -->
+
+    <div class="page-content">
+        <div class="container">
+            
+            <!-- Search Results Summary Bar -->
+            <div class="toolbox mb-4 p-3 bg-white rounded shadow-sm d-flex align-items-center justify-content-between flex-wrap" style="border: 1px solid #ebebeb;">
+                <div class="toolbox-left d-flex align-items-center">
+                    <div class="toolbox-info" style="font-size: 1.4rem;">
+                        {% if query %}
+                            Showing results for <span class="font-weight-bold text-dark">&ldquo;{{ query }}&rdquo;</span> 
+                            &mdash; <span class="badge badge-primary px-2 py-1 ml-1" style="font-size: 1.2rem; border-radius: 12px;">{{ products.count }} product{{ products.count|pluralize }} found</span>
+                        {% else %}
+                            Showing <span class="badge badge-primary px-2 py-1 ml-1" style="font-size: 1.2rem; border-radius: 12px;">{{ products.count }} product{{ products.count|pluralize }}</span>
+                        {% endif %}
+                    </div>
+                </div><!-- End .toolbox-left -->
+
+                <div class="toolbox-right mt-2 mt-sm-0">
+                    <form action="{% url 'core:search' %}" method="get" class="d-flex align-items-center">
+                        <div class="input-group" style="max-width: 320px;">
+                            <input type="search" name="q" class="form-control form-control-sm" value="{{ query }}" placeholder="Search again..." style="border-radius: 20px 0 0 20px; font-size: 1.3rem; padding-left: 15px;" required>
+                            <div class="input-group-append">
+                                <button class="btn btn-primary btn-sm px-3" type="submit" style="border-radius: 0 20px 20px 0;">
+                                    <i class="icon-search"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div><!-- End .toolbox-right -->
+            </div><!-- End .toolbox -->
+
+            <!-- Products Grid -->
+            <div class="products mb-5">
+                <div class="row">
+                    {% for p in products %}
+                    <div class="col-6 col-md-4 col-lg-3 mb-4">
+                        <div class="product product-7 text-center shadow-sm h-100" 
+                             style="border: 1px solid #ebebeb; border-radius: 12px; overflow: hidden; background: #fff; display: flex; flex-direction: column; transition: all 0.25s ease;"
+                             onmouseover="this.style.transform='translateY(-4px)'; this.style.boxShadow='0 10px 25px rgba(0,0,0,0.08)';"
+                             onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 2px 6px rgba(0,0,0,0.04)';">
+                            
+                            <!-- Product Media -->
+                            <figure class="product-media position-relative m-0" 
+                                    style="background: #fbfbfb; overflow: hidden; min-height: 220px; display: flex; align-items: center; justify-content: center;">
+                                
+                                {% if p.old_price and p.get_percentage %}
+                                <span class="product-label label-new" style="position: absolute; top: 10px; left: 10px; background-color: #a6c76c; font-size: 1.1rem; padding: 2px 8px; border-radius: 4px; z-index: 2;">
+                                    {{ p.get_percentage|floatformat:0 }}% Off
+                                </span>
+                                {% endif %}
+
+                                {% if p.featured %}
+                                <span class="product-label label-top" style="position: absolute; top: {% if p.old_price and p.get_percentage %}38px{% else %}10px{% endif %}; left: 10px; background-color: #39f; font-size: 1.1rem; padding: 2px 8px; border-radius: 4px; z-index: 2;">
+                                    Featured
+                                </span>
+                                {% endif %}
+
+                                <a href="{% url 'core:product-details' p.pid %}" style="width: 100%; display: block;">
+                                    {% if p.image %}
+                                    <img src="{{ p.image.url }}" alt="{{ p.title }}" class="product-image" style="height: 200px; object-fit: contain; width: 100%; padding: 15px;">
+                                    {% else %}
+                                    <div style="height: 200px; display: flex; align-items: center; justify-content: center; background: #eee;">
+                                        <i class="icon-camera text-muted" style="font-size: 3rem;"></i>
+                                    </div>
+                                    {% endif %}
+                                </a>
+
+                                <div class="product-action-vertical">
+                                    <a href="#" class="btn-product-icon btn-wishlist btn-expandable" title="Add to wishlist"><span>add to wishlist</span></a>
+                                    <a href="{% url 'core:product-details' p.pid %}" class="btn-product-icon" title="View Details"><i class="icon-eye"></i></a>
+                                </div><!-- End .product-action-vertical -->
+
+                                <div class="product-action">
+                                    <a href="#" class="btn-product btn-cart" title="Add to cart"><span>add to cart</span></a>
+                                </div><!-- End .product-action -->
+                            </figure><!-- End .product-media -->
+
+                            <!-- Product Body -->
+                            <div class="product-body p-3 text-center" style="flex-grow: 1; display: flex; flex-direction: column; justify-content: space-between;">
+                                <div>
+                                    <div class="product-cat text-muted mb-1" style="font-size: 1.2rem;">
+                                        {% if p.category %}
+                                        <a href="{% url 'core:products' %}?category={{ p.category.cid }}" style="color: #999;">
+                                            {{ p.category.title }}
+                                        </a>
+                                        {% else %}
+                                        <span>General</span>
+                                        {% endif %}
+                                    </div><!-- End .product-cat -->
+
+                                    {% if p.tags.all %}
+                                    <div class="product-tags mb-1" style="font-size: 1.1rem; line-height: 1.2;">
+                                        {% for tag in p.tags.all|slice:":3" %}
+                                        <a href="{% url 'core:products' %}?tag={{ tag.slug }}" class="badge badge-light border text-muted px-1 py-0 mr-1" style="font-size: 1rem; font-weight: normal;">#{{ tag.name }}</a>
+                                        {% endfor %}
+                                    </div>
+                                    {% endif %}
+
+                                    <h3 class="product-title font-weight-normal mb-2" style="font-size: 1.5rem; line-height: 1.3;">
+                                        <a href="{% url 'core:product-details' p.pid %}" style="color: #333;" title="{{ p.title }}">{{ p.title }}</a>
+                                    </h3><!-- End .product-title -->
+                                </div>
+
+                                <div>
+                                    <!-- Price -->
+                                    <div class="product-price d-flex align-items-center justify-content-center mb-2" style="font-size: 1.6rem; font-weight: 600; color: #39f;">
+                                        ${{ p.price }}
+                                        {% if p.old_price %}
+                                        <span class="old-price ml-2" style="text-decoration: line-through; color: #ccc; font-size: 1.3rem; font-weight: 400;">
+                                            ${{ p.old_price }}
+                                        </span>
+                                        {% endif %}
+                                    </div><!-- End .product-price -->
+
+                                    <!-- Rating -->
+                                    <div class="ratings-container justify-content-center mb-2">
+                                        <div class="ratings">
+                                            <div class="ratings-val" style="width: {{ p.get_rating_percent }}%;"></div><!-- End .ratings-val -->
+                                        </div><!-- End .ratings -->
+                                        <span class="ratings-text">( {{ p.get_review_count }} {% if p.get_review_count == 1 %}Review{% else %}Reviews{% endif %} )</span>
+                                    </div><!-- End .ratings-container -->
+
+                                    <!-- Stock & Vendor -->
+                                    <div class="d-flex align-items-center justify-content-center flex-wrap" style="gap: 8px;">
+                                        {% if p.in_stock %}
+                                        <span class="badge badge-success px-2 py-1 font-weight-normal" style="font-size: 1.05rem;">
+                                            <i class="icon-check"></i> In Stock
+                                        </span>
+                                        {% else %}
+                                        <span class="badge badge-danger px-2 py-1 font-weight-normal" style="font-size: 1.05rem;">
+                                            Out of Stock
+                                        </span>
+                                        {% endif %}
+
+                                        {% if p.vendor %}
+                                        <span class="text-muted" style="font-size: 1.15rem;">
+                                            by <a href="{% url 'core:vendor_details' p.vendor.vid %}" style="color: #39f; font-weight: 500;">{{ p.vendor.title }}</a>
+                                        </span>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div><!-- End .product-body -->
+                        </div><!-- End .product -->
+                    </div><!-- End .col -->
+                    {% empty %}
+                    <div class="col-12 text-center py-5">
+                        <div class="p-5 bg-white rounded shadow-sm mx-auto" style="max-width: 580px; border: 1px dashed #dbe8fa;">
+                            <div class="mb-3" style="width: 80px; height: 80px; border-radius: 50%; background: #f0f7ff; color: #39f; display: inline-flex; align-items: center; justify-content: center; font-size: 3.5rem;">
+                                <i class="icon-search"></i>
+                            </div>
+                            <h3 class="mt-2 font-weight-bold text-dark" style="font-size: 2.2rem;">No Products Found</h3>
+                            {% if query %}
+                            <p class="text-muted mb-4" style="font-size: 1.4rem;">
+                                We couldn't find any products matching &ldquo;<strong>{{ query }}</strong>&rdquo;. Please check for typos or try searching with different keywords.
+                            </p>
+                            {% else %}
+                            <p class="text-muted mb-4" style="font-size: 1.4rem;">
+                                Please enter a keyword in the search bar above to find products.
+                            </p>
+                            {% endif %}
+                            
+                            <div class="d-flex justify-content-center flex-wrap" style="gap: 12px;">
+                                <a href="{% url 'core:products' %}" class="btn btn-primary btn-round px-4 py-2" style="font-size: 1.35rem;">
+                                    <i class="icon-th-list mr-2"></i> Browse All Products
+                                </a>
+                                <a href="{% url 'core:home' %}" class="btn btn-outline-dark btn-round px-4 py-2" style="font-size: 1.35rem;">
+                                    <i class="icon-home mr-2"></i> Go to Homepage
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div><!-- End .row -->
+            </div><!-- End .products -->
+
+        </div><!-- End .container -->
+    </div><!-- End .page-content -->
+</main><!-- End .main -->
+{% endblock content %}
