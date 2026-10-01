@@ -31,6 +31,7 @@ urlpatterns = [
 
     # customer dashboard & history
     path('dashboard/', views.customer_dashboard, name='customer-dashboard'),
+    path('dashboard/delete-address/', views.delete_address, name='delete-address'),
     path('order-detail/<int:oid>/', views.order_detail_view, name='order-detail'),
     path('ajax-order-detail/<int:oid>/', views.order_detail_ajax, name='ajax-order-detail'),
 ]

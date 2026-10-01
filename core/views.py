@@ -4,6 +4,7 @@ from taggit.models import Tag
 from core.forms import ProductReviewForm
 from django.http import JsonResponse
 from django.contrib.auth.decorators import login_required
+from django.contrib.auth import update_session_auth_hash
 from django.contrib import messages
 
 from core.models import (
@@ -613,12 +614,36 @@ def customer_dashboard(request):
         active_address.status = True
         active_address.save()
 
-    # Handle profile bio update
+    # Handle profile details update
     if request.method == 'POST' and 'update_profile' in request.POST:
+        first_name = request.POST.get('first_name', '').strip()
+        last_name = request.POST.get('last_name', '').strip()
         bio = request.POST.get('bio', '').strip()
+
+        request.user.first_name = first_name
+        request.user.last_name = last_name
         request.user.bio = bio
         request.user.save()
-        messages.success(request, 'Your account details have been updated.')
+        messages.success(request, 'Your profile details have been updated successfully.')
+        return redirect('core:customer-dashboard')
+
+    # Handle password change
+    if request.method == 'POST' and 'change_password' in request.POST:
+        current_password = request.POST.get('current_password', '')
+        new_password = request.POST.get('new_password', '')
+        confirm_password = request.POST.get('confirm_password', '')
+
+        if not request.user.check_password(current_password):
+            messages.error(request, 'Current password entered is incorrect.')
+        elif len(new_password) < 6:
+            messages.error(request, 'New password must be at least 6 characters long.')
+        elif new_password != confirm_password:
+            messages.error(request, 'New password and confirmation password do not match.')
+        else:
+            request.user.set_password(new_password)
+            request.user.save()
+            update_session_auth_hash(request, request.user)
+            messages.success(request, 'Your password was updated successfully!')
         return redirect('core:customer-dashboard')
 
     context = {
@@ -635,6 +660,37 @@ def customer_dashboard(request):
         'active_address': active_address,
     }
     return render(request, 'core/dashboard.html', context)
+
+
+@login_required
+def delete_address(request):
+    if request.method == 'POST':
+        address_id = request.POST.get('id')
+        address = Address.objects.filter(id=address_id, user=request.user).first()
+        if address:
+            was_active = address.status
+            address.delete()
+
+            next_active_text = ''
+            next_active_id = None
+            if was_active:
+                next_address = Address.objects.filter(user=request.user).first()
+                if next_address:
+                    next_address.status = True
+                    next_address.save()
+                    next_active_text = next_address.address
+                    next_active_id = next_address.id
+
+            return JsonResponse({
+                'status': 'success',
+                'message': 'Address removed successfully.',
+                'was_active': was_active,
+                'next_active_id': next_active_id,
+                'next_active_text': next_active_text,
+                'remaining_count': Address.objects.filter(user=request.user).count()
+            })
+        return JsonResponse({'status': 'error', 'message': 'Address not found.'}, status=404)
+    return JsonResponse({'status': 'error', 'message': 'Invalid request method.'}, status=400)
 
 
 @login_required
@@ -673,6 +729,7 @@ def order_detail_ajax(request, oid):
             'date': order.order_date.strftime('%B %d, %Y - %I:%M %p'),
             'price': str(order.price),
             'status': order.product_status,
+            'paid_status': order.paid_status,
             'address': active_address.address if active_address else 'Not specified',
             'items': items_list,
         }

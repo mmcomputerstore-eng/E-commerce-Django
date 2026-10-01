@@ -78,7 +78,7 @@
                                     </li>
                                     {% if request.user.is_authenticated %}
                                         <li class="login">
-                                            <a href="{% url 'core:customer-dashboard' %}"><i class="icon-user"></i>Hello, {{ request.user.username|title }}</a>
+                                            <a href="{% url 'core:customer-dashboard' %}"><i class="icon-user"></i>Dashboard ({{ request.user.username|title }})</a>
                                         </li>
                                         <li class="login">
                                             <a href="{% url 'userauth:logout' %}"><i class="icon-long-arrow-right"></i>Log Out</a>
@@ -397,10 +397,18 @@
                                 <li class="{% if request.resolver_match.url_name == 'vendors' or request.resolver_match.url_name == 'vendor_details' %}active{% endif %}">
                                     <a href="{% url 'core:vendors' %}">Vendors</a>
                                 </li>
+                                {% if request.user.is_authenticated %}
+                                <li class="{% if request.resolver_match.url_name == 'customer-dashboard' or request.resolver_match.url_name == 'order-detail' %}active{% endif %}">
+                                    <a href="{% url 'core:customer-dashboard' %}">Dashboard</a>
+                                </li>
+                                {% endif %}
                                 <li>
                                     <a href="#" class="sf-with-ul">Pages</a>
 
                                     <ul>
+                                        {% if request.user.is_authenticated %}
+                                            <li><a href="{% url 'core:customer-dashboard' %}">Customer Dashboard</a></li>
+                                        {% endif %}
                                         <li>
                                             <a href="about.html" class="sf-with-ul">About</a>
 
@@ -717,8 +725,13 @@
                     <nav class="mobile-nav">
                         <ul class="mobile-menu">
                             <li class="active">
-                                <a href="index.html">Home</a>
+                                <a href="{% url 'core:home' %}">Home</a>
                             </li>
+                            {% if request.user.is_authenticated %}
+                            <li>
+                                <a href="{% url 'core:customer-dashboard' %}"><i class="icon-user mr-2"></i>My Dashboard</a>
+                            </li>
+                            {% endif %}
                             <li>
                                 <a href="{% url 'core:products' %}">Shop</a>
                                 <ul>
@@ -734,6 +747,7 @@
                                                     class="tip tip-new">New</span></span></a></li>
                                     <li><a href="{% url 'core:cart' %}">Cart</a></li>
                                     <li><a href="{% url 'core:checkout' %}">Checkout</a></li>
+                                    <li><a href="{% url 'core:customer-dashboard' %}">My Account / Dashboard</a></li>
                                     <li><a href="wishlist.html">Wishlist</a></li>
                                     <li><a href="#">Lookbook</a></li>
                                 </ul>
@@ -775,6 +789,7 @@
                                         </ul>
                                     </li>
                                     {% if request.user.is_authenticated %}
+                                        <li><a href="{% url 'core:customer-dashboard' %}">Customer Dashboard</a></li>
                                         <li><a href="{% url 'userauth:logout' %}">Logout ({{ request.user.username|title }})</a></li>
                                     {% else %}
                                         <li><a href="{% url 'userauth:login' %}">Login</a></li>
