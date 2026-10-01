@@ -264,4 +264,117 @@ $(document).ready(function() {
             }
         });
     });
+
+    // 3. Global Add to Wishlist click handler
+    $(document).on('click', '.btn-wishlist', function(e) {
+        e.preventDefault();
+        const $btn = $(this);
+
+        // Find PID
+        let pid = $btn.data('pid') || $btn.attr('data-pid');
+        if (!pid) {
+            const $productWrapper = $btn.closest('.product, .product-details-top, .product-details');
+            if ($productWrapper.length) {
+                const $detailLink = $productWrapper.find("a[href*='/product/']").first();
+                if ($detailLink.length) {
+                    const linkHref = $detailLink.attr('href');
+                    const match = linkHref.match(/\/product\/([^\/]+)\//);
+                    if (match && match[1]) {
+                        pid = match[1];
+                    }
+                }
+            }
+        }
+        if (!pid && window.location.pathname.includes('/product/')) {
+            const match = window.location.pathname.match(/\/product\/([^\/]+)\//);
+            if (match && match[1]) {
+                pid = match[1];
+            }
+        }
+
+        if (!pid) {
+            console.error("Could not find product PID for Wishlist button.");
+            return;
+        }
+
+        const csrfToken = getCookie('csrftoken') || $('input[name="csrfmiddlewaretoken"]').val() || '';
+
+        $.ajax({
+            url: '/add-to-wishlist/',
+            type: 'POST',
+            data: {
+                id: pid,
+                csrfmiddlewaretoken: csrfToken
+            },
+            dataType: 'json',
+            success: function(response) {
+                if (response.status === 'success') {
+                    $('#headerWishlistCount').text(response.wishlist_count);
+                    $('#sidebarWishlistCount').text(response.wishlist_count);
+                    $('.overview-wishlist-count').text(response.wishlist_count);
+                    showCartToast(response.message, 'success');
+                    $btn.addClass('added-to-wishlist');
+                    $btn.find('i').removeClass('icon-heart-o').addClass('icon-heart');
+                } else if (response.status === 'exists') {
+                    showCartToast(response.message, 'info');
+                } else if (response.status === 'login_required') {
+                    showCartToast(response.message, 'error');
+                    if ($('#signin-modal').length) {
+                        $('#signin-modal').modal('show');
+                    }
+                } else {
+                    showCartToast(response.message || 'Could not add to wishlist.', 'error');
+                }
+            },
+            error: function(xhr, status, error) {
+                showCartToast('Error adding to wishlist.', 'error');
+            }
+        });
+    });
+
+    // 4. Remove from Wishlist click handler
+    $(document).on('click', '.btn-remove-wishlist', function(e) {
+        e.preventDefault();
+        const $removeBtn = $(this);
+        const wishlistId = $removeBtn.data('id');
+        if (!wishlistId) return;
+
+        const csrfToken = getCookie('csrftoken') || $('input[name="csrfmiddlewaretoken"]').val() || '';
+
+        $.ajax({
+            url: '/remove-from-wishlist/',
+            type: 'POST',
+            data: {
+                id: wishlistId,
+                csrfmiddlewaretoken: csrfToken
+            },
+            dataType: 'json',
+            success: function(response) {
+                if (response.status === 'success') {
+                    $('#headerWishlistCount').text(response.wishlist_count);
+                    $('#sidebarWishlistCount').text(response.wishlist_count);
+                    $('.overview-wishlist-count').text(response.wishlist_count);
+                    showCartToast(response.message, 'success');
+
+                    const $row = $('#wishlist-row-' + wishlistId);
+                    if ($row.length) {
+                        $row.fadeOut(300, function() {
+                            $(this).remove();
+                            if (response.wishlist_count === 0) {
+                                $('#wishlistFilledSection').hide();
+                                $('#wishlistEmptySection').fadeIn(300);
+                                $('#dashWishlistFilled').hide();
+                                $('#dashWishlistEmpty').fadeIn(300);
+                            }
+                        });
+                    }
+                } else {
+                    showCartToast(response.message || 'Could not remove from wishlist.', 'error');
+                }
+            },
+            error: function(xhr, status, error) {
+                showCartToast('Error removing item from wishlist.', 'error');
+            }
+        });
+    });
 });

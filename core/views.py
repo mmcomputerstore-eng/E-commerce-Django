@@ -1,4 +1,5 @@
 from django.shortcuts import render, get_object_or_404, redirect
+from django.urls import reverse
 from django.db.models import Count, Q, Avg, Min, Max
 from taggit.models import Tag
 from core.forms import ProductReviewForm
@@ -646,6 +647,8 @@ def customer_dashboard(request):
             messages.success(request, 'Your password was updated successfully!')
         return redirect('core:customer-dashboard')
 
+    wishlist_items = Wishlist.objects.filter(user=request.user).select_related('product', 'product__category').order_by('-date')
+
     context = {
         'orders': orders,
         'orders_processing': orders_processing,
@@ -658,6 +661,7 @@ def customer_dashboard(request):
         'total_spent': f"{total_spent:.2f}",
         'addresses': addresses,
         'active_address': active_address,
+        'wishlist': wishlist_items,
     }
     return render(request, 'core/dashboard.html', context)
 
@@ -734,5 +738,76 @@ def order_detail_ajax(request, oid):
             'items': items_list,
         }
     })
+
+
+# ==============================================================================
+# Wishlist Management
+# ==============================================================================
+
+@login_required
+def wishlist_view(request):
+    return redirect(reverse('core:customer-dashboard') + '#tab-wishlist')
+
+
+def add_to_wishlist(request):
+    if not request.user.is_authenticated:
+        return JsonResponse({
+            'status': 'login_required',
+            'message': 'Please sign in to add items to your wishlist.',
+        }, status=200)
+
+    if request.method == 'POST':
+        product_id = request.POST.get('id') or request.POST.get('product_id')
+        product = None
+        if product_id:
+            if str(product_id).isdigit():
+                product = Products.objects.filter(id=int(product_id)).first()
+            if not product:
+                product = Products.objects.filter(pid=str(product_id)).first()
+
+        if not product:
+            return JsonResponse({'status': 'error', 'message': 'Product not found.'}, status=404)
+
+        existing = Wishlist.objects.filter(user=request.user, product=product).first()
+        if existing:
+            wishlist_count = Wishlist.objects.filter(user=request.user).count()
+            return JsonResponse({
+                'status': 'exists',
+                'message': f'"{product.title}" is already in your wishlist!',
+                'wishlist_count': wishlist_count,
+            })
+
+        Wishlist.objects.create(user=request.user, product=product)
+        wishlist_count = Wishlist.objects.filter(user=request.user).count()
+        return JsonResponse({
+            'status': 'success',
+            'message': f'"{product.title}" added to your wishlist!',
+            'wishlist_count': wishlist_count,
+        })
+
+    return JsonResponse({'status': 'error', 'message': 'Invalid request method.'}, status=400)
+
+
+@login_required
+def remove_from_wishlist(request):
+    if request.method == 'POST':
+        item_id = request.POST.get('id')
+        item = Wishlist.objects.filter(id=item_id, user=request.user).first()
+        if not item:
+            item = Wishlist.objects.filter(product__pid=item_id, user=request.user).first()
+        if not item and str(item_id).isdigit():
+            item = Wishlist.objects.filter(product__id=int(item_id), user=request.user).first()
+
+        if item:
+            product_title = item.product.title if item.product else 'Product'
+            item.delete()
+            wishlist_count = Wishlist.objects.filter(user=request.user).count()
+            return JsonResponse({
+                'status': 'success',
+                'message': f'"{product_title}" removed from your wishlist.',
+                'wishlist_count': wishlist_count,
+            })
+        return JsonResponse({'status': 'error', 'message': 'Item not found in your wishlist.'}, status=404)
+    return JsonResponse({'status': 'error', 'message': 'Invalid request method.'}, status=400)
 
 

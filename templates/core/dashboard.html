@@ -176,6 +176,12 @@
                                         <i class="icon-user mr-2 text-primary"></i> Account Profile
                                     </a>
                                 </li>
+                                <li class="nav-item">
+                                    <a class="nav-link d-flex align-items-center justify-content-between" id="tab-wishlist-link" data-toggle="tab" href="#tab-wishlist" role="tab" aria-controls="tab-wishlist" aria-selected="false" style="font-size: 1.45rem; padding: 1.2rem 1.5rem;">
+                                        <span><i class="icon-heart-o mr-2 text-primary"></i> My Wishlist</span>
+                                        <span class="badge badge-secondary badge-pill ml-auto" id="sidebarWishlistCount">{{ wishlist|length }}</span>
+                                    </a>
+                                </li>
                                 <li class="nav-item border-top mt-2 pt-2">
                                     <a class="nav-link text-muted" href="{% url 'core:products' %}" style="font-size: 1.4rem; padding: 1rem 1.5rem;">
                                         <i class="icon-shopping-bag mr-2"></i> Browse Products
@@ -223,6 +229,9 @@
                                         </a>
                                         <a href="#tab-account" class="btn btn-outline-dark btn-sm rounded switch-to-tab" data-target="#tab-account-link" style="font-size: 1.25rem;">
                                             <i class="icon-edit mr-1"></i> Edit Profile
+                                        </a>
+                                        <a href="#tab-wishlist" class="btn btn-outline-dark btn-sm rounded switch-to-tab" data-target="#tab-wishlist-link" style="font-size: 1.25rem;">
+                                            <i class="icon-heart-o mr-1 text-danger"></i> My Wishlist (<span class="overview-wishlist-count">{{ wishlist|length }}</span>)
                                         </a>
                                     </div>
                                 </div>
@@ -637,6 +646,138 @@
                                     </form>
                                 </div>
                             </div><!-- End #tab-account -->
+
+                            <!-- TAB 5: WISHLIST -->
+                            <div class="tab-pane fade" id="tab-wishlist" role="tabpanel" aria-labelledby="tab-wishlist-link">
+                                <div class="bg-white rounded shadow-sm border p-4 mb-4">
+                                    <div class="d-flex align-items-center justify-content-between mb-4 pb-2 border-bottom flex-wrap" style="gap: 15px;">
+                                        <div>
+                                            <h2 class="font-weight-bold mb-0" style="font-size: 2.2rem; color: #222;">
+                                                <i class="icon-heart-o text-primary mr-2"></i>My Wishlist
+                                            </h2>
+                                            <p class="text-muted mb-0 mt-1" style="font-size: 1.35rem;">
+                                                Saved items you love. Move them directly to your shopping cart anytime.
+                                            </p>
+                                        </div>
+                                        <div class="d-flex align-items-center" style="gap: 10px;">
+                                            <a href="{% url 'core:products' %}" class="btn btn-outline-dark btn-sm rounded px-3 py-2" style="font-size: 1.25rem;">
+                                                <i class="icon-shopping-bag mr-1"></i> Continue Shopping
+                                            </a>
+                                            <a href="{% url 'core:cart' %}" class="btn btn-primary btn-sm rounded px-3 py-2 font-weight-bold" style="font-size: 1.25rem;">
+                                                <i class="icon-shopping-cart mr-1"></i> View Cart
+                                            </a>
+                                        </div>
+                                    </div>
+
+                                    <!-- Wishlist Filled State -->
+                                    <div id="dashWishlistFilled" {% if not wishlist %}style="display: none;"{% endif %}>
+                                        <div class="table-responsive">
+                                            <table class="table table-wishlist table-mobile mb-0" id="dashWishlistTable">
+                                                <thead>
+                                                    <tr style="border-bottom: 2px solid #f4f4f4;">
+                                                        <th style="font-size: 1.35rem; font-weight: 600; color: #333; padding-bottom: 1.2rem;">Product</th>
+                                                        <th style="font-size: 1.35rem; font-weight: 600; color: #333; padding-bottom: 1.2rem; width: 140px;">Price</th>
+                                                        <th style="font-size: 1.35rem; font-weight: 600; color: #333; padding-bottom: 1.2rem; width: 140px;">Stock</th>
+                                                        <th style="font-size: 1.35rem; font-weight: 600; color: #333; padding-bottom: 1.2rem; width: 160px; text-align: center;">Action</th>
+                                                        <th style="padding-bottom: 1.2rem; width: 45px;"></th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody id="dashWishlistTableBody">
+                                                    {% for item in wishlist %}
+                                                    <tr class="wishlist-item-row" id="wishlist-row-{{ item.id }}" style="vertical-align: middle;">
+                                                        <td class="product-col" style="padding: 1.2rem 0.5rem;">
+                                                            <div class="product d-flex align-items-center">
+                                                                <figure class="product-media mr-3 mb-0" style="flex-shrink: 0; width: 70px; height: 70px; border-radius: 6px; overflow: hidden; border: 1px solid #eee; display: flex; align-items: center; justify-content: center; background: #fff;">
+                                                                    <a href="{% url 'core:product-details' item.product.pid %}">
+                                                                        {% if item.product.image %}
+                                                                        <img src="{{ item.product.image.url }}" alt="{{ item.product.title }}" style="max-height: 100%; max-width: 100%; object-fit: contain;">
+                                                                        {% else %}
+                                                                        <img src="{% static 'assets/images/demos/demo-13/products/product-1.jpg' %}" alt="{{ item.product.title }}" style="max-height: 100%; max-width: 100%; object-fit: contain;">
+                                                                        {% endif %}
+                                                                    </a>
+                                                                </figure>
+
+                                                                <div>
+                                                                    <span class="text-muted d-block" style="font-size: 1.15rem; text-transform: uppercase;">
+                                                                        {{ item.product.category.title|default:"Electronics" }}
+                                                                    </span>
+                                                                    <h4 class="product-title mb-0" style="font-size: 1.45rem; font-weight: 500; line-height: 1.4;">
+                                                                        <a href="{% url 'core:product-details' item.product.pid %}" class="text-dark">{{ item.product.title }}</a>
+                                                                    </h4>
+                                                                    <small class="text-muted" style="font-size: 1.15rem;">
+                                                                        Saved on {{ item.date|date:"M d, Y" }}
+                                                                    </small>
+                                                                </div>
+                                                            </div>
+                                                        </td>
+
+                                                        <td class="price-col" style="font-size: 1.55rem; color: #333; font-weight: 500;">
+                                                            <div class="d-flex align-items-baseline" style="gap: 6px;">
+                                                                <span class="font-weight-bold text-primary">${{ item.product.price }}</span>
+                                                                {% if item.product.old_price %}
+                                                                <span class="text-muted" style="text-decoration: line-through; font-size: 1.25rem;">
+                                                                    ${{ item.product.old_price }}
+                                                                </span>
+                                                                {% endif %}
+                                                            </div>
+                                                        </td>
+
+                                                        <td class="stock-col">
+                                                            {% if item.product.in_stock %}
+                                                            <span class="badge badge-success px-3 py-1 font-weight-500" style="font-size: 1.15rem; border-radius: 12px;">
+                                                                <i class="icon-check mr-1"></i> In Stock
+                                                            </span>
+                                                            {% else %}
+                                                            <span class="badge badge-danger px-3 py-1 font-weight-500" style="font-size: 1.15rem; border-radius: 12px;">
+                                                                <i class="icon-close mr-1"></i> Out of Stock
+                                                            </span>
+                                                            {% endif %}
+                                                        </td>
+
+                                                        <td class="action-col text-center">
+                                                            {% if item.product.in_stock %}
+                                                            <button type="button" class="btn btn-outline-primary btn-sm rounded btn-cart w-100 py-2" data-pid="{{ item.product.pid }}" style="font-size: 1.25rem;">
+                                                                <i class="icon-cart-plus mr-1"></i> Add to Cart
+                                                            </button>
+                                                            {% else %}
+                                                            <button type="button" class="btn btn-outline-secondary btn-sm rounded disabled w-100 py-2" style="font-size: 1.25rem; cursor: not-allowed;">
+                                                                Unavailable
+                                                            </button>
+                                                            {% endif %}
+                                                        </td>
+
+                                                        <td class="remove-col text-center">
+                                                            <button class="btn-remove-wishlist" data-id="{{ item.id }}" title="Remove from Wishlist" style="border: none; background: transparent; cursor: pointer; color: #999; font-size: 1.8rem; transition: color 0.2s;" onmouseover="this.style.color='#ef3b2c';" onmouseout="this.style.color='#999';">
+                                                                <i class="icon-close"></i>
+                                                            </button>
+                                                        </td>
+                                                    </tr>
+                                                    {% endfor %}
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+
+                                    <!-- Wishlist Empty State -->
+                                    <div id="dashWishlistEmpty" class="text-center py-5" {% if wishlist %}style="display: none;"{% endif %}>
+                                        <div class="mb-3">
+                                            <div style="width: 80px; height: 80px; border-radius: 50%; background: #f8f9fa; border: 2px dashed #ddd; display: inline-flex; align-items: center; justify-content: center;">
+                                                <i class="icon-heart-o text-muted" style="font-size: 3.5rem; opacity: 0.6;"></i>
+                                            </div>
+                                        </div>
+                                        <h3 class="font-weight-bold mb-2" style="font-size: 2rem; color: #222;">
+                                            Your Wishlist is Empty
+                                        </h3>
+                                        <p class="text-muted mb-4 mx-auto" style="max-width: 460px; font-size: 1.35rem; line-height: 1.6;">
+                                            Explore our catalog and click the heart icon on any product to save it here for quick access later.
+                                        </p>
+                                        <a href="{% url 'core:products' %}" class="btn btn-primary rounded px-5 py-3 font-weight-bold" style="font-size: 1.35rem;">
+                                            <span>DISCOVER PRODUCTS</span>
+                                            <i class="icon-long-arrow-right ml-2"></i>
+                                        </a>
+                                    </div>
+                                </div>
+                            </div><!-- End #tab-wishlist -->
                         </div><!-- End .tab-content -->
                     </div><!-- End .col-md-8 col-lg-9 -->
                 </div><!-- End .row -->
@@ -683,10 +824,36 @@ $(document).ready(function() {
     const csrfToken = '{{ csrf_token }}';
 
     // 1. URL Hash routing for tabs
-    const hash = window.location.hash;
-    if (hash && $(hash).length) {
-        $('.nav-dashboard a[href="' + hash + '"]').tab('show');
+    function activateTabFromHash() {
+        let hash = window.location.hash;
+        if (hash === '#wishlist') hash = '#tab-wishlist';
+        if (hash === '#orders') hash = '#tab-orders';
+        if (hash === '#address') hash = '#tab-address';
+        if (hash === '#account') hash = '#tab-account';
+        if (hash === '#dashboard' || hash === '#overview') hash = '#tab-dashboard';
+
+        if (hash && $(hash).length) {
+            const $tabLink = $('.nav-dashboard a[href="' + hash + '"]');
+            if ($tabLink.length) {
+                $tabLink.tab('show');
+                $('html, body').animate({
+                    scrollTop: $('.dashboard').offset().top - 80
+                }, 200);
+            }
+        }
     }
+    activateTabFromHash();
+    $(window).on('hashchange', function() {
+        activateTabFromHash();
+    });
+
+    // Keep URL hash updated when switching tabs via sidebar
+    $('.nav-dashboard a[data-toggle="tab"]').on('shown.bs.tab', function(e) {
+        const hash = $(e.target).attr('href');
+        if (history.replaceState) {
+            history.replaceState(null, null, hash);
+        }
+    });
 
     // Switch tabs on button click
     $(document).on('click', '.switch-to-tab', function(e) {

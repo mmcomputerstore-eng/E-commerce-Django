@@ -1,0 +1,157 @@
+{% extends "partials/base.html" %}
+{% load static %}
+
+{% block title %}My Wishlist | Mubeen Store{% endblock title %}
+
+{% block content %}
+<main class="main">
+    <!-- Page Header -->
+    <div class="page-header text-center" style="background-image: url('{% static 'assets/images/page-header-bg.jpg' %}'); background-size: cover; background-position: center; padding: 4rem 0;">
+        <div class="container">
+            <h1 class="page-title text-white font-weight-bold" style="font-size: 3.2rem; letter-spacing: -0.5px;">
+                My Wishlist
+                <span class="text-white-50 mt-1" style="font-size: 1.5rem; font-weight: normal; display: block;">
+                    Keep track of items you love and move them directly to your shopping cart anytime
+                </span>
+            </h1>
+        </div><!-- End .container -->
+    </div><!-- End .page-header -->
+
+    <!-- Breadcrumb Navigation -->
+    <nav aria-label="breadcrumb" class="breadcrumb-nav mb-4">
+        <div class="container">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{% url 'core:home' %}">Home</a></li>
+                <li class="breadcrumb-item"><a href="{% url 'core:products' %}">Shop</a></li>
+                <li class="breadcrumb-item active" aria-current="page">Wishlist</li>
+            </ol>
+        </div><!-- End .container -->
+    </nav><!-- End .breadcrumb-nav -->
+
+    <div class="page-content pb-6">
+        <div class="container">
+            <!-- Wishlist Content Section -->
+            <div id="wishlistFilledSection" {% if not wishlist %}style="display: none;"{% endif %}>
+                <div class="table-responsive bg-white rounded shadow-sm border p-4 mb-4">
+                    <table class="table table-wishlist table-mobile mb-0" id="wishlistTable">
+                        <thead>
+                            <tr style="border-bottom: 2px solid #f4f4f4;">
+                                <th style="font-size: 1.4rem; font-weight: 600; color: #333; padding-bottom: 1.5rem;">Product</th>
+                                <th style="font-size: 1.4rem; font-weight: 600; color: #333; padding-bottom: 1.5rem; width: 140px;">Price</th>
+                                <th style="font-size: 1.4rem; font-weight: 600; color: #333; padding-bottom: 1.5rem; width: 150px;">Stock Status</th>
+                                <th style="font-size: 1.4rem; font-weight: 600; color: #333; padding-bottom: 1.5rem; width: 180px; text-align: center;">Action</th>
+                                <th style="padding-bottom: 1.5rem; width: 50px;"></th>
+                            </tr>
+                        </thead>
+                        <tbody id="wishlistTableBody">
+                            {% for item in wishlist %}
+                            <tr class="wishlist-item-row" id="wishlist-row-{{ item.id }}" style="vertical-align: middle;">
+                                <td class="product-col" style="padding: 1.5rem 0.5rem;">
+                                    <div class="product d-flex align-items-center">
+                                        <figure class="product-media mr-3 mb-0" style="flex-shrink: 0; width: 75px; height: 75px; border-radius: 6px; overflow: hidden; border: 1px solid #eee; display: flex; align-items: center; justify-content: center; background: #fff;">
+                                            <a href="{% url 'core:product-details' item.product.pid %}">
+                                                {% if item.product.image %}
+                                                <img src="{{ item.product.image.url }}" alt="{{ item.product.title }}" style="max-height: 100%; max-width: 100%; object-fit: contain;">
+                                                {% else %}
+                                                <img src="{% static 'assets/images/demos/demo-13/products/product-1.jpg' %}" alt="{{ item.product.title }}" style="max-height: 100%; max-width: 100%; object-fit: contain;">
+                                                {% endif %}
+                                            </a>
+                                        </figure>
+
+                                        <div>
+                                            <span class="text-muted d-block" style="font-size: 1.2rem; text-transform: uppercase;">
+                                                {{ item.product.category.title|default:"Electronics" }}
+                                            </span>
+                                            <h3 class="product-title mb-0" style="font-size: 1.55rem; font-weight: 500; line-height: 1.4;">
+                                                <a href="{% url 'core:product-details' item.product.pid %}" class="text-dark">{{ item.product.title }}</a>
+                                            </h3>
+                                            <small class="text-muted" style="font-size: 1.15rem;">
+                                                Saved on {{ item.date|date:"M d, Y" }}
+                                            </small>
+                                        </div>
+                                    </div>
+                                </td>
+
+                                <td class="price-col" style="font-size: 1.6rem; color: #333; font-weight: 500;">
+                                    <div class="d-flex align-items-baseline" style="gap: 8px;">
+                                        <span class="font-weight-bold text-primary">${{ item.product.price }}</span>
+                                        {% if item.product.old_price %}
+                                        <span class="text-muted" style="text-decoration: line-through; font-size: 1.35rem;">
+                                            ${{ item.product.old_price }}
+                                        </span>
+                                        {% endif %}
+                                    </div>
+                                </td>
+
+                                <td class="stock-col">
+                                    {% if item.product.in_stock %}
+                                    <span class="badge badge-success px-3 py-1 font-weight-500" style="font-size: 1.2rem; border-radius: 12px;">
+                                        <i class="icon-check mr-1"></i> In Stock
+                                    </span>
+                                    {% else %}
+                                    <span class="badge badge-danger px-3 py-1 font-weight-500" style="font-size: 1.2rem; border-radius: 12px;">
+                                        <i class="icon-close mr-1"></i> Out of Stock
+                                    </span>
+                                    {% endif %}
+                                </td>
+
+                                <td class="action-col text-center">
+                                    {% if item.product.in_stock %}
+                                    <button type="button" class="btn btn-outline-primary btn-sm rounded btn-cart w-100 py-2" data-pid="{{ item.product.pid }}" style="font-size: 1.3rem;">
+                                        <i class="icon-cart-plus mr-1"></i> Add to Cart
+                                    </button>
+                                    {% else %}
+                                    <button type="button" class="btn btn-outline-secondary btn-sm rounded disabled w-100 py-2" style="font-size: 1.3rem; cursor: not-allowed;">
+                                        Unavailable
+                                    </button>
+                                    {% endif %}
+                                </td>
+
+                                <td class="remove-col text-center">
+                                    <button class="btn-remove-wishlist" data-id="{{ item.id }}" title="Remove from Wishlist" style="border: none; background: transparent; cursor: pointer; color: #999; font-size: 1.8rem; transition: color 0.2s;" onmouseover="this.style.color='#ef3b2c';" onmouseout="this.style.color='#999';">
+                                        <i class="icon-close"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div><!-- End .table-responsive -->
+
+                <!-- Wishlist Bottom Navigation -->
+                <div class="d-flex align-items-center justify-content-between flex-wrap p-3 bg-white rounded shadow-sm border mb-4" style="gap: 15px;">
+                    <a href="{% url 'core:products' %}" class="btn btn-outline-dark rounded px-4 py-2" style="font-size: 1.35rem;">
+                        <i class="icon-shopping-bag mr-2"></i> Continue Shopping
+                    </a>
+
+                    <div class="d-flex" style="gap: 10px;">
+                        <a href="{% url 'core:cart' %}" class="btn btn-primary rounded px-4 py-2 font-weight-bold" style="font-size: 1.35rem;">
+                            <span>View Shopping Cart</span>
+                            <i class="icon-long-arrow-right ml-2"></i>
+                        </a>
+                    </div>
+                </div>
+            </div><!-- End #wishlistFilledSection -->
+
+            <!-- Empty Wishlist State -->
+            <div id="wishlistEmptySection" class="bg-white rounded shadow-sm border p-5 text-center my-4" {% if wishlist %}style="display: none;"{% endif %}>
+                <div class="mb-4">
+                    <div style="width: 90px; height: 90px; border-radius: 50%; background: #f8f9fa; border: 2px dashed #ddd; display: inline-flex; align-items: center; justify-content: center;">
+                        <i class="icon-heart-o text-muted" style="font-size: 4rem; opacity: 0.6;"></i>
+                    </div>
+                </div>
+                <h2 class="font-weight-bold mb-2" style="font-size: 2.4rem; color: #222;">
+                    Your Wishlist is Empty
+                </h2>
+                <p class="text-muted mb-4 mx-auto" style="max-width: 500px; font-size: 1.45rem; line-height: 1.6;">
+                    Explore our catalog and click the heart icon on any product to save it here for later.
+                </p>
+                <a href="{% url 'core:products' %}" class="btn btn-primary rounded px-5 py-3 font-weight-bold" style="font-size: 1.4rem;">
+                    <span>DISCOVER PRODUCTS</span>
+                    <i class="icon-long-arrow-right ml-2"></i>
+                </a>
+            </div><!-- End #wishlistEmptySection -->
+        </div><!-- End .container -->
+    </div><!-- End .page-content -->
+</main>
+{% endblock content %}

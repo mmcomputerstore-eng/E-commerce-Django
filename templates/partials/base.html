@@ -167,9 +167,9 @@
                                 </div><!-- End .dropdown-menu -->
                             </div><!-- End .compare-dropdown -->
 
-                            <a href="wishlist.html" class="wishlist-link">
+                            <a href="{% url 'core:customer-dashboard' %}#tab-wishlist" class="wishlist-link">
                                 <i class="icon-heart-o"></i>
-                                <span class="wishlist-count">3</span>
+                                <span class="wishlist-count" id="headerWishlistCount">{{ wishlist_count }}</span>
                                 <span class="wishlist-txt">Wishlist</span>
                             </a>
 
@@ -328,7 +328,7 @@
                                                             <ul>
                                                                 <li><a href="{% url 'core:cart' %}">Cart</a></li>
                                                                 <li><a href="{% url 'core:checkout' %}">Checkout</a></li>
-                                                                <li><a href="wishlist.html">Wishlist</a></li>
+                                                                <li><a href="{% url 'core:customer-dashboard' %}#tab-wishlist">Wishlist</a></li>
                                                                 <li><a href="{% url 'core:customer-dashboard' %}">My Account</a></li>
                                                                 <li><a href="#">Lookbook</a></li>
                                                             </ul>
@@ -655,7 +655,7 @@
                                         <li><a href="{% url 'userauth:login' %}">Sign In</a></li>
                                     {% endif %}
                                     <li><a href="{% url 'core:cart' %}">View Cart</a></li>
-                                    <li><a href="#">My Wishlist</a></li>
+                                    <li><a href="{% url 'core:customer-dashboard' %}#tab-wishlist">My Wishlist</a></li>
                                     <li><a href="#">Track My Order</a></li>
                                     <li><a href="#">Help</a></li>
                                 </ul><!-- End .widget-list -->
@@ -748,7 +748,7 @@
                                     <li><a href="{% url 'core:cart' %}">Cart</a></li>
                                     <li><a href="{% url 'core:checkout' %}">Checkout</a></li>
                                     <li><a href="{% url 'core:customer-dashboard' %}">My Account / Dashboard</a></li>
-                                    <li><a href="wishlist.html">Wishlist</a></li>
+                                    <li><a href="{% url 'core:customer-dashboard' %}#tab-wishlist">Wishlist</a></li>
                                     <li><a href="#">Lookbook</a></li>
                                 </ul>
                             </li>

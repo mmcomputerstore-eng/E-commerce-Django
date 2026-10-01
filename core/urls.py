@@ -34,4 +34,9 @@ urlpatterns = [
     path('dashboard/delete-address/', views.delete_address, name='delete-address'),
     path('order-detail/<int:oid>/', views.order_detail_view, name='order-detail'),
     path('ajax-order-detail/<int:oid>/', views.order_detail_ajax, name='ajax-order-detail'),
+
+    # wishlist
+    path('wishlist/', views.wishlist_view, name='wishlist'),
+    path('add-to-wishlist/', views.add_to_wishlist, name='add-to-wishlist'),
+    path('remove-from-wishlist/', views.remove_from_wishlist, name='remove-from-wishlist'),
 ]

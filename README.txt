@@ -189,6 +189,14 @@ E. CUSTOMER DASHBOARD ('/dashboard/')
        re-assignment if active address is deleted).
      * Add new delivery address form.
 
+F. WISHLIST MANAGEMENT ('/wishlist/')
+   - Asynchronous Add to Wishlist from any product card or detail page.
+   - Real-time global wishlist badge counter in header.
+   - Dedicated Wishlist page displaying saved products, prices, and stock status.
+   - Instant 1-click 'Add to Cart' directly from the wishlist table.
+   - AJAX 'Remove from Wishlist' with smooth animated row removal.
+   - Empty state view encouraging users to discover new products.
+
 
 ================================================================================
 6. PROJECT DIRECTORY STRUCTURE
@@ -225,6 +233,7 @@ ecomdjango/
 │   │   ├── product_details.html # Product detail & review form
 │   │   ├── product_list.html    # Filterable products catalog
 │   │   ├── order_detail.html    # Full printable order receipt
+│   │   ├── wishlist.html        # Interactive wishlist interface
 │   │   └── partials/            # Reusable table partials
 │   ├── partials/                # Global layout templates (base.html, header, footer)
 │   └── userauth/                # Login & registration templates
@@ -302,6 +311,9 @@ Route Pattern                         Method   Description
 /dashboard/delete-address/            POST     AJAX endpoint to delete address
 /order-detail/<oid>/                  GET      Full printable order invoice
 /ajax-order-detail/<oid>/             GET      AJAX endpoint for order tracker modal
+/wishlist/                            GET      Customer wishlist page
+/add-to-wishlist/                     POST     AJAX endpoint to add product to wishlist
+/remove-from-wishlist/                POST     AJAX endpoint to remove item from wishlist
 /users/sign-in/                       GET/POST User authentication login
 /users/sign-up/                       GET/POST User account registration
 /users/sign-out/                      GET      User logout and session cleanup
