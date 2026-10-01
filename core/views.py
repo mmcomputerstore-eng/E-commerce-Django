@@ -26,10 +26,19 @@ def index(request):
         avg_rating=Avg('productreview__rating'),
         review_count=Count('productreview')
     ).prefetch_related('tags')
+
+    banner_product_1 = Products.objects.filter(title='MacBook Air Latest Model', product_status='published').first()
+    banner_product_2 = Products.objects.filter(title='Original Outdoor Beanbag', product_status='published').first()
+    banner_product_3 = Products.objects.filter(title='Tan Suede Biker Jacket', product_status='published').first()
+
     context = {
-        'products': products
+        'products': products,
+        'banner_product_1': banner_product_1,
+        'banner_product_2': banner_product_2,
+        'banner_product_3': banner_product_3,
     }
     return render(request, 'core/index.html', context)
+
 
 
 def products_list_view(request, tag_slug=None):

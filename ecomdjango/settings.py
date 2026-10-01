@@ -144,10 +144,10 @@ MAILERS = {
 }
 
 JAZZMIN_SETTINGS = {
-    'site_header':'ecomrece Shop',
-    'site_brand': 'you order, we dliver',
+    'site_header':'Mubeen Store',
+    'site_brand': 'You Order, We Deliver',
     'site_logo':'assets/images/logos.png',
-    'copyright':'ecomreceproject.com'
+    'copyright':'mubeenstore.com'
 }
 
 AUTH_USER_MODEL = 'userauth.User'

@@ -1,6 +1,6 @@
 {% extends "partials/base.html" %}
 {% load static %}
-{% block title %} Home {% endblock title %}
+{% block title %} Home | Mubeen Store {% endblock title %}
 
 {% block content %}
         <main class="main">
@@ -25,7 +25,7 @@
                                         </span>
                                     </h1><!-- End .intro-title -->
 
-                                    <a href="category.html" class="btn btn-outline-primary-2">
+                                    <a href="{% if banner_product_1 %}{% url 'core:product-details' banner_product_1.pid %}{% else %}#{% endif %}" class="btn btn-outline-primary-2">
                                         <span>Shop Now</span>
                                         <i class="icon-long-arrow-right"></i>
                                     </a>
@@ -34,7 +34,7 @@
                         </div><!-- End .container intro-content -->
                     </div><!-- End .intro-slide -->
 
-                    <div class="intro-slide" style="background-image: url({% static 'assets/images/demos/demo-13/slider/slide-2.jpg)' %};">
+                    <div class="intro-slide" style="background-image: url({% static 'assets/images/demos/demo-13/slider/slide-2.jpg' %});">
                         <div class="container intro-content">
                             <div class="row">
                                 <div class="col-auto offset-lg-3 intro-col">
@@ -46,7 +46,7 @@
                                         </span>
                                     </h1><!-- End .intro-title -->
 
-                                    <a href="category.html" class="btn btn-outline-primary-2">
+                                    <a href="{% if banner_product_2 %}{% url 'core:product-details' banner_product_2.pid %}{% else %}#{% endif %}" class="btn btn-outline-primary-2">
                                         <span>Shop Now</span>
                                         <i class="icon-long-arrow-right"></i>
                                     </a>
@@ -67,7 +67,7 @@
                                         </span>
                                     </h1><!-- End .intro-title -->
 
-                                    <a href="category.html" class="btn btn-outline-primary-2">
+                                    <a href="{% if banner_product_3 %}{% url 'core:product-details' banner_product_3.pid %}{% else %}#{% endif %}" class="btn btn-outline-primary-2">
                                         <span>Shop Now</span>
                                         <i class="icon-long-arrow-right"></i>
                                     </a>

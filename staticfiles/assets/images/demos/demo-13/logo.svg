@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 130 28" width="130" height="28">
+  <defs>
+    <linearGradient id="mubeenGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#3399ff"/>
+      <stop offset="100%" stop-color="#0066cc"/>
+    </linearGradient>
+  </defs>
+  <!-- Stylized Geometric Brand Icon -->
+  <g transform="translate(2, 2)">
+    <rect x="0" y="0" width="24" height="24" rx="6" fill="url(#mubeenGrad)"/>
+    <path d="M5.5 18 L5.5 7 L12 14 L18.5 7 L18.5 18" stroke="#ffffff" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+  </g>
+  <!-- Brand Name 'Mubeen' -->
+  <text x="34" y="20" font-family="'Poppins', 'Segoe UI', -apple-system, sans-serif" font-size="18.5" font-weight="800" fill="#333333" letter-spacing="-0.3">Mubeen</text>
+  <circle cx="116" cy="19" r="2.5" fill="#3399ff"/>
+</svg>
