@@ -1,0 +1,60 @@
+{% load static %}
+<div class="product">
+    <figure class="product-media">
+        {% if p.old_price and p.get_percentage %}
+        <span class="product-label label-new">{{ p.get_percentage|floatformat:0 }}% Off</span>
+        {% elif p.featured %}
+        <span class="product-label label-top">Top</span>
+        {% endif %}
+        <a href="{% url 'core:product-details' p.pid %}">
+            <img src="{{ p.image.url }}" alt="{{ p.title }}" class="product-image" style="width: 100%; height: 220px; object-fit: contain; background: #fff; padding: 5px;">
+        </a>
+
+        <div class="product-action-vertical">
+            <a href="javascript:void(0);" class="btn-product-icon btn-wishlist btn-expandable" data-pid="{{ p.pid }}" title="Add to wishlist"><span>add to wishlist</span></a>
+            <a href="{% url 'core:product-details' p.pid %}" class="btn-product-icon" title="View details" style="display: flex; align-items: center; justify-content: center;"><i class="icon-eye"></i><span>View</span></a>
+        </div><!-- End .product-action-vertical -->
+
+        <div class="product-action">
+            <a href="javascript:void(0);" class="btn-product btn-cart" data-pid="{{ p.pid }}" title="Add to cart"><span>add to cart</span></a>
+        </div><!-- End .product-action -->
+    </figure><!-- End .product-media -->
+
+    <div class="product-body">
+        {% if p.category %}
+        <div class="product-cat">
+            <a href="{% url 'core:products' %}?category={{ p.category.cid }}">{{ p.category.title }}</a>
+        </div><!-- End .product-cat -->
+        {% endif %}
+
+        {% if p.tags.all %}
+        <div class="product-tags mb-1" style="font-size: 1.1rem; line-height: 1.2;">
+            {% for tag in p.tags.all|slice:":3" %}
+            <a href="{% url 'core:products' %}?tag={{ tag.slug }}" class="badge badge-light border text-muted px-1 py-0 mr-1" style="font-size: 1rem; font-weight: normal; transition: all 0.2s;" onmouseover="this.style.color='#39f'; this.style.borderColor='#39f';" onmouseout="this.style.color='#777'; this.style.borderColor='#e0e0e0';">#{{ tag.name }}</a>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        <h3 class="product-title"><a href="{% url 'core:product-details' p.pid %}">{{ p.title }}</a></h3><!-- End .product-title -->
+        
+        <div class="product-price">
+            ${{ p.price }}
+            {% if p.old_price %}
+            <p style="text-decoration: line-through; margin-left: 8px; color: #999; margin-bottom: 0;">${{ p.old_price }}</p>
+            {% endif %}
+        </div><!-- End .product-price -->
+
+        <div class="ratings-container">
+            <div class="ratings">
+                <div class="ratings-val" style="width: {{ p.get_rating_percent }}%;"></div><!-- End .ratings-val -->
+            </div><!-- End .ratings -->
+            <span class="ratings-text">( {{ p.get_review_count }} {% if p.get_review_count == 1 %}Review{% else %}Reviews{% endif %} )</span>
+        </div><!-- End .rating-container -->
+
+        {% if p.vendor %}
+        <div class="product-vendor text-muted mt-1" style="font-size: 1.2rem;">
+            By <a href="{% url 'core:vendor_details' p.vendor.vid %}" style="color: #39f; font-weight: 500;">{{ p.vendor.title }}</a>
+        </div>
+        {% endif %}
+    </div><!-- End .product-body -->
+</div><!-- End .product -->

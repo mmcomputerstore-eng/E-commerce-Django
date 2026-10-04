@@ -422,9 +422,8 @@
                                             </a>
 
                                             <div class="product-action-vertical">
-                                                <a href="#" class="btn-product-icon btn-wishlist btn-expandable" title="Add to wishlist"><span>add to wishlist</span></a>
-                                                <a href="#" class="btn-product-icon btn-compare" title="Compare"><span>Compare</span></a>
-                                                <a href="{% static 'popup/quickView.html' %}" class="btn-product-icon btn-quickview" title="Quick view"><span>Quick view</span></a>
+                                                <a href="javascript:void(0);" class="btn-product-icon btn-wishlist btn-expandable" data-pid="{{ p.pid }}" title="Add to wishlist"><span>add to wishlist</span></a>
+                                                <a href="{% url 'core:product-details' p.pid %}" class="btn-product-icon" title="View details" style="display: flex; align-items: center; justify-content: center;"><i class="icon-eye"></i><span>View</span></a>
                                             </div><!-- End .product-action-vertical -->
 
                                             <div class="product-action">
@@ -534,9 +533,8 @@
                                             </a>
 
                                             <div class="product-action-vertical">
-                                                <a href="#" class="btn-product-icon btn-wishlist btn-expandable" title="Add to wishlist"><span>add to wishlist</span></a>
-                                                <a href="#" class="btn-product-icon btn-compare" title="Compare"><span>Compare</span></a>
-                                                <a href="{% static 'popup/quickView.html' %}" class="btn-product-icon btn-quickview" title="Quick view"><span>Quick view</span></a>
+                                                <a href="javascript:void(0);" class="btn-product-icon btn-wishlist btn-expandable" data-pid="{{ p.pid }}" title="Add to wishlist"><span>add to wishlist</span></a>
+                                                <a href="{% url 'core:product-details' p.pid %}" class="btn-product-icon" title="View details" style="display: flex; align-items: center; justify-content: center;"><i class="icon-eye"></i><span>View</span></a>
                                             </div><!-- End .product-action-vertical -->
 
                                             <div class="product-action">

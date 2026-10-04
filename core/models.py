@@ -234,8 +234,8 @@ class Products(models.Model):
         return self.title
 
     def get_percentage(self):
-        if self.old_price and self.old_price > 0:
-            return (self.price / self.old_price) * 100
+        if self.old_price and self.old_price > 0 and self.old_price > self.price:
+            return ((self.old_price - self.price) / self.old_price) * 100
         return 0
 
     def get_rating_percent(self):

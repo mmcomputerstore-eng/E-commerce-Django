@@ -1,0 +1,55 @@
+{% extends "partials/base.html" %}
+{% load static %}
+
+{% block title %}Vendor Access Restricted | Mubeen Store{% endblock title %}
+
+{% block content %}
+<main class="main">
+    <div class="page-content py-6" style="background-color: #f9fafb; min-height: 70vh; display: flex; align-items: center;">
+        <div class="container">
+            <div class="row justify-content-center">
+                <div class="col-md-8 col-lg-6">
+                    <div class="card border-0 shadow-sm rounded-lg p-5 text-center bg-white" style="border-radius: 14px;">
+                        <div class="mb-4">
+                            <div style="width: 90px; height: 90px; border-radius: 50%; background: #fff3cd; color: #856404; display: inline-flex; align-items: center; justify-content: center; box-shadow: 0 4px 15px rgba(255, 193, 7, 0.2);">
+                                <i class="icon-briefcase" style="font-size: 4rem;"></i>
+                            </div>
+                        </div>
+
+                        <span class="badge badge-warning text-dark px-3 py-1 mb-3 mx-auto" style="font-size: 1.25rem; font-weight: 600; border-radius: 20px;">
+                            Customer Account Detected
+                        </span>
+
+                        <h2 class="font-weight-bold mb-2" style="font-size: 2.4rem; color: #222;">
+                            Vendor Access Restricted
+                        </h2>
+
+                        <p class="text-muted mb-4" style="font-size: 1.45rem; line-height: 1.6;">
+                            Hello, <strong>{{ request.user.first_name|default:request.user.username|title }}</strong>! Your account is currently registered as a <strong>Customer</strong>. The Vendor Dashboard is exclusively accessible to vendor accounts approved by the Administrator.
+                        </p>
+
+                        <div class="alert alert-light border text-left p-3 mb-4 rounded" style="font-size: 1.35rem; background-color: #fbfbfb;">
+                            <div class="d-flex align-items-center mb-1">
+                                <i class="icon-info-circle text-primary mr-2" style="font-size: 1.6rem;"></i>
+                                <strong class="text-dark">How to become a Vendor?</strong>
+                            </div>
+                            <span class="text-muted">
+                                If you want to sell your products on Mubeen Store, please contact our administrative team. Once an admin selects your account as a Vendor, your Vendor Dashboard will be automatically activated.
+                            </span>
+                        </div>
+
+                        <div class="d-flex flex-wrap justify-content-center" style="gap: 12px;">
+                            <a href="{% url 'core:customer-dashboard' %}" class="btn btn-primary rounded px-4 py-3 font-weight-bold" style="font-size: 1.35rem;">
+                                <i class="icon-user mr-1"></i> Go to Customer Dashboard
+                            </a>
+                            <a href="{% url 'core:products' %}" class="btn btn-outline-dark rounded px-4 py-3" style="font-size: 1.35rem;">
+                                <i class="icon-shopping-bag mr-1"></i> Browse Products
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</main>
+{% endblock content %}

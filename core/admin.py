@@ -62,6 +62,12 @@ class VendorAdmin(admin.ModelAdmin):
     ]
     search_fields = ['title', 'contact', 'address', 'user__username']
 
+    def save_model(self, request, obj, form, change):
+        super().save_model(request, obj, form, change)
+        if obj.user and not obj.user.is_vendor:
+            obj.user.is_vendor = True
+            obj.user.save(update_fields=['is_vendor'])
+
 
 class CartOrdersItemsInline(admin.TabularInline):
     model = CartOrdersItems

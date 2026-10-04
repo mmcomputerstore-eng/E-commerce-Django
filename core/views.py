@@ -1,3 +1,4 @@
+import os
 from django.shortcuts import render, get_object_or_404, redirect
 from django.urls import reverse
 from django.db.models import Count, Q, Avg, Min, Max
@@ -22,19 +23,48 @@ from core.models import (
 
 
 def index(request):
-    products = Products.objects.filter(
-        featured=True, product_status='published'
+    base_products = Products.objects.filter(
+        product_status='published'
     ).annotate(
         avg_rating=Avg('productreview__rating'),
         review_count=Count('productreview')
     ).prefetch_related('tags')
 
-    banner_product_1 = Products.objects.filter(title='MacBook Air Latest Model', product_status='published').first()
-    banner_product_2 = Products.objects.filter(title='Original Outdoor Beanbag', product_status='published').first()
-    banner_product_3 = Products.objects.filter(title='Tan Suede Biker Jacket', product_status='published').first()
+    products = base_products.filter(featured=True).order_by('-id')
+    hot_deals = base_products.filter(old_price__isnull=False).order_by('-id')
+
+    electronics_products = base_products.filter(
+        Q(category__title__icontains='Computer') |
+        Q(category__title__icontains='Audio') |
+        Q(category__title__icontains='Smart') |
+        Q(category__title__icontains='Electronic')
+    ).order_by('-id')
+
+    furniture_products = base_products.filter(
+        category__title__icontains='Furniture'
+    ).order_by('-id')
+
+    fashion_products = base_products.filter(
+        Q(category__title__icontains='Fashion') |
+        Q(category__title__icontains='Cloth') |
+        Q(category__title__icontains='Apparel')
+    ).order_by('-id')
+
+    vendors = Vendor.objects.annotate(
+        product_count=Count('products', filter=Q(products__product_status='published'))
+    ).order_by('-date', '-id')
+
+    banner_product_1 = base_products.filter(title__icontains='MacBook Air').first()
+    banner_product_2 = base_products.filter(title__icontains='Beanbag').first()
+    banner_product_3 = base_products.filter(title__icontains='Biker Jacket').first()
 
     context = {
         'products': products,
+        'hot_deals': hot_deals,
+        'electronics_products': electronics_products,
+        'furniture_products': furniture_products,
+        'fashion_products': fashion_products,
+        'vendors': vendors,
         'banner_product_1': banner_product_1,
         'banner_product_2': banner_product_2,
         'banner_product_3': banner_product_3,
@@ -809,5 +839,317 @@ def remove_from_wishlist(request):
             })
         return JsonResponse({'status': 'error', 'message': 'Item not found in your wishlist.'}, status=404)
     return JsonResponse({'status': 'error', 'message': 'Invalid request method.'}, status=400)
+
+
+# ==============================================================================
+# Vendor Dashboard & Store Management
+# ==============================================================================
+
+@login_required
+def vendor_dashboard(request):
+    # Verify that user has vendor status
+    if not request.user.is_vendor_user:
+        return render(request, 'core/vendor_access_denied.html', status=403)
+
+    # Get or create vendor profile for this user
+    vendor, _ = Vendor.objects.get_or_create(
+        user=request.user,
+        defaults={
+            'title': f"{request.user.first_name or request.user.username}'s Store",
+            'address': 'Main Commercial District',
+            'contact': '+1 234 567 8900',
+            'chat_resp_time': '98',
+            'ship_on_time': '99',
+            'days_return': '7',
+            'warranty_period': '1 Year',
+        }
+    )
+
+    # Handle Vendor Actions
+    if request.method == 'POST':
+        action = request.POST.get('action')
+
+        # 1. Update Store Profile
+        if action == 'update_profile':
+            vendor.title = request.POST.get('title', vendor.title).strip()
+            vendor.contact = request.POST.get('contact', vendor.contact).strip()
+            vendor.address = request.POST.get('address', vendor.address).strip()
+            vendor.description = request.POST.get('description', vendor.description).strip()
+            vendor.chat_resp_time = request.POST.get('chat_resp_time', vendor.chat_resp_time).strip()
+            vendor.ship_on_time = request.POST.get('ship_on_time', vendor.ship_on_time).strip()
+            vendor.days_return = request.POST.get('days_return', vendor.days_return).strip()
+            vendor.warranty_period = request.POST.get('warranty_period', vendor.warranty_period).strip()
+
+            if 'image' in request.FILES:
+                vendor.image = request.FILES['image']
+            if 'cover_image' in request.FILES:
+                vendor.cover_image = request.FILES['cover_image']
+
+            vendor.save()
+            messages.success(request, 'Your store profile and settings have been updated successfully.')
+            return redirect(reverse('core:vendor-dashboard') + '#vtab-settings')
+
+        # 2. Add New Product
+        elif action == 'add_product':
+            title = request.POST.get('title', '').strip()
+            price = request.POST.get('price', '0').strip()
+            old_price = request.POST.get('old_price', '').strip()
+            category_id = request.POST.get('category')
+            description = request.POST.get('description', '').strip()
+            specifications = request.POST.get('specifications', '').strip()
+            in_stock = (request.POST.get('in_stock') == 'on' or request.POST.get('in_stock') == 'true')
+            featured = request.POST.get('featured') == 'on'
+            product_status = request.POST.get('product_status', 'published')
+
+            try:
+                price_val = float(price) if price else 99.99
+            except (ValueError, TypeError):
+                price_val = 99.99
+
+            try:
+                old_price_val = float(old_price) if old_price else None
+            except (ValueError, TypeError):
+                old_price_val = None
+
+            category = Category.objects.filter(id=category_id).first() if category_id else None
+
+            prod_data = {
+                'user': request.user,
+                'vendor': vendor,
+                'title': title,
+                'price': price_val,
+                'old_price': old_price_val,
+                'category': category,
+                'description': description or 'No Description',
+                'specifications': specifications or 'No Description',
+                'in_stock': in_stock,
+                'featured': featured,
+                'product_status': product_status,
+            }
+            if 'image' in request.FILES:
+                prod_data['image'] = request.FILES['image']
+
+            prod = Products.objects.create(**prod_data)
+
+            # Handle multiple gallery images
+            gallery_files = request.FILES.getlist('gallery_images')
+            for g_file in gallery_files:
+                ProductImage.objects.create(product=prod, images=g_file)
+
+            messages.success(request, f'Product "{prod.title}" with {len(gallery_files)} gallery image(s) added successfully!')
+            return redirect(reverse('core:vendor-dashboard') + '#vtab-products')
+
+    # Query vendor products
+    products = Products.objects.filter(vendor=vendor).order_by('-date')
+    total_products = products.count()
+    published_products = products.filter(product_status='published').count()
+    in_stock_products = products.filter(in_stock=True).count()
+    out_of_stock_products = products.filter(in_stock=False).count()
+
+    # Query vendor sales / order items
+    product_titles = list(products.values_list('title', flat=True))
+    order_items = CartOrdersItems.objects.filter(items__in=product_titles).select_related('order', 'order__user').order_by('-order__order_date')
+    total_orders_count = order_items.values('order').distinct().count()
+    total_revenue = sum(float(item.total) for item in order_items)
+
+    categories = Category.objects.all()
+
+    context = {
+        'vendor': vendor,
+        'products': products,
+        'total_products': total_products,
+        'published_products': published_products,
+        'in_stock_products': in_stock_products,
+        'out_of_stock_products': out_of_stock_products,
+        'order_items': order_items,
+        'total_orders_count': total_orders_count,
+        'total_revenue': f"{total_revenue:.2f}",
+        'categories': categories,
+    }
+    return render(request, 'core/vendor_dashboard.html', context)
+
+
+@login_required
+def vendor_get_product_data(request, pid):
+    if not request.user.is_vendor_user:
+        return JsonResponse({'status': 'error', 'message': 'Unauthorized'}, status=403)
+
+    vendor = Vendor.objects.filter(user=request.user).first()
+    product = get_object_or_404(Products, pid=pid, vendor=vendor)
+
+    gallery = [
+        {
+            'id': img.id,
+            'url': img.images.url,
+            'name': os.path.basename(img.images.name) if img.images else 'Photo'
+        }
+        for img in product.p_images.all() if img.images
+    ]
+
+    return JsonResponse({
+        'status': 'success',
+        'pid': product.pid,
+        'title': product.title,
+        'price': str(product.price),
+        'old_price': str(product.old_price) if product.old_price else '',
+        'category_id': product.category.id if product.category else '',
+        'in_stock': product.in_stock,
+        'featured': product.featured,
+        'product_status': product.product_status,
+        'description': product.description or '',
+        'specifications': product.specifications or '',
+        'main_image_url': product.image.url if product.image else '',
+        'gallery_images': gallery,
+    })
+
+
+@login_required
+def vendor_edit_product(request, pid):
+    if not request.user.is_vendor_user:
+        if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+            return JsonResponse({'status': 'error', 'message': 'Unauthorized'}, status=403)
+        return render(request, 'core/vendor_access_denied.html', status=403)
+
+    vendor = Vendor.objects.filter(user=request.user).first()
+    product = get_object_or_404(Products, pid=pid, vendor=vendor)
+
+    if request.method == 'POST':
+        product.title = request.POST.get('title', product.title).strip()
+        price = request.POST.get('price', '').strip()
+        if price:
+            try:
+                product.price = float(price)
+            except (ValueError, TypeError):
+                pass
+        
+        old_price = request.POST.get('old_price', '').strip()
+        if old_price:
+            try:
+                product.old_price = float(old_price)
+            except (ValueError, TypeError):
+                product.old_price = None
+        else:
+            product.old_price = None
+
+        cat_id = request.POST.get('category')
+        if cat_id:
+            cat = Category.objects.filter(id=cat_id).first()
+            if cat:
+                product.category = cat
+
+        product.in_stock = (request.POST.get('in_stock') == 'on' or request.POST.get('in_stock') == 'true')
+        product.featured = (request.POST.get('featured') == 'on')
+        product.product_status = request.POST.get('product_status', product.product_status)
+        product.description = request.POST.get('description', product.description)
+        product.specifications = request.POST.get('specifications', product.specifications)
+
+        # Update main cover image if new image file uploaded
+        if 'image' in request.FILES:
+            # Clean up previous custom image file if exists
+            if product.image and hasattr(product.image, 'path') and os.path.isfile(product.image.path) and 'product.jpg' not in product.image.name:
+                try:
+                    os.remove(product.image.path)
+                except Exception:
+                    pass
+            product.image = request.FILES['image']
+
+        product.save()
+
+        # Handle appending new gallery images
+        new_gallery_files = request.FILES.getlist('gallery_images')
+        for g_file in new_gallery_files:
+            ProductImage.objects.create(product=product, images=g_file)
+
+        if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+            return JsonResponse({
+                'status': 'success',
+                'message': f'Product "{product.title}" has been updated successfully.'
+            })
+
+        messages.success(request, f'Product "{product.title}" has been updated successfully.')
+        return redirect(reverse('core:vendor-dashboard') + '#vtab-products')
+
+    return redirect(reverse('core:vendor-dashboard') + '#vtab-products')
+
+
+@login_required
+def vendor_delete_gallery_image(request, img_id):
+    if not request.user.is_vendor_user:
+        return JsonResponse({'status': 'error', 'message': 'Unauthorized'}, status=403)
+
+    vendor = Vendor.objects.filter(user=request.user).first()
+    img_obj = get_object_or_404(ProductImage, id=img_id, product__vendor=vendor)
+
+    if request.method == 'POST':
+        # Remove physical file if safe
+        if img_obj.images and hasattr(img_obj.images, 'path') and os.path.isfile(img_obj.images.path) and 'product.jpg' not in img_obj.images.name:
+            try:
+                os.remove(img_obj.images.path)
+            except Exception:
+                pass
+        img_obj.delete()
+        return JsonResponse({'status': 'success', 'message': 'Gallery image removed successfully.'})
+
+    return JsonResponse({'status': 'error', 'message': 'Invalid request method.'}, status=400)
+
+
+@login_required
+def vendor_delete_product(request, pid):
+    if not request.user.is_vendor_user:
+        if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+            return JsonResponse({'status': 'error', 'message': 'Unauthorized'}, status=403)
+        return render(request, 'core/vendor_access_denied.html', status=403)
+
+    vendor = Vendor.objects.filter(user=request.user).first()
+    product = get_object_or_404(Products, pid=pid, vendor=vendor)
+
+    if request.method == 'POST':
+        title = product.title
+        # Delete associated gallery images files and db records
+        for img in product.p_images.all():
+            if img.images and hasattr(img.images, 'path') and os.path.isfile(img.images.path) and 'product.jpg' not in img.images.name:
+                try:
+                    os.remove(img.images.path)
+                except Exception:
+                    pass
+        product.p_images.all().delete()
+
+        # Delete main image file if not default
+        if product.image and hasattr(product.image, 'path') and os.path.isfile(product.image.path) and 'product.jpg' not in product.image.name:
+            try:
+                os.remove(product.image.path)
+            except Exception:
+                pass
+
+        product.delete()
+
+        if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+            return JsonResponse({'status': 'success', 'message': f'Product "{title}" was removed from your catalog.'})
+
+        messages.success(request, f'Product "{title}" was deleted from your store.')
+        return redirect(reverse('core:vendor-dashboard') + '#vtab-products')
+
+    return redirect(reverse('core:vendor-dashboard') + '#vtab-products')
+
+
+@login_required
+def vendor_toggle_stock(request, pid):
+    if not request.user.is_vendor_user:
+        return JsonResponse({'status': 'error', 'message': 'Unauthorized'}, status=403)
+
+    vendor = Vendor.objects.filter(user=request.user).first()
+    product = get_object_or_404(Products, pid=pid, vendor=vendor)
+
+    if request.method == 'POST':
+        product.in_stock = not product.in_stock
+        product.save(update_fields=['in_stock'])
+        return JsonResponse({
+            'status': 'success',
+            'in_stock': product.in_stock,
+            'message': f'"{product.title}" is now {"in stock" if product.in_stock else "out of stock"}.'
+        })
+
+    return JsonResponse({'status': 'error', 'message': 'Invalid request method.'}, status=400)
+
 
 

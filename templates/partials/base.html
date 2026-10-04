@@ -51,32 +51,16 @@
 
                         <ul class="top-menu">
                             <li>
-                                <a href="#">Links</a>
+                                <a href="javascript:void(0);">Links</a>
                                 <ul>
-                                    <li>
-                                        <div class="header-dropdown">
-                                            <a href="#">USD</a>
-                                            <div class="header-menu">
-                                                <ul>
-                                                    <li><a href="#">Eur</a></li>
-                                                    <li><a href="#">Usd</a></li>
-                                                </ul>
-                                            </div><!-- End .header-menu -->
-                                        </div><!-- End .header-dropdown -->
-                                    </li>
-                                    <li>
-                                        <div class="header-dropdown">
-                                            <a href="#">Engligh</a>
-                                            <div class="header-menu">
-                                                <ul>
-                                                    <li><a href="#">English</a></li>
-                                                    <li><a href="#">French</a></li>
-                                                    <li><a href="#">Spanish</a></li>
-                                                </ul>
-                                            </div><!-- End .header-menu -->
-                                        </div><!-- End .header-dropdown -->
-                                    </li>
+                                    <li><a href="{% url 'core:vendors' %}"><i class="icon-laptop"></i>Our Vendors</a></li>
+                                    <li><a href="{% url 'core:wishlist' %}"><i class="icon-heart-o"></i>Wishlist</a></li>
                                     {% if request.user.is_authenticated %}
+                                        {% if is_vendor %}
+                                        <li class="login mr-2">
+                                            <a href="{% url 'core:vendor-dashboard' %}" class="font-weight-bold text-primary"><i class="icon-briefcase"></i>Vendor Dashboard</a>
+                                        </li>
+                                        {% endif %}
                                         <li class="login">
                                             <a href="{% url 'core:customer-dashboard' %}"><i class="icon-user"></i>Dashboard ({{ request.user.username|title }})</a>
                                         </li>
@@ -112,7 +96,7 @@
                     <div class="header-center">
                         <div
                             class="header-search header-search-extended header-search-visible header-search-no-radius d-none d-lg-block">
-                            <a href="#" class="search-toggle" role="button"><i class="icon-search"></i></a>
+                            <a href="javascript:void(0);" class="search-toggle" role="button"><i class="icon-search"></i></a>
                             <form action="{% url 'core:search' %}" method="get">
                                 <div class="header-search-wrapper search-wrapper-wide">
                                     <div class="select-custom">
@@ -135,37 +119,19 @@
 
                     <div class="header-right">
                         <div class="header-dropdown-link">
-                            <div class="dropdown compare-dropdown">
-                                <a href="#" class="dropdown-toggle" role="button" data-toggle="dropdown"
-                                    aria-haspopup="true" aria-expanded="false" data-display="static"
-                                    title="Compare Products" aria-label="Compare Products">
-                                    <i class="icon-random"></i>
-                                    <span class="compare-txt">Compare</span>
-                                </a>
-
-                                <div class="dropdown-menu dropdown-menu-right">
-                                    <ul class="compare-products">
-                                        <li class="compare-product">
-                                            <a href="#" class="btn-remove" title="Remove Product"><i
-                                                    class="icon-close"></i></a>
-                                            <h4 class="compare-product-title"><a href="product.html">Blue Night
-                                                    Dress</a></h4>
-                                        </li>
-                                        <li class="compare-product">
-                                            <a href="#" class="btn-remove" title="Remove Product"><i
-                                                    class="icon-close"></i></a>
-                                            <h4 class="compare-product-title"><a href="product.html">White Long
-                                                    Skirt</a></h4>
-                                        </li>
-                                    </ul>
-
-                                    <div class="compare-actions">
-                                        <a href="#" class="action-link">Clear All</a>
-                                        <a href="#" class="btn btn-outline-primary-2"><span>Compare</span><i
-                                                class="icon-long-arrow-right"></i></a>
-                                    </div>
-                                </div><!-- End .dropdown-menu -->
-                            </div><!-- End .compare-dropdown -->
+                            <a href="{% url 'core:vendors' %}" class="wishlist-link mr-3" title="Verified Vendors" style="display: flex; flex-direction: column; align-items: center; position: relative;">
+                                <div style="position: relative; display: inline-flex; align-items: center; justify-content: center; height: 30px; width: 30px;">
+                                    <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="transition: stroke 0.3s ease;">
+                                        <path d="M3 9l2-5h14l2 5"></path>
+                                        <path d="M21 9v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V9"></path>
+                                        <path d="M3 9c0 1.66 1.34 3 3 3s3-1.34 3-3c0 1.66 1.34 3 3 3s3-1.34 3-3c0 1.66 1.34 3 3 3s3-1.34 3-3"></path>
+                                        <line x1="9" y1="22" x2="9" y2="16"></line>
+                                        <line x1="15" y1="22" x2="15" y2="16"></line>
+                                    </svg>
+                                    <span class="wishlist-count" id="headerVendorCount" style="position: absolute; top: -6px; right: -8px; min-width: 1.6rem; height: 1.6rem; border-radius: 50%; font-size: 1rem; line-height: 1.6rem; text-align: center; color: #fff; background-color: #39f; font-weight: 400;">{{ vendor_count|default:"4" }}</span>
+                                </div>
+                                <span class="wishlist-txt">Vendors</span>
+                            </a>
 
                             <a href="{% url 'core:customer-dashboard' %}#tab-wishlist" class="wishlist-link">
                                 <i class="icon-heart-o"></i>
@@ -273,10 +239,10 @@
                     <div class="header-center">
                         <nav class="main-nav">
                             <ul class="menu sf-arrows">
-                                <li class="megamenu-container active">
-                                    <a href="{% url 'core:home' %}" class="sf-with-ul">Home</a>
+                                <li class="{% if request.resolver_match.url_name == 'home' %}active{% endif %}">
+                                    <a href="{% url 'core:home' %}">Home</a>
                                 </li>
-                                <li>
+                                <li class="megamenu-container {% if request.resolver_match.url_name == 'products' or request.resolver_match.url_name == 'product-details' %}active{% endif %}">
                                     <a href="{% url 'core:products' %}" class="sf-with-ul">Shop</a>
 
                                     <div class="megamenu megamenu-md">
@@ -285,52 +251,34 @@
                                                 <div class="menu-col">
                                                     <div class="row">
                                                         <div class="col-md-6">
-                                                            <div class="menu-title">Shop with sidebar</div>
-                                                            <!-- End .menu-title -->
+                                                            <div class="menu-title">Browse Categories</div>
                                                             <ul>
-                                                                <li><a href="category-list.html">Shop List</a></li>
-                                                                <li><a href="category-2cols.html">Shop Grid 2
-                                                                        Columns</a></li>
-                                                                <li><a href="category.html">Shop Grid 3 Columns</a></li>
-                                                                <li><a href="category-4cols.html">Shop Grid 4
-                                                                        Columns</a></li>
-                                                                <li><a href="category-market.html"><span>Shop
-                                                                            Market<span
-                                                                                class="tip tip-new">New</span></span></a>
-                                                                </li>
-                                                            </ul>
-
-                                                            <div class="menu-title">Shop no sidebar</div>
-                                                            <!-- End .menu-title -->
-                                                            <ul>
-                                                                <li><a href="category-boxed.html"><span>Shop Boxed No
-                                                                            Sidebar<span
-                                                                                class="tip tip-hot">Hot</span></span></a>
-                                                                </li>
-                                                                <li><a href="category-fullwidth.html">Shop Fullwidth No
-                                                                        Sidebar</a></li>
+                                                                <li><a href="{% url 'core:products' %}" style="font-weight: 600; color: #39f;">All Categories</a></li>
+                                                                {% for c in categories %}
+                                                                <li><a href="{% url 'core:products' %}?category={{ c.cid }}">{{ c.title }}</a></li>
+                                                                {% endfor %}
                                                             </ul>
                                                         </div><!-- End .col-md-6 -->
 
                                                         <div class="col-md-6">
-                                                            <div class="menu-title">Product Category</div>
-                                                            <!-- End .menu-title -->
+                                                            <div class="menu-title">Verified Vendors</div>
                                                             <ul>
-                                                                <li><a href="product-category-boxed.html">Product
-                                                                        Category Boxed</a></li>
-                                                                <li><a href="product-category-fullwidth.html"><span>Product
-                                                                            Category Fullwidth<span
-                                                                                class="tip tip-new">New</span></span></a>
-                                                                </li>
+                                                                <li><a href="{% url 'core:vendors' %}" style="font-weight: 600; color: #39f;">All Verified Vendors</a></li>
+                                                                <li><a href="{% url 'core:products' %}?vendor=vend0a7g2g2h9">Nexus Tech &amp; Electronics</a></li>
+                                                                <li><a href="{% url 'core:products' %}?vendor=ven21ab9b4277">Aura Sound &amp; Acoustics</a></li>
+                                                                <li><a href="{% url 'core:products' %}?vendor=vena80a6ff8hh">Nordic Living &amp; Home</a></li>
+                                                                <li><a href="{% url 'core:products' %}?vendor=veng3154658c4">Urban Vogue &amp; Apparel</a></li>
                                                             </ul>
-                                                            <div class="menu-title">Shop Pages</div>
-                                                            <!-- End .menu-title -->
+
+                                                            <div class="menu-title mt-2">Quick Navigation</div>
                                                             <ul>
-                                                                <li><a href="{% url 'core:cart' %}">Cart</a></li>
+                                                                <li><a href="{% url 'core:cart' %}">Shopping Cart</a></li>
                                                                 <li><a href="{% url 'core:checkout' %}">Checkout</a></li>
-                                                                <li><a href="{% url 'core:customer-dashboard' %}#tab-wishlist">Wishlist</a></li>
-                                                                <li><a href="{% url 'core:customer-dashboard' %}">My Account</a></li>
-                                                                <li><a href="#">Lookbook</a></li>
+                                                                <li><a href="{% url 'core:customer-dashboard' %}#tab-wishlist">My Wishlist</a></li>
+                                                                <li><a href="{% url 'core:customer-dashboard' %}">Customer Dashboard</a></li>
+                                                                {% if is_vendor %}
+                                                                <li><a href="{% url 'core:vendor-dashboard' %}" class="text-primary font-weight-bold">Vendor Dashboard</a></li>
+                                                                {% endif %}
                                                             </ul>
                                                         </div><!-- End .col-md-6 -->
                                                     </div><!-- End .row -->
@@ -339,162 +287,54 @@
 
                                             <div class="col-md-4">
                                                 <div class="banner banner-overlay">
-                                                    <a href="category.html" class="banner banner-menu">
+                                                    <a href="{% url 'core:products' %}" class="banner banner-menu">
                                                         <img src="{% static 'assets/images/menu/banner-1.jpg' %}"
                                                             alt="Banner">
 
                                                         <div class="banner-content banner-content-top">
-                                                            <div class="banner-title text-white">Last
-                                                                <br>Chance<br><span><strong>Sale</strong></span></div>
-                                                            <!-- End .banner-title -->
-                                                        </div><!-- End .banner-content -->
+                                                            <div class="banner-title text-white">Explore<br>Our Store<br><span><strong>Deals</strong></span></div>
+                                                        </div>
                                                     </a>
-                                                </div><!-- End .banner banner-overlay -->
+                                                </div><!-- End .banner -->
                                             </div><!-- End .col-md-4 -->
                                         </div><!-- End .row -->
                                     </div><!-- End .megamenu megamenu-md -->
                                 </li>
-                                <li>
-                                    <a href="product.html" class="sf-with-ul">Product</a>
-
-                                    <div class="megamenu megamenu-sm">
-                                        <div class="row no-gutters">
-                                            <div class="col-md-6">
-                                                <div class="menu-col">
-                                                    <div class="menu-title">Product Details</div>
-                                                    <!-- End .menu-title -->
-                                                    <ul>
-                                                        <li><a href="product.html">Default</a></li>
-                                                        <li><a href="product-centered.html">Centered</a></li>
-                                                        <li><a href="product-extended.html"><span>Extended Info<span
-                                                                        class="tip tip-new">New</span></span></a></li>
-                                                        <li><a href="product-gallery.html">Gallery</a></li>
-                                                        <li><a href="product-sticky.html">Sticky Info</a></li>
-                                                        <li><a href="product-sidebar.html">Boxed With Sidebar</a></li>
-                                                        <li><a href="product-fullwidth.html">Full Width</a></li>
-                                                        <li><a href="product-masonry.html">Masonry Sticky Info</a></li>
-                                                    </ul>
-                                                </div><!-- End .menu-col -->
-                                            </div><!-- End .col-md-6 -->
-
-                                            <div class="col-md-6">
-                                                <div class="banner banner-overlay">
-                                                    <a href="category.html">
-                                                        <img src="{% static 'assets/images/menu/banner-2.jpg' %}"
-                                                            alt="Banner">
-
-                                                        <div class="banner-content banner-content-bottom">
-                                                            <div class="banner-title text-white">New
-                                                                Trends<br><span><strong>spring 2019</strong></span>
-                                                            </div><!-- End .banner-title -->
-                                                        </div><!-- End .banner-content -->
-                                                    </a>
-                                                </div><!-- End .banner -->
-                                            </div><!-- End .col-md-6 -->
-                                        </div><!-- End .row -->
-                                    </div><!-- End .megamenu megamenu-sm -->
-                                </li>
                                 <li class="{% if request.resolver_match.url_name == 'vendors' or request.resolver_match.url_name == 'vendor_details' %}active{% endif %}">
-                                    <a href="{% url 'core:vendors' %}">Vendors</a>
+                                    <a href="{% url 'core:vendors' %}" class="sf-with-ul">Vendors</a>
+                                    <ul>
+                                        <li><a href="{% url 'core:vendors' %}" class="font-weight-bold text-primary">All Vendors</a></li>
+                                        <li><a href="{% url 'core:vendor_details' 'vend0a7g2g2h9' %}">Nexus Tech &amp; Electronics</a></li>
+                                        <li><a href="{% url 'core:vendor_details' 'ven21ab9b4277' %}">Aura Sound &amp; Acoustics</a></li>
+                                        <li><a href="{% url 'core:vendor_details' 'vena80a6ff8hh' %}">Nordic Living &amp; Home</a></li>
+                                        <li><a href="{% url 'core:vendor_details' 'veng3154658c4' %}">Urban Vogue &amp; Apparel</a></li>
+                                    </ul>
                                 </li>
-                                {% if request.user.is_authenticated %}
-                                <li class="{% if request.resolver_match.url_name == 'customer-dashboard' or request.resolver_match.url_name == 'order-detail' %}active{% endif %}">
-                                    <a href="{% url 'core:customer-dashboard' %}">Dashboard</a>
-                                </li>
-                                {% endif %}
                                 <li>
-                                    <a href="#" class="sf-with-ul">Pages</a>
-
+                                    <a href="{% url 'core:products' %}" class="sf-with-ul">Categories</a>
+                                    <ul>
+                                        <li><a href="{% url 'core:products' %}" class="font-weight-bold text-primary">All Categories</a></li>
+                                        {% for c in categories %}
+                                        <li><a href="{% url 'core:products' %}?category={{ c.cid }}">{{ c.title }}</a></li>
+                                        {% endfor %}
+                                    </ul>
+                                </li>
+                                <li class="{% if request.resolver_match.url_name == 'customer-dashboard' or request.resolver_match.url_name == 'order-detail' or request.resolver_match.url_name == 'vendor-dashboard' %}active{% endif %}">
+                                    <a href="{% url 'core:customer-dashboard' %}" class="sf-with-ul">Account</a>
                                     <ul>
                                         {% if request.user.is_authenticated %}
                                             <li><a href="{% url 'core:customer-dashboard' %}">Customer Dashboard</a></li>
-                                        {% endif %}
-                                        <li>
-                                            <a href="about.html" class="sf-with-ul">About</a>
-
-                                            <ul>
-                                                <li><a href="about.html">About 01</a></li>
-                                                <li><a href="about-2.html">About 02</a></li>
-                                            </ul>
-                                        </li>
-                                        <li>
-                                            <a href="contact.html" class="sf-with-ul">Contact</a>
-
-                                            <ul>
-                                                <li><a href="contact.html">Contact 01</a></li>
-                                                <li><a href="contact-2.html">Contact 02</a></li>
-                                            </ul>
-                                        </li>
-                                        {% if request.user.is_authenticated %}
-                                            <li><a href="{% url 'userauth:logout' %}">Logout</a></li>
+                                            <li><a href="{% url 'core:customer-dashboard' %}#tab-orders">Order History</a></li>
+                                            <li><a href="{% url 'core:customer-dashboard' %}#tab-wishlist">My Wishlist</a></li>
+                                            {% if is_vendor %}
+                                            <li><a href="{% url 'core:vendor-dashboard' %}" class="text-primary font-weight-bold">Vendor Dashboard</a></li>
+                                            {% endif %}
+                                            <li><a href="{% url 'userauth:logout' %}">Log Out</a></li>
                                         {% else %}
-                                            <li><a href="{% url 'userauth:login' %}">Login</a></li>
+                                            <li><a href="{% url 'userauth:login' %}">Log In</a></li>
+                                            <li><a href="{% url 'userauth:sign-up' %}">Create Account</a></li>
+                                            <li><a href="{% url 'core:cart' %}">View Cart</a></li>
                                         {% endif %}
-                                        <li><a href="faq.html">FAQs</a></li>
-                                        <li><a href="404.html">Error 404</a></li>
-                                        <li><a href="coming-soon.html">Coming Soon</a></li>
-                                    </ul>
-                                </li>
-                                <li>
-                                    <a href="blog.html" class="sf-with-ul">Blog</a>
-
-                                    <ul>
-                                        <li><a href="blog.html">Classic</a></li>
-                                        <li><a href="blog-listing.html">Listing</a></li>
-                                        <li>
-                                            <a href="#">Grid</a>
-                                            <ul>
-                                                <li><a href="blog-grid-2cols.html">Grid 2 columns</a></li>
-                                                <li><a href="blog-grid-3cols.html">Grid 3 columns</a></li>
-                                                <li><a href="blog-grid-4cols.html">Grid 4 columns</a></li>
-                                                <li><a href="blog-grid-sidebar.html">Grid sidebar</a></li>
-                                            </ul>
-                                        </li>
-                                        <li>
-                                            <a href="#">Masonry</a>
-                                            <ul>
-                                                <li><a href="blog-masonry-2cols.html">Masonry 2 columns</a></li>
-                                                <li><a href="blog-masonry-3cols.html">Masonry 3 columns</a></li>
-                                                <li><a href="blog-masonry-4cols.html">Masonry 4 columns</a></li>
-                                                <li><a href="blog-masonry-sidebar.html">Masonry sidebar</a></li>
-                                            </ul>
-                                        </li>
-                                        <li>
-                                            <a href="#">Mask</a>
-                                            <ul>
-                                                <li><a href="blog-mask-grid.html">Blog mask grid</a></li>
-                                                <li><a href="blog-mask-masonry.html">Blog mask masonry</a></li>
-                                            </ul>
-                                        </li>
-                                        <li>
-                                            <a href="#">Single Post</a>
-                                            <ul>
-                                                <li><a href="single.html">Default with sidebar</a></li>
-                                                <li><a href="single-fullwidth.html">Fullwidth no sidebar</a></li>
-                                                <li><a href="single-fullwidth-sidebar.html">Fullwidth with sidebar</a>
-                                                </li>
-                                            </ul>
-                                        </li>
-                                    </ul>
-                                </li>
-                                <li>
-                                    <a href="elements-list.html" class="sf-with-ul">Elements</a>
-
-                                    <ul>
-                                        <li><a href="elements-products.html">Products</a></li>
-                                        <li><a href="elements-typography.html">Typography</a></li>
-                                        <li><a href="elements-titles.html">Titles</a></li>
-                                        <li><a href="elements-banners.html">Banners</a></li>
-                                        <li><a href="elements-product-category.html">Product Category</a></li>
-                                        <li><a href="elements-video-banners.html">Video Banners</a></li>
-                                        <li><a href="elements-buttons.html">Buttons</a></li>
-                                        <li><a href="elements-accordions.html">Accordions</a></li>
-                                        <li><a href="elements-tabs.html">Tabs</a></li>
-                                        <li><a href="elements-testimonials.html">Testimonials</a></li>
-                                        <li><a href="elements-blog-posts.html">Blog Posts</a></li>
-                                        <li><a href="elements-portfolio.html">Portfolio</a></li>
-                                        <li><a href="elements-cta.html">Call to Action</a></li>
-                                        <li><a href="elements-icon-boxes.html">Icon Boxes</a></li>
                                     </ul>
                                 </li>
                             </ul><!-- End .menu -->
@@ -619,11 +459,11 @@
                                 <h4 class="widget-title">Information</h4><!-- End .widget-title -->
 
                                 <ul class="widget-list">
-                                    <li><a href="#">About Mubeen</a></li>
-                                    <li><a href="#">How to shop on Mubeen</a></li>
-                                    <li><a href="faq.html">FAQ</a></li>
-                                    <li><a href="contact.html">Contact us</a></li>
-                                    <li><a href="{% url 'userauth:login' %}">Log in</a></li>
+                                    <li><a href="{% url 'core:home' %}">About Our Store</a></li>
+                                    <li><a href="{% url 'core:products' %}">All Products</a></li>
+                                    <li><a href="{% url 'core:vendors' %}">Verified Vendors</a></li>
+                                    <li><a href="{% url 'core:cart' %}">Shopping Cart</a></li>
+                                    <li><a href="{% url 'userauth:login' %}">Sign In / Register</a></li>
                                 </ul><!-- End .widget-list -->
                             </div><!-- End .widget -->
                         </div><!-- End .col-sm-4 col-lg-3 -->
@@ -633,12 +473,12 @@
                                 <h4 class="widget-title">Customer Service</h4><!-- End .widget-title -->
 
                                 <ul class="widget-list">
-                                    <li><a href="#">Payment Methods</a></li>
-                                    <li><a href="#">Money-back guarantee!</a></li>
-                                    <li><a href="#">Returns</a></li>
-                                    <li><a href="#">Shipping</a></li>
-                                    <li><a href="#">Terms and conditions</a></li>
-                                    <li><a href="#">Privacy Policy</a></li>
+                                    <li><a href="{% url 'core:products' %}">Browse Categories</a></li>
+                                    <li><a href="{% url 'core:customer-dashboard' %}#tab-orders">Order Tracking</a></li>
+                                    <li><a href="{% url 'core:customer-dashboard' %}#tab-orders">Order History</a></li>
+                                    <li><a href="{% url 'core:customer-dashboard' %}#tab-wishlist">My Wishlist</a></li>
+                                    <li><a href="{% url 'core:customer-dashboard' %}#tab-address">Addresses</a></li>
+                                    <li><a href="tel:+0123456789">Call: +0123 456 789</a></li>
                                 </ul><!-- End .widget-list -->
                             </div><!-- End .widget -->
                         </div><!-- End .col-sm-4 col-lg-3 -->
@@ -649,6 +489,9 @@
 
                                 <ul class="widget-list">
                                     {% if request.user.is_authenticated %}
+                                        {% if is_vendor %}
+                                        <li><a href="{% url 'core:vendor-dashboard' %}" class="text-primary font-weight-bold">Vendor Dashboard</a></li>
+                                        {% endif %}
                                         <li><a href="{% url 'core:customer-dashboard' %}">Customer Dashboard</a></li>
                                         <li><a href="{% url 'userauth:logout' %}">Log Out</a></li>
                                     {% else %}
@@ -656,8 +499,8 @@
                                     {% endif %}
                                     <li><a href="{% url 'core:cart' %}">View Cart</a></li>
                                     <li><a href="{% url 'core:customer-dashboard' %}#tab-wishlist">My Wishlist</a></li>
-                                    <li><a href="#">Track My Order</a></li>
-                                    <li><a href="#">Help</a></li>
+                                    <li><a href="{% url 'core:customer-dashboard' %}#tab-orders">Track My Order</a></li>
+                                    <li><a href="{% url 'core:home' %}">Store Home</a></li>
                                 </ul><!-- End .widget-list -->
                             </div><!-- End .widget -->
                         </div><!-- End .col-sm-64 col-lg-3 -->
@@ -670,21 +513,21 @@
                     <p class="footer-copyright">Copyright © {% now "Y" %} Mubeen Store. All Rights Reserved.</p>
                     <!-- End .footer-copyright -->
                     <ul class="footer-menu">
-                        <li><a href="#">Terms Of Use</a></li>
-                        <li><a href="#">Privacy Policy</a></li>
+                        <li><a href="javascript:void(0);">Terms Of Use</a></li>
+                        <li><a href="javascript:void(0);">Privacy Policy</a></li>
                     </ul><!-- End .footer-menu -->
 
                     <div class="social-icons social-icons-color">
                         <span class="social-label">Social Media</span>
-                        <a href="#" class="social-icon social-facebook" title="Facebook" target="_blank"><i
+                        <a href="javascript:void(0);" class="social-icon social-facebook" title="Facebook"><i
                                 class="icon-facebook-f"></i></a>
-                        <a href="#" class="social-icon social-twitter" title="Twitter" target="_blank"><i
+                        <a href="javascript:void(0);" class="social-icon social-twitter" title="Twitter"><i
                                 class="icon-twitter"></i></a>
-                        <a href="#" class="social-icon social-instagram" title="Instagram" target="_blank"><i
+                        <a href="javascript:void(0);" class="social-icon social-instagram" title="Instagram"><i
                                 class="icon-instagram"></i></a>
-                        <a href="#" class="social-icon social-youtube" title="Youtube" target="_blank"><i
+                        <a href="javascript:void(0);" class="social-icon social-youtube" title="Youtube"><i
                                 class="icon-youtube"></i></a>
-                        <a href="#" class="social-icon social-pinterest" title="Pinterest" target="_blank"><i
+                        <a href="javascript:void(0);" class="social-icon social-pinterest" title="Pinterest"><i
                                 class="icon-pinterest"></i></a>
                     </div><!-- End .soial-icons -->
                 </div><!-- End .container -->
@@ -724,139 +567,53 @@
                     aria-labelledby="mobile-menu-link">
                     <nav class="mobile-nav">
                         <ul class="mobile-menu">
-                            <li class="active">
+                            <li class="{% if request.resolver_match.url_name == 'home' %}active{% endif %}">
                                 <a href="{% url 'core:home' %}">Home</a>
                             </li>
-                            {% if request.user.is_authenticated %}
-                            <li>
-                                <a href="{% url 'core:customer-dashboard' %}"><i class="icon-user mr-2"></i>My Dashboard</a>
-                            </li>
-                            {% endif %}
-                            <li>
+                            <li class="{% if request.resolver_match.url_name == 'products' or request.resolver_match.url_name == 'product-details' %}active{% endif %}">
                                 <a href="{% url 'core:products' %}">Shop</a>
                                 <ul>
-                                    <li><a href="category-list.html">Shop List</a></li>
-                                    <li><a href="category-2cols.html">Shop Grid 2 Columns</a></li>
-                                    <li><a href="category.html">Shop Grid 3 Columns</a></li>
-                                    <li><a href="category-4cols.html">Shop Grid 4 Columns</a></li>
-                                    <li><a href="category-boxed.html"><span>Shop Boxed No Sidebar<span
-                                                    class="tip tip-hot">Hot</span></span></a></li>
-                                    <li><a href="category-fullwidth.html">Shop Fullwidth No Sidebar</a></li>
-                                    <li><a href="product-category-boxed.html">Product Category Boxed</a></li>
-                                    <li><a href="product-category-fullwidth.html"><span>Product Category Fullwidth<span
-                                                    class="tip tip-new">New</span></span></a></li>
+                                    <li><a href="{% url 'core:products' %}">All Products</a></li>
                                     <li><a href="{% url 'core:cart' %}">Cart</a></li>
                                     <li><a href="{% url 'core:checkout' %}">Checkout</a></li>
-                                    <li><a href="{% url 'core:customer-dashboard' %}">My Account / Dashboard</a></li>
                                     <li><a href="{% url 'core:customer-dashboard' %}#tab-wishlist">Wishlist</a></li>
-                                    <li><a href="#">Lookbook</a></li>
                                 </ul>
                             </li>
-                            <li>
+                            <li class="{% if request.resolver_match.url_name == 'vendors' or request.resolver_match.url_name == 'vendor_details' %}active{% endif %}">
                                 <a href="{% url 'core:vendors' %}">Vendors</a>
-                            </li>
-                            <li>
-                                <a href="product.html" class="sf-with-ul">Product</a>
                                 <ul>
-                                    <li><a href="product.html">Default</a></li>
-                                    <li><a href="product-centered.html">Centered</a></li>
-                                    <li><a href="product-extended.html"><span>Extended Info<span
-                                                    class="tip tip-new">New</span></span></a></li>
-                                    <li><a href="product-gallery.html">Gallery</a></li>
-                                    <li><a href="product-sticky.html">Sticky Info</a></li>
-                                    <li><a href="product-sidebar.html">Boxed With Sidebar</a></li>
-                                    <li><a href="product-fullwidth.html">Full Width</a></li>
-                                    <li><a href="product-masonry.html">Masonry Sticky Info</a></li>
+                                    <li><a href="{% url 'core:vendors' %}" class="font-weight-bold text-primary">All Vendors</a></li>
+                                    <li><a href="{% url 'core:vendor_details' 'vend0a7g2g2h9' %}">Nexus Tech &amp; Electronics</a></li>
+                                    <li><a href="{% url 'core:vendor_details' 'ven21ab9b4277' %}">Aura Sound &amp; Acoustics</a></li>
+                                    <li><a href="{% url 'core:vendor_details' 'vena80a6ff8hh' %}">Nordic Living &amp; Home</a></li>
+                                    <li><a href="{% url 'core:vendor_details' 'veng3154658c4' %}">Urban Vogue &amp; Apparel</a></li>
                                 </ul>
                             </li>
                             <li>
-                                <a href="#">Pages</a>
+                                <a href="{% url 'core:products' %}">Categories</a>
                                 <ul>
-                                    <li>
-                                        <a href="about.html">About</a>
-
-                                        <ul>
-                                            <li><a href="about.html">About 01</a></li>
-                                            <li><a href="about-2.html">About 02</a></li>
-                                        </ul>
-                                    </li>
-                                    <li>
-                                        <a href="contact.html">Contact</a>
-
-                                        <ul>
-                                            <li><a href="contact.html">Contact 01</a></li>
-                                            <li><a href="contact-2.html">Contact 02</a></li>
-                                        </ul>
-                                    </li>
+                                    <li><a href="{% url 'core:products' %}" class="font-weight-bold text-primary">All Categories</a></li>
+                                    {% for c in categories %}
+                                    <li><a href="{% url 'core:products' %}?category={{ c.cid }}">{{ c.title }}</a></li>
+                                    {% endfor %}
+                                </ul>
+                            </li>
+                            <li class="{% if request.resolver_match.url_name == 'customer-dashboard' or request.resolver_match.url_name == 'order-detail' or request.resolver_match.url_name == 'vendor-dashboard' %}active{% endif %}">
+                                <a href="{% url 'core:customer-dashboard' %}">Account</a>
+                                <ul>
                                     {% if request.user.is_authenticated %}
-                                        <li><a href="{% url 'core:customer-dashboard' %}">Customer Dashboard</a></li>
-                                        <li><a href="{% url 'userauth:logout' %}">Logout ({{ request.user.username|title }})</a></li>
+                                        <li><a href="{% url 'core:customer-dashboard' %}"><i class="icon-user mr-1"></i>Customer Dashboard</a></li>
+                                        <li><a href="{% url 'core:customer-dashboard' %}#tab-orders">Order History</a></li>
+                                        <li><a href="{% url 'core:customer-dashboard' %}#tab-wishlist">My Wishlist</a></li>
+                                        {% if is_vendor %}
+                                        <li><a href="{% url 'core:vendor-dashboard' %}" class="text-primary font-weight-bold"><i class="icon-briefcase mr-1"></i>Vendor Dashboard</a></li>
+                                        {% endif %}
+                                        <li><a href="{% url 'userauth:logout' %}">Log Out ({{ request.user.username|title }})</a></li>
                                     {% else %}
-                                        <li><a href="{% url 'userauth:login' %}">Login</a></li>
+                                        <li><a href="{% url 'userauth:login' %}">Log In</a></li>
+                                        <li><a href="{% url 'userauth:sign-up' %}">Create Account</a></li>
+                                        <li><a href="{% url 'core:cart' %}">View Cart</a></li>
                                     {% endif %}
-                                    <li><a href="faq.html">FAQs</a></li>
-                                    <li><a href="404.html">Error 404</a></li>
-                                    <li><a href="coming-soon.html">Coming Soon</a></li>
-                                </ul>
-                            </li>
-                            <li>
-                                <a href="blog.html">Blog</a>
-
-                                <ul>
-                                    <li><a href="blog.html">Classic</a></li>
-                                    <li><a href="blog-listing.html">Listing</a></li>
-                                    <li>
-                                        <a href="#">Grid</a>
-                                        <ul>
-                                            <li><a href="blog-grid-2cols.html">Grid 2 columns</a></li>
-                                            <li><a href="blog-grid-3cols.html">Grid 3 columns</a></li>
-                                            <li><a href="blog-grid-4cols.html">Grid 4 columns</a></li>
-                                            <li><a href="blog-grid-sidebar.html">Grid sidebar</a></li>
-                                        </ul>
-                                    </li>
-                                    <li>
-                                        <a href="#">Masonry</a>
-                                        <ul>
-                                            <li><a href="blog-masonry-2cols.html">Masonry 2 columns</a></li>
-                                            <li><a href="blog-masonry-3cols.html">Masonry 3 columns</a></li>
-                                            <li><a href="blog-masonry-4cols.html">Masonry 4 columns</a></li>
-                                            <li><a href="blog-masonry-sidebar.html">Masonry sidebar</a></li>
-                                        </ul>
-                                    </li>
-                                    <li>
-                                        <a href="#">Mask</a>
-                                        <ul>
-                                            <li><a href="blog-mask-grid.html">Blog mask grid</a></li>
-                                            <li><a href="blog-mask-masonry.html">Blog mask masonry</a></li>
-                                        </ul>
-                                    </li>
-                                    <li>
-                                        <a href="#">Single Post</a>
-                                        <ul>
-                                            <li><a href="single.html">Default with sidebar</a></li>
-                                            <li><a href="single-fullwidth.html">Fullwidth no sidebar</a></li>
-                                            <li><a href="single-fullwidth-sidebar.html">Fullwidth with sidebar</a></li>
-                                        </ul>
-                                    </li>
-                                </ul>
-                            </li>
-                            <li>
-                                <a href="elements-list.html">Elements</a>
-                                <ul>
-                                    <li><a href="elements-products.html">Products</a></li>
-                                    <li><a href="elements-typography.html">Typography</a></li>
-                                    <li><a href="elements-titles.html">Titles</a></li>
-                                    <li><a href="elements-banners.html">Banners</a></li>
-                                    <li><a href="elements-product-category.html">Product Category</a></li>
-                                    <li><a href="elements-video-banners.html">Video Banners</a></li>
-                                    <li><a href="elements-buttons.html">Buttons</a></li>
-                                    <li><a href="elements-accordions.html">Accordions</a></li>
-                                    <li><a href="elements-tabs.html">Tabs</a></li>
-                                    <li><a href="elements-testimonials.html">Testimonials</a></li>
-                                    <li><a href="elements-blog-posts.html">Blog Posts</a></li>
-                                    <li><a href="elements-portfolio.html">Portfolio</a></li>
-                                    <li><a href="elements-cta.html">Call to Action</a></li>
-                                    <li><a href="elements-icon-boxes.html">Icon Boxes</a></li>
                                 </ul>
                             </li>
                         </ul>
@@ -877,10 +634,10 @@
             </div><!-- End .tab-content -->
 
             <div class="social-icons">
-                <a href="#" class="social-icon" target="_blank" title="Facebook"><i class="icon-facebook-f"></i></a>
-                <a href="#" class="social-icon" target="_blank" title="Twitter"><i class="icon-twitter"></i></a>
-                <a href="#" class="social-icon" target="_blank" title="Instagram"><i class="icon-instagram"></i></a>
-                <a href="#" class="social-icon" target="_blank" title="Youtube"><i class="icon-youtube"></i></a>
+                <a href="https://facebook.com" class="social-icon" target="_blank" title="Facebook"><i class="icon-facebook-f"></i></a>
+                <a href="https://twitter.com" class="social-icon" target="_blank" title="Twitter"><i class="icon-twitter"></i></a>
+                <a href="https://instagram.com" class="social-icon" target="_blank" title="Instagram"><i class="icon-instagram"></i></a>
+                <a href="https://youtube.com" class="social-icon" target="_blank" title="Youtube"><i class="icon-youtube"></i></a>
             </div><!-- End .social-icons -->
         </div><!-- End .mobile-menu-wrapper -->
     </div><!-- End .mobile-menu-container -->
@@ -937,20 +694,20 @@
                                                     Me</label>
                                             </div><!-- End .custom-checkbox -->
 
-                                            <a href="#" class="forgot-link">Forgot Your Password?</a>
+                                            <a href="javascript:void(0);" class="forgot-link">Forgot Your Password?</a>
                                         </div><!-- End .form-footer -->
                                     </form>
                                     <div class="form-choice">
                                         <p class="text-center">or sign in with</p>
                                         <div class="row">
                                             <div class="col-sm-6">
-                                                <a href="#" class="btn btn-login btn-g">
+                                                <a href="javascript:void(0);" class="btn btn-login btn-g">
                                                     <i class="icon-google"></i>
                                                     Login With Google
                                                 </a>
                                             </div><!-- End .col-6 -->
                                             <div class="col-sm-6">
-                                                <a href="#" class="btn btn-login btn-f">
+                                                <a href="javascript:void(0);" class="btn btn-login btn-f">
                                                     <i class="icon-facebook-f"></i>
                                                     Login With Facebook
                                                 </a>
@@ -996,7 +753,7 @@
                                                 <input type="checkbox" class="custom-control-input" id="register-policy"
                                                     required checked>
                                                 <label class="custom-control-label" for="register-policy">I agree to the
-                                                    <a href="#">privacy policy</a> *</label>
+                                                    <a href="javascript:void(0);">privacy policy</a> *</label>
                                             </div><!-- End .custom-checkbox -->
                                         </div><!-- End .form-footer -->
                                     </form>
@@ -1004,13 +761,13 @@
                                         <p class="text-center">or sign in with</p>
                                         <div class="row">
                                             <div class="col-sm-6">
-                                                <a href="#" class="btn btn-login btn-g">
+                                                <a href="javascript:void(0);" class="btn btn-login btn-g">
                                                     <i class="icon-google"></i>
                                                     Login With Google
                                                 </a>
                                             </div><!-- End .col-6 -->
                                             <div class="col-sm-6">
-                                                <a href="#" class="btn btn-login  btn-f">
+                                                <a href="javascript:void(0);" class="btn btn-login  btn-f">
                                                     <i class="icon-facebook-f"></i>
                                                     Login With Facebook
                                                 </a>

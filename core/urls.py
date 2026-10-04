@@ -39,4 +39,12 @@ urlpatterns = [
     path('wishlist/', views.wishlist_view, name='wishlist'),
     path('add-to-wishlist/', views.add_to_wishlist, name='add-to-wishlist'),
     path('remove-from-wishlist/', views.remove_from_wishlist, name='remove-from-wishlist'),
+
+    # vendor dashboard & store management
+    path('vendor/dashboard/', views.vendor_dashboard, name='vendor-dashboard'),
+    path('vendor/get-product-data/<str:pid>/', views.vendor_get_product_data, name='vendor-get-product-data'),
+    path('vendor/edit-product/<str:pid>/', views.vendor_edit_product, name='vendor-edit-product'),
+    path('vendor/delete-product/<str:pid>/', views.vendor_delete_product, name='vendor-delete-product'),
+    path('vendor/toggle-stock/<str:pid>/', views.vendor_toggle_stock, name='vendor-toggle-stock'),
+    path('vendor/delete-gallery-image/<int:img_id>/', views.vendor_delete_gallery_image, name='vendor-delete-gallery-image'),
 ]

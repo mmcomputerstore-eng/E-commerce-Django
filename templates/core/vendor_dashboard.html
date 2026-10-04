@@ -1,0 +1,1329 @@
+{% extends "partials/base.html" %}
+{% load static %}
+
+{% block title %}{{ vendor.title }} - Vendor Dashboard | Mubeen Store{% endblock title %}
+
+{% block content %}
+<style>
+/* Vendor Dashboard Styling */
+.v-card {
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+.v-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08) !important;
+}
+.nav-vendor-tabs .nav-link {
+    border-radius: 8px;
+    font-size: 1.45rem;
+    font-weight: 500;
+    padding: 1.2rem 1.5rem;
+    color: #495057;
+    margin-bottom: 0.5rem;
+    display: flex;
+    align-items: center;
+    transition: all 0.2s ease;
+}
+.nav-vendor-tabs .nav-link:hover {
+    background-color: #f4f6f9;
+    color: #007bff;
+}
+.nav-vendor-tabs .nav-link.active {
+    background: linear-gradient(135deg, #007bff, #0056b3);
+    color: #ffffff !important;
+    box-shadow: 0 4px 12px rgba(0, 123, 255, 0.3);
+}
+.nav-vendor-tabs .nav-link.active i {
+    color: #ffffff !important;
+}
+.nav-vendor-tabs .nav-link.active .badge-pill {
+    background-color: rgba(255, 255, 255, 0.25) !important;
+    color: #fff !important;
+}
+.store-cover-hero {
+    border-radius: 12px;
+    overflow: hidden;
+    position: relative;
+    background-size: cover;
+    background-position: center;
+    border: 1px solid #e5e7eb;
+}
+.store-cover-overlay {
+    background: linear-gradient(to right, rgba(20, 24, 33, 0.88), rgba(30, 41, 59, 0.72));
+    padding: 3.5rem 2.5rem;
+}
+.stock-toggle-btn {
+    cursor: pointer;
+    user-select: none;
+    transition: all 0.2s;
+}
+</style>
+
+<main class="main">
+    <!-- Breadcrumb Navigation -->
+    <nav aria-label="breadcrumb" class="breadcrumb-nav mb-3">
+        <div class="container">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{% url 'core:home' %}">Home</a></li>
+                <li class="breadcrumb-item"><a href="{% url 'core:customer-dashboard' %}">Customer Account</a></li>
+                <li class="breadcrumb-item active" aria-current="page">Vendor Dashboard</li>
+            </ol>
+        </div><!-- End .container -->
+    </nav><!-- End .breadcrumb-nav -->
+
+    <div class="page-content pb-6">
+        <div class="container">
+            <!-- Flash Messages -->
+            {% if messages %}
+            <div class="mb-4">
+                {% for message in messages %}
+                <div class="alert alert-{{ message.tags|default:'info' }} alert-dismissible fade show" role="alert" style="font-size: 1.35rem;">
+                    {{ message }}
+                    <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                {% endfor %}
+            </div>
+            {% endif %}
+
+            <!-- Store Banner Header -->
+            <div class="store-cover-hero mb-4 shadow-sm" style="{% if vendor.cover_image %}background-image: url('{{ vendor.cover_image.url }}');{% else %}background: linear-gradient(135deg, #1f2937, #374151);{% endif %}">
+                <div class="store-cover-overlay">
+                    <div class="d-flex align-items-center justify-content-between flex-wrap" style="gap: 20px;">
+                        <div class="d-flex align-items-center flex-wrap" style="gap: 20px;">
+                            <!-- Vendor Avatar -->
+                            <div style="width: 85px; height: 85px; border-radius: 12px; overflow: hidden; border: 3px solid #fff; background: #fff; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 14px rgba(0,0,0,0.3); flex-shrink: 0;">
+                                {% if vendor.image %}
+                                <img src="{{ vendor.image.url }}" alt="{{ vendor.title }}" style="width: 100%; height: 100%; object-fit: cover;">
+                                {% else %}
+                                <div style="width: 100%; height: 100%; background: linear-gradient(135deg, #007bff, #1cc0a0); color: #fff; display: flex; align-items: center; justify-content: center; font-size: 3.2rem; font-weight: 700;">
+                                    {{ vendor.title|slice:":1"|upper }}
+                                </div>
+                                {% endif %}
+                            </div>
+
+                            <!-- Vendor Title & Badges -->
+                            <div>
+                                <div class="d-flex align-items-center flex-wrap" style="gap: 10px;">
+                                    <h1 class="text-white font-weight-bold mb-0" style="font-size: 2.6rem;">
+                                        {{ vendor.title }}
+                                    </h1>
+                                    <span class="badge badge-success px-3 py-1 font-weight-500" style="font-size: 1.2rem; border-radius: 12px;">
+                                        <i class="icon-check-circle mr-1"></i> Verified Vendor
+                                    </span>
+                                    <span class="badge badge-info px-3 py-1 font-weight-500" style="font-size: 1.2rem; border-radius: 12px;">
+                                        Seller ID: #{{ vendor.vid }}
+                                    </span>
+                                </div>
+
+                                <p class="text-white-50 mb-0 mt-1" style="font-size: 1.35rem;">
+                                    <i class="icon-map-marker mr-1"></i> {{ vendor.address }} &nbsp;|&nbsp;
+                                    <i class="icon-phone mr-1"></i> {{ vendor.contact }} &nbsp;|&nbsp;
+                                    <i class="icon-calendar mr-1"></i> Vendor since {{ vendor.date|date:"M Y"|default:"2024" }}
+                                </p>
+                            </div>
+                        </div>
+
+                        <!-- Quick Actions on Header -->
+                        <div class="d-flex align-items-center flex-wrap" style="gap: 10px;">
+                            <a href="{% url 'core:vendor_details' vendor.vid %}" target="_blank" class="btn btn-outline-light rounded px-4 py-2 font-weight-500" style="font-size: 1.3rem;">
+                                <i class="icon-external-link mr-1"></i> View Public Storefront
+                            </a>
+                            <a href="{% url 'core:customer-dashboard' %}" class="btn btn-light rounded px-4 py-2 font-weight-bold" style="font-size: 1.3rem; color: #222;">
+                                <i class="icon-user mr-1"></i> Customer Dashboard
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Dashboard Layout (Sidebar + Content) -->
+            <div class="row">
+                <!-- Left Sidebar Navigation -->
+                <aside class="col-lg-3 col-md-4 mb-4 mb-md-0">
+                    <div class="bg-white rounded shadow-sm border p-3">
+                        <ul class="nav flex-column nav-vendor-tabs mb-0" id="vendorTabs" role="tablist">
+                            <li class="nav-item">
+                                <a class="nav-link active" id="vtab-overview-link" data-toggle="tab" href="#vtab-overview" role="tab" aria-controls="vtab-overview" aria-selected="true">
+                                    <i class="icon-home mr-3 text-primary" style="font-size: 1.8rem;"></i>
+                                    <span>Store Overview</span>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link justify-content-between" id="vtab-products-link" data-toggle="tab" href="#vtab-products" role="tab" aria-controls="vtab-products" aria-selected="false">
+                                    <div class="d-flex align-items-center">
+                                        <i class="icon-shopping-bag mr-3 text-primary" style="font-size: 1.8rem;"></i>
+                                        <span>Products Catalog</span>
+                                    </div>
+                                    <span class="badge badge-primary badge-pill ml-auto" style="font-size: 1.15rem;">{{ total_products }}</span>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" id="vtab-add-product-link" data-toggle="tab" href="#vtab-add-product" role="tab" aria-controls="vtab-add-product" aria-selected="false">
+                                    <i class="icon-plus-circle mr-3 text-success" style="font-size: 1.8rem;"></i>
+                                    <span>Add New Product</span>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link justify-content-between" id="vtab-orders-link" data-toggle="tab" href="#vtab-orders" role="tab" aria-controls="vtab-orders" aria-selected="false">
+                                    <div class="d-flex align-items-center">
+                                        <i class="icon-shopping-cart mr-3 text-primary" style="font-size: 1.8rem;"></i>
+                                        <span>Orders & Sales</span>
+                                    </div>
+                                    <span class="badge badge-secondary badge-pill ml-auto" style="font-size: 1.15rem;">{{ total_orders_count }}</span>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" id="vtab-settings-link" data-toggle="tab" href="#vtab-settings" role="tab" aria-controls="vtab-settings" aria-selected="false">
+                                    <i class="icon-cog mr-3 text-primary" style="font-size: 1.8rem;"></i>
+                                    <span>Store Settings</span>
+                                </a>
+                            </li>
+                            <li class="nav-item border-top mt-3 pt-3">
+                                <a class="nav-link text-muted" href="{% url 'core:customer-dashboard' %}" style="font-size: 1.35rem;">
+                                    <i class="icon-user mr-3"></i> Customer Dashboard
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link text-danger" href="{% url 'userauth:logout' %}" style="font-size: 1.35rem;">
+                                    <i class="icon-sign-out mr-3"></i> Log Out
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
+                </aside><!-- End .col-lg-3 -->
+
+                <!-- Right Tab Content -->
+                <div class="col-lg-9 col-md-8">
+                    <div class="tab-content" id="vendorTabsContent">
+                        
+                        <!-- ========================================== -->
+                        <!-- TAB 1: OVERVIEW                            -->
+                        <!-- ========================================== -->
+                        <div class="tab-pane fade show active" id="vtab-overview" role="tabpanel" aria-labelledby="vtab-overview-link">
+                            <!-- Metrics Cards Grid -->
+                            <div class="row mb-4">
+                                <!-- Total Products -->
+                                <div class="col-sm-6 col-lg-3 mb-3">
+                                    <div class="card v-card p-3 rounded shadow-sm border text-center h-100" style="background: linear-gradient(135deg, #f8f9ff 0%, #ebedfa 100%); border-color: #dbe4ff !important;">
+                                        <div class="text-primary mb-2" style="font-size: 2.6rem;">
+                                            <i class="icon-shopping-bag"></i>
+                                        </div>
+                                        <div class="font-weight-bold" style="font-size: 2.4rem; color: #222;">
+                                            {{ total_products }}
+                                        </div>
+                                        <div class="text-muted" style="font-size: 1.3rem; font-weight: 500;">
+                                            Total Products
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Live In-Stock -->
+                                <div class="col-sm-6 col-lg-3 mb-3">
+                                    <div class="card v-card p-3 rounded shadow-sm border text-center h-100" style="background: linear-gradient(135deg, #f0fff4 0%, #d4edda 100%); border-color: #c3e6cb !important;">
+                                        <div class="text-success mb-2" style="font-size: 2.6rem;">
+                                            <i class="icon-check-circle"></i>
+                                        </div>
+                                        <div class="font-weight-bold text-success" style="font-size: 2.4rem;">
+                                            {{ in_stock_products }}
+                                        </div>
+                                        <div class="text-muted" style="font-size: 1.3rem; font-weight: 500;">
+                                            In Stock & Ready
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Total Orders -->
+                                <div class="col-sm-6 col-lg-3 mb-3">
+                                    <div class="card v-card p-3 rounded shadow-sm border text-center h-100" style="background: linear-gradient(135deg, #fffbf0 0%, #fff3cd 100%); border-color: #ffeeba !important;">
+                                        <div class="text-warning mb-2" style="font-size: 2.6rem;">
+                                            <i class="icon-shopping-cart"></i>
+                                        </div>
+                                        <div class="font-weight-bold text-warning" style="font-size: 2.4rem;">
+                                            {{ total_orders_count }}
+                                        </div>
+                                        <div class="text-muted" style="font-size: 1.3rem; font-weight: 500;">
+                                            Customer Orders
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Total Revenue -->
+                                <div class="col-sm-6 col-lg-3 mb-3">
+                                    <div class="card v-card p-3 rounded shadow-sm border text-center h-100" style="background: linear-gradient(135deg, #f0f7ff 0%, #d1ecf1 100%); border-color: #bee5eb !important;">
+                                        <div class="text-info mb-2" style="font-size: 2.6rem;">
+                                            <i class="icon-dollar"></i>
+                                        </div>
+                                        <div class="font-weight-bold text-info" style="font-size: 2.4rem;">
+                                            ${{ total_revenue }}
+                                        </div>
+                                        <div class="text-muted" style="font-size: 1.3rem; font-weight: 500;">
+                                            Total Sales Volume
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Store Health & Service KPIs -->
+                            <div class="bg-white rounded shadow-sm border p-4 mb-4">
+                                <h3 class="font-weight-bold mb-3 pb-2 border-bottom" style="font-size: 1.8rem; color: #222;">
+                                    <i class="icon-dashboard text-primary mr-2"></i>Store Performance Highlights
+                                </h3>
+                                <div class="row text-center">
+                                    <div class="col-6 col-md-3 mb-2">
+                                        <div class="font-weight-bold text-dark" style="font-size: 2rem;">{{ vendor.ship_on_time }}%</div>
+                                        <div class="text-muted" style="font-size: 1.25rem;">Ship On Time</div>
+                                    </div>
+                                    <div class="col-6 col-md-3 mb-2">
+                                        <div class="font-weight-bold text-dark" style="font-size: 2rem;">{{ vendor.chat_resp_time }}%</div>
+                                        <div class="text-muted" style="font-size: 1.25rem;">Chat Response Rate</div>
+                                    </div>
+                                    <div class="col-6 col-md-3 mb-2">
+                                        <div class="font-weight-bold text-dark" style="font-size: 2rem;">{{ vendor.days_return }} Days</div>
+                                        <div class="text-muted" style="font-size: 1.25rem;">Return Window</div>
+                                    </div>
+                                    <div class="col-6 col-md-3 mb-2">
+                                        <div class="font-weight-bold text-dark" style="font-size: 2rem;">{{ vendor.warranty_period }}</div>
+                                        <div class="text-muted" style="font-size: 1.25rem;">Warranty Support</div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Recent Products Snippet -->
+                            <div class="bg-white rounded shadow-sm border p-4 mb-4">
+                                <div class="d-flex align-items-center justify-content-between mb-3 pb-2 border-bottom flex-wrap">
+                                    <h3 class="font-weight-bold mb-0" style="font-size: 1.8rem; color: #222;">
+                                        <i class="icon-shopping-bag text-primary mr-2"></i>Recent Catalog Items
+                                    </h3>
+                                    <div>
+                                        <a href="#vtab-products" class="btn btn-outline-dark btn-sm rounded switch-vtab" data-target="#vtab-products-link" style="font-size: 1.25rem;">
+                                            View All ({{ total_products }})
+                                        </a>
+                                        <a href="#vtab-add-product" class="btn btn-primary btn-sm rounded ml-2 switch-vtab" data-target="#vtab-add-product-link" style="font-size: 1.25rem;">
+                                            <i class="icon-plus mr-1"></i> Add Product
+                                        </a>
+                                    </div>
+                                </div>
+
+                                {% if products %}
+                                <div class="table-responsive">
+                                    <table class="table table-hover mb-0">
+                                        <thead class="thead-light">
+                                            <tr>
+                                                <th style="font-size: 1.3rem;">Product</th>
+                                                <th style="font-size: 1.3rem;">Category</th>
+                                                <th style="font-size: 1.3rem;">Price</th>
+                                                <th style="font-size: 1.3rem;">Stock</th>
+                                                <th style="font-size: 1.3rem;">Status</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {% for p in products|slice:":5" %}
+                                            <tr>
+                                                <td>
+                                                    <div class="d-flex align-items-center">
+                                                        {% if p.image %}
+                                                        <img src="{{ p.image.url }}" alt="{{ p.title }}" style="width: 45px; height: 45px; object-fit: contain; border-radius: 4px; border: 1px solid #eee; margin-right: 12px;">
+                                                        {% endif %}
+                                                        <div>
+                                                            <a href="{% url 'core:product-details' p.pid %}" class="font-weight-bold text-dark" style="font-size: 1.35rem;">{{ p.title|truncatechars:40 }}</a>
+                                                            <div class="text-muted" style="font-size: 1.15rem;">SKU: {{ p.sku }}</div>
+                                                        </div>
+                                                    </div>
+                                                </td>
+                                                <td style="font-size: 1.3rem;">{{ p.category.title|default:"General" }}</td>
+                                                <td class="font-weight-bold text-primary" style="font-size: 1.4rem;">${{ p.price }}</td>
+                                                <td>
+                                                    {% if p.in_stock %}
+                                                    <span class="badge badge-success px-2 py-1" style="font-size: 1.15rem;">In Stock</span>
+                                                    {% else %}
+                                                    <span class="badge badge-danger px-2 py-1" style="font-size: 1.15rem;">Out of Stock</span>
+                                                    {% endif %}
+                                                </td>
+                                                <td>
+                                                    <span class="badge badge-light border px-2 py-1" style="font-size: 1.15rem;">{{ p.product_status|title }}</span>
+                                                </td>
+                                            </tr>
+                                            {% endfor %}
+                                        </tbody>
+                                    </table>
+                                </div>
+                                {% else %}
+                                <div class="text-center py-4 text-muted">
+                                    <i class="icon-shopping-bag mb-2" style="font-size: 3rem; opacity: 0.4;"></i>
+                                    <p class="mb-2" style="font-size: 1.4rem;">You haven't added any products to your store yet.</p>
+                                    <a href="#vtab-add-product" class="btn btn-primary rounded px-4 py-2 switch-vtab" data-target="#vtab-add-product-link" style="font-size: 1.3rem;">
+                                        Add Your First Product
+                                    </a>
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div><!-- End #vtab-overview -->
+
+                        <!-- ========================================== -->
+                        <!-- TAB 2: PRODUCTS CATALOG                    -->
+                        <!-- ========================================== -->
+                        <div class="tab-pane fade" id="vtab-products" role="tabpanel" aria-labelledby="vtab-products-link">
+                            <div class="bg-white rounded shadow-sm border p-4 mb-4">
+                                <div class="d-flex align-items-center justify-content-between mb-4 pb-2 border-bottom flex-wrap" style="gap: 15px;">
+                                    <div>
+                                        <h2 class="font-weight-bold mb-0" style="font-size: 2.2rem; color: #222;">
+                                            <i class="icon-shopping-bag text-primary mr-2"></i>Products Catalog
+                                        </h2>
+                                        <p class="text-muted mb-0 mt-1" style="font-size: 1.35rem;">
+                                            Manage your product inventory, toggle stock status, and update product pricing.
+                                        </p>
+                                    </div>
+                                    <a href="#vtab-add-product" class="btn btn-primary rounded px-4 py-2 font-weight-bold switch-vtab" data-target="#vtab-add-product-link" style="font-size: 1.3rem;">
+                                        <i class="icon-plus mr-1"></i> Add New Product
+                                    </a>
+                                </div>
+
+                                {% if products %}
+                                <div class="table-responsive">
+                                    <table class="table table-hover align-middle mb-0" id="vendorProductsTable">
+                                        <thead class="thead-light">
+                                            <tr>
+                                                <th style="font-size: 1.35rem; font-weight: 600;">Product</th>
+                                                <th style="font-size: 1.35rem; font-weight: 600;">Category</th>
+                                                <th style="font-size: 1.35rem; font-weight: 600;">Price</th>
+                                                <th style="font-size: 1.35rem; font-weight: 600; text-align: center;">Stock Status</th>
+                                                <th style="font-size: 1.35rem; font-weight: 600; text-align: center;">Status</th>
+                                                <th style="font-size: 1.35rem; font-weight: 600; text-align: center;">Actions</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {% for p in products %}
+                                            <tr id="prod-row-{{ p.pid }}">
+                                                <td style="padding: 1.2rem 0.75rem;">
+                                                    <div class="d-flex align-items-center">
+                                                        <div class="position-relative mr-3" style="flex-shrink: 0;">
+                                                            <figure class="mb-0" style="width: 55px; height: 55px; border-radius: 6px; overflow: hidden; border: 1px solid #eee; display: flex; align-items: center; justify-content: center; background: #fff;">
+                                                                {% if p.image %}
+                                                                <img src="{{ p.image.url }}" alt="{{ p.title }}" style="max-height: 100%; max-width: 100%; object-fit: contain;">
+                                                                {% else %}
+                                                                <img src="{% static 'assets/images/demos/demo-13/products/product-1.jpg' %}" alt="{{ p.title }}" style="max-height: 100%; max-width: 100%; object-fit: contain;">
+                                                                {% endif %}
+                                                            </figure>
+                                                            {% if p.p_images.count %}
+                                                            <span class="badge badge-dark position-absolute" style="bottom: -5px; right: -5px; font-size: 1rem; padding: 2px 4px; border-radius: 6px;" title="{{ p.p_images.count }} gallery photos">
+                                                                <i class="icon-picture-o"></i> +{{ p.p_images.count }}
+                                                            </span>
+                                                            {% endif %}
+                                                        </div>
+                                                        <div>
+                                                            <h4 class="mb-0" style="font-size: 1.45rem; font-weight: 500;">
+                                                                <a href="{% url 'core:product-details' p.pid %}" target="_blank" class="text-dark">{{ p.title }}</a>
+                                                            </h4>
+                                                            <small class="text-muted" style="font-size: 1.15rem;">
+                                                                SKU: {{ p.sku }} &nbsp;|&nbsp; Added {{ p.date|date:"M d, Y" }}
+                                                            </small>
+                                                        </div>
+                                                    </div>
+                                                </td>
+                                                <td style="font-size: 1.35rem; vertical-align: middle;">
+                                                    {{ p.category.title|default:"General" }}
+                                                </td>
+                                                <td style="font-size: 1.5rem; font-weight: 600; color: #333; vertical-align: middle;">
+                                                    <span class="text-primary">${{ p.price }}</span>
+                                                    {% if p.old_price %}
+                                                    <span class="text-muted ml-1" style="font-size: 1.2rem; text-decoration: line-through;">${{ p.old_price }}</span>
+                                                    {% endif %}
+                                                </td>
+                                                <td style="vertical-align: middle; text-align: center;">
+                                                    <button type="button" class="btn btn-sm btn-toggle-stock stock-toggle-btn {% if p.in_stock %}btn-success{% else %}btn-danger{% endif %} rounded-pill px-3 py-1" data-pid="{{ p.pid }}" style="font-size: 1.2rem;">
+                                                        <i class="icon-{% if p.in_stock %}check{% else %}close{% endif %} mr-1"></i>
+                                                        <span class="stock-text">{% if p.in_stock %}In Stock{% else %}Out of Stock{% endif %}</span>
+                                                    </button>
+                                                </td>
+                                                <td style="vertical-align: middle; text-align: center;">
+                                                    {% if p.product_status == 'published' %}
+                                                    <span class="badge badge-success px-2 py-1" style="font-size: 1.15rem;">Published</span>
+                                                    {% elif p.product_status == 'in_review' %}
+                                                    <span class="badge badge-warning text-white px-2 py-1" style="font-size: 1.15rem;">In Review</span>
+                                                    {% else %}
+                                                    <span class="badge badge-secondary px-2 py-1" style="font-size: 1.15rem;">{{ p.product_status|title }}</span>
+                                                    {% endif %}
+                                                </td>
+                                                <td style="vertical-align: middle; text-align: center;">
+                                                    <div class="d-inline-flex" style="gap: 6px;">
+                                                        <button type="button" class="btn btn-outline-primary btn-sm rounded btn-edit-product"
+                                                            data-pid="{{ p.pid }}"
+                                                            data-title="{{ p.title }}"
+                                                            data-price="{{ p.price }}"
+                                                            data-oldprice="{{ p.old_price|default:'' }}"
+                                                            data-category="{{ p.category.id|default:'' }}"
+                                                            data-status="{{ p.product_status }}"
+                                                            data-stock="{% if p.in_stock %}true{% else %}false{% endif %}"
+                                                            data-featured="{% if p.featured %}true{% else %}false{% endif %}"
+                                                            data-desc="{{ p.description }}"
+                                                            title="Edit Product" style="font-size: 1.2rem; padding: 0.35rem 0.8rem;">
+                                                            <i class="icon-edit"></i> Edit
+                                                        </button>
+
+                                                        <form method="POST" action="{% url 'core:vendor-delete-product' p.pid %}" class="form-delete-product" data-pid="{{ p.pid }}" data-title="{{ p.title }}" style="display: inline-block;">
+                                                            {% csrf_token %}
+                                                            <button type="submit" class="btn btn-outline-danger btn-sm rounded" title="Delete Product" style="font-size: 1.2rem; padding: 0.35rem 0.8rem;">
+                                                                <i class="icon-trash"></i>
+                                                            </button>
+                                                        </form>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                            {% endfor %}
+                                        </tbody>
+                                    </table>
+                                </div>
+                                {% else %}
+                                <div class="text-center py-5 text-muted">
+                                    <div style="width: 80px; height: 80px; border-radius: 50%; background: #f8f9fa; border: 2px dashed #ddd; display: inline-flex; align-items: center; justify-content: center; margin-bottom: 1.5rem;">
+                                        <i class="icon-shopping-bag text-muted" style="font-size: 3.5rem; opacity: 0.6;"></i>
+                                    </div>
+                                    <h3 class="font-weight-bold mb-2" style="font-size: 2rem; color: #222;">No Products in Your Catalog</h3>
+                                    <p class="text-muted mb-4 mx-auto" style="max-width: 480px; font-size: 1.4rem;">
+                                        Add your store products to start receiving customer orders on Mubeen Store.
+                                    </p>
+                                    <a href="#vtab-add-product" class="btn btn-primary rounded px-5 py-3 font-weight-bold switch-vtab" data-target="#vtab-add-product-link" style="font-size: 1.35rem;">
+                                        <i class="icon-plus mr-1"></i> ADD FIRST PRODUCT
+                                    </a>
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div><!-- End #vtab-products -->
+
+                        <!-- ========================================== -->
+                        <!-- TAB 3: ADD NEW PRODUCT                     -->
+                        <!-- ========================================== -->
+                        <div class="tab-pane fade" id="vtab-add-product" role="tabpanel" aria-labelledby="vtab-add-product-link">
+                            <div class="bg-white rounded shadow-sm border p-4 mb-4">
+                                <h2 class="font-weight-bold mb-3 pb-2 border-bottom" style="font-size: 2.2rem; color: #222;">
+                                    <i class="icon-plus-circle text-success mr-2"></i>Add New Product
+                                </h2>
+                                <p class="text-muted mb-4" style="font-size: 1.35rem;">
+                                    List a new item for sale in your store catalog. All products are published immediately.
+                                </p>
+
+                                <form method="POST" action="{% url 'core:vendor-dashboard' %}" enctype="multipart/form-data">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="action" value="add_product">
+
+                                    <div class="row">
+                                        <div class="col-md-8 mb-3">
+                                            <label style="font-size: 1.35rem; font-weight: 500;">Product Title *</label>
+                                            <input type="text" class="form-control" name="title" required placeholder="e.g. Ultra Slim Wireless Mechanical Keyboard" style="font-size: 1.4rem;">
+                                        </div>
+
+                                        <div class="col-md-4 mb-3">
+                                            <label style="font-size: 1.35rem; font-weight: 500;">Category *</label>
+                                            <select class="form-control" name="category" required style="font-size: 1.35rem; height: 42px;">
+                                                <option value="">-- Select Category --</option>
+                                                {% for cat in categories %}
+                                                <option value="{{ cat.id }}">{{ cat.title }}</option>
+                                                {% endfor %}
+                                            </select>
+                                        </div>
+                                    </div>
+
+                                    <div class="row">
+                                        <div class="col-sm-6 col-md-3 mb-3">
+                                            <label style="font-size: 1.35rem; font-weight: 500;">Selling Price ($) *</label>
+                                            <input type="number" step="0.01" min="0" class="form-control" name="price" required placeholder="99.99" style="font-size: 1.4rem;">
+                                        </div>
+
+                                        <div class="col-sm-6 col-md-3 mb-3">
+                                            <label style="font-size: 1.35rem; font-weight: 500;">Old / Original Price ($)</label>
+                                            <input type="number" step="0.01" min="0" class="form-control" name="old_price" placeholder="129.99" style="font-size: 1.4rem;">
+                                        </div>
+
+                                        <div class="col-sm-6 col-md-3 mb-3">
+                                            <label style="font-size: 1.35rem; font-weight: 500;">Publish Status</label>
+                                            <select class="form-control" name="product_status" style="font-size: 1.35rem; height: 42px;">
+                                                <option value="published" selected>Published</option>
+                                                <option value="in_review">In Review</option>
+                                                <option value="draft">Draft</option>
+                                            </select>
+                                        </div>
+
+                                        <div class="col-sm-6 col-md-3 mb-3">
+                                            <label style="font-size: 1.35rem; font-weight: 500;">Inventory Status</label>
+                                            <div class="custom-control custom-checkbox mt-2">
+                                                <input type="checkbox" class="custom-control-input" id="in_stock_check" name="in_stock" checked>
+                                                <label class="custom-control-label" for="in_stock_check" style="font-size: 1.35rem;">In Stock</label>
+                                            </div>
+                                            <div class="custom-control custom-checkbox mt-1">
+                                                <input type="checkbox" class="custom-control-input" id="featured_check" name="featured">
+                                                <label class="custom-control-label" for="featured_check" style="font-size: 1.35rem;">Featured Product</label>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="row">
+                                        <!-- Main Product Image -->
+                                        <div class="col-md-6 mb-3">
+                                            <div class="p-3 rounded border bg-light h-100">
+                                                <div class="d-flex justify-content-between align-items-center mb-1">
+                                                    <label style="font-size: 1.35rem; font-weight: 600; color: #222;" class="mb-0">
+                                                        <i class="icon-camera text-primary mr-1"></i> Main Cover Image *
+                                                    </label>
+                                                    <button type="button" class="btn btn-link text-danger p-0" id="btn_clear_add_main_img" style="display: none; font-size: 1.2rem; text-decoration: none;">
+                                                        <i class="icon-close"></i> Clear
+                                                    </button>
+                                                </div>
+                                                <input type="file" class="form-control-file" name="image" id="add_prod_main_image" accept="image/*" required style="font-size: 1.35rem;">
+                                                <small class="form-text text-muted">Primary display photo on catalog and shop cards.</small>
+                                                <div id="add_main_image_preview_box" class="mt-2 align-items-center" style="display: none;">
+                                                    <img id="add_main_image_preview_img" src="#" alt="Main Preview" style="width: 75px; height: 75px; object-fit: contain; border-radius: 6px; border: 2px solid #007bff; background: #fff; padding: 3px;">
+                                                    <span class="text-success ml-2 font-weight-500" style="font-size: 1.25rem;"><i class="icon-check-circle"></i> Ready to upload</span>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <!-- Additional Gallery Images -->
+                                        <div class="col-md-6 mb-3">
+                                            <div class="p-3 rounded border bg-light h-100">
+                                                <div class="d-flex justify-content-between align-items-center mb-1">
+                                                    <label style="font-size: 1.35rem; font-weight: 600; color: #222;" class="mb-0">
+                                                        <i class="icon-picture-o text-success mr-1"></i> Additional Gallery Images (Optional)
+                                                    </label>
+                                                    <button type="button" class="btn btn-link text-danger p-0" id="btn_clear_add_gallery_img" style="display: none; font-size: 1.2rem; text-decoration: none;">
+                                                        <i class="icon-close"></i> Clear All
+                                                    </button>
+                                                </div>
+                                                <input type="file" class="form-control-file" name="gallery_images" id="add_prod_gallery_images" accept="image/*" multiple style="font-size: 1.35rem;">
+                                                <small class="form-text text-muted">Hold Ctrl/Cmd to select multiple extra photos (angles, features, specs).</small>
+                                                <div id="add_gallery_preview_container" class="d-flex flex-wrap mt-2" style="gap: 8px;"></div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="form-group mb-3">
+                                        <label style="font-size: 1.35rem; font-weight: 500;">Product Description</label>
+                                        <textarea class="form-control" name="description" rows="4" placeholder="Detailed product description, key benefits, and features..." style="font-size: 1.4rem;"></textarea>
+                                    </div>
+
+                                    <div class="form-group mb-4">
+                                        <label style="font-size: 1.35rem; font-weight: 500;">Specifications (Optional)</label>
+                                        <textarea class="form-control" name="specifications" rows="3" placeholder="Technical specifications (e.g. Dimensions, Weight, Material, Battery life)..." style="font-size: 1.4rem;"></textarea>
+                                    </div>
+
+                                    <button type="submit" class="btn btn-primary rounded px-5 py-3 font-weight-bold" style="font-size: 1.4rem;">
+                                        <i class="icon-check mr-1"></i> PUBLISH PRODUCT TO STORE
+                                    </button>
+                                </form>
+                            </div>
+                        </div><!-- End #vtab-add-product -->
+
+                        <!-- ========================================== -->
+                        <!-- TAB 4: ORDERS & SALES                      -->
+                        <!-- ========================================== -->
+                        <div class="tab-pane fade" id="vtab-orders" role="tabpanel" aria-labelledby="vtab-orders-link">
+                            <div class="bg-white rounded shadow-sm border p-4 mb-4">
+                                <div class="d-flex align-items-center justify-content-between mb-4 pb-2 border-bottom flex-wrap" style="gap: 15px;">
+                                    <div>
+                                        <h2 class="font-weight-bold mb-0" style="font-size: 2.2rem; color: #222;">
+                                            <i class="icon-shopping-cart text-primary mr-2"></i>Orders & Customer Purchases
+                                        </h2>
+                                        <p class="text-muted mb-0 mt-1" style="font-size: 1.35rem;">
+                                            Track customer orders containing items from your store catalog.
+                                        </p>
+                                    </div>
+                                    <div class="p-2 px-3 rounded bg-light border">
+                                        <span class="text-muted" style="font-size: 1.35rem;">
+                                            Total Earned: <strong class="text-primary font-weight-bold" style="font-size: 1.55rem;">${{ total_revenue }}</strong>
+                                        </span>
+                                    </div>
+                                </div>
+
+                                {% if order_items %}
+                                <div class="table-responsive">
+                                    <table class="table table-hover mb-0">
+                                        <thead class="thead-light">
+                                            <tr>
+                                                <th style="font-size: 1.3rem;">Order ID</th>
+                                                <th style="font-size: 1.3rem;">Customer</th>
+                                                <th style="font-size: 1.3rem;">Date</th>
+                                                <th style="font-size: 1.3rem;">Item</th>
+                                                <th style="font-size: 1.3rem; text-align: center;">Qty</th>
+                                                <th style="font-size: 1.3rem;">Price</th>
+                                                <th style="font-size: 1.3rem;">Total</th>
+                                                <th style="font-size: 1.3rem; text-align: center;">Status</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {% for item in order_items %}
+                                            <tr>
+                                                <td class="font-weight-bold" style="font-size: 1.35rem;">
+                                                    #ORD-{{ item.order.id }}
+                                                </td>
+                                                <td style="font-size: 1.3rem;">
+                                                    <strong>{{ item.order.user.username }}</strong>
+                                                    <div class="text-muted" style="font-size: 1.15rem;">{{ item.order.user.email }}</div>
+                                                </td>
+                                                <td class="text-muted" style="font-size: 1.25rem;">
+                                                    {{ item.order.order_date|date:"M d, Y" }}
+                                                </td>
+                                                <td class="font-weight-500" style="font-size: 1.35rem;">
+                                                    {{ item.items }}
+                                                </td>
+                                                <td style="font-size: 1.35rem; text-align: center;">
+                                                    {{ item.quantity }}
+                                                </td>
+                                                <td style="font-size: 1.35rem;">
+                                                    ${{ item.price }}
+                                                </td>
+                                                <td class="font-weight-bold text-primary" style="font-size: 1.45rem;">
+                                                    ${{ item.total }}
+                                                </td>
+                                                <td style="text-align: center;">
+                                                    {% if item.product_status == 'delivered' %}
+                                                    <span class="badge badge-success px-2 py-1" style="font-size: 1.15rem;">Delivered</span>
+                                                    {% elif item.product_status == 'shipped' %}
+                                                    <span class="badge badge-info px-2 py-1" style="font-size: 1.15rem;">Shipped</span>
+                                                    {% else %}
+                                                    <span class="badge badge-warning text-white px-2 py-1" style="font-size: 1.15rem;">Processing</span>
+                                                    {% endif %}
+                                                </td>
+                                            </tr>
+                                            {% endfor %}
+                                        </tbody>
+                                    </table>
+                                </div>
+                                {% else %}
+                                <div class="text-center py-5 text-muted">
+                                    <i class="icon-shopping-cart mb-2" style="font-size: 3.5rem; opacity: 0.4;"></i>
+                                    <h3 class="font-weight-bold mb-2" style="font-size: 2rem; color: #222;">No Customer Orders Yet</h3>
+                                    <p class="text-muted mb-0 mx-auto" style="max-width: 450px; font-size: 1.4rem;">
+                                        When customers purchase items from your store, their orders will appear here in real time.
+                                    </p>
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div><!-- End #vtab-orders -->
+
+                        <!-- ========================================== -->
+                        <!-- TAB 5: STORE SETTINGS                      -->
+                        <!-- ========================================== -->
+                        <div class="tab-pane fade" id="vtab-settings" role="tabpanel" aria-labelledby="vtab-settings-link">
+                            <div class="bg-white rounded shadow-sm border p-4 mb-4">
+                                <h2 class="font-weight-bold mb-3 pb-2 border-bottom" style="font-size: 2.2rem; color: #222;">
+                                    <i class="icon-cog text-primary mr-2"></i>Store Profile & Policies
+                                </h2>
+                                <p class="text-muted mb-4" style="font-size: 1.35rem;">
+                                    Configure your public vendor store information, shipping policies, and store visuals.
+                                </p>
+
+                                <form method="POST" action="{% url 'core:vendor-dashboard' %}" enctype="multipart/form-data">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="action" value="update_profile">
+
+                                    <div class="row">
+                                        <div class="col-md-6 mb-3">
+                                            <label style="font-size: 1.35rem; font-weight: 500;">Store Display Name *</label>
+                                            <input type="text" class="form-control" name="title" value="{{ vendor.title }}" required style="font-size: 1.4rem;">
+                                        </div>
+
+                                        <div class="col-md-6 mb-3">
+                                            <label style="font-size: 1.35rem; font-weight: 500;">Store Contact Phone *</label>
+                                            <input type="text" class="form-control" name="contact" value="{{ vendor.contact }}" required style="font-size: 1.4rem;">
+                                        </div>
+                                    </div>
+
+                                    <div class="form-group mb-3">
+                                        <label style="font-size: 1.35rem; font-weight: 500;">Store Business Address *</label>
+                                        <input type="text" class="form-control" name="address" value="{{ vendor.address }}" required style="font-size: 1.4rem;">
+                                    </div>
+
+                                    <div class="row">
+                                        <div class="col-sm-6 col-md-3 mb-3">
+                                            <label style="font-size: 1.35rem; font-weight: 500;">Ship On Time (%)</label>
+                                            <input type="text" class="form-control" name="ship_on_time" value="{{ vendor.ship_on_time }}" style="font-size: 1.4rem;">
+                                        </div>
+
+                                        <div class="col-sm-6 col-md-3 mb-3">
+                                            <label style="font-size: 1.35rem; font-weight: 500;">Chat Response (%)</label>
+                                            <input type="text" class="form-control" name="chat_resp_time" value="{{ vendor.chat_resp_time }}" style="font-size: 1.4rem;">
+                                        </div>
+
+                                        <div class="col-sm-6 col-md-3 mb-3">
+                                            <label style="font-size: 1.35rem; font-weight: 500;">Return Period (Days)</label>
+                                            <input type="text" class="form-control" name="days_return" value="{{ vendor.days_return }}" style="font-size: 1.4rem;">
+                                        </div>
+
+                                        <div class="col-sm-6 col-md-3 mb-3">
+                                            <label style="font-size: 1.35rem; font-weight: 500;">Warranty Period</label>
+                                            <input type="text" class="form-control" name="warranty_period" value="{{ vendor.warranty_period }}" style="font-size: 1.4rem;">
+                                        </div>
+                                    </div>
+
+                                    <div class="row">
+                                        <div class="col-md-6 mb-3">
+                                            <label style="font-size: 1.35rem; font-weight: 500;">Store Logo</label>
+                                            <input type="file" class="form-control-file" name="image" accept="image/*" style="font-size: 1.35rem;">
+                                            {% if vendor.image %}
+                                            <small class="form-text text-muted mt-1">Current: <a href="{{ vendor.image.url }}" target="_blank">View Logo</a></small>
+                                            {% endif %}
+                                        </div>
+
+                                        <div class="col-md-6 mb-3">
+                                            <label style="font-size: 1.35rem; font-weight: 500;">Store Cover Banner</label>
+                                            <input type="file" class="form-control-file" name="cover_image" accept="image/*" style="font-size: 1.35rem;">
+                                            {% if vendor.cover_image %}
+                                            <small class="form-text text-muted mt-1">Current: <a href="{{ vendor.cover_image.url }}" target="_blank">View Cover Banner</a></small>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+
+                                    <div class="form-group mb-4">
+                                        <label style="font-size: 1.35rem; font-weight: 500;">Store Bio & Description</label>
+                                        <textarea class="form-control" name="description" rows="4" placeholder="Tell customers about your store, warranties, customer service..." style="font-size: 1.4rem;">{{ vendor.description|default:'' }}</textarea>
+                                    </div>
+
+                                    <button type="submit" class="btn btn-primary rounded px-5 py-3 font-weight-bold" style="font-size: 1.4rem;">
+                                        <i class="icon-check mr-1"></i> SAVE STORE PROFILE CHANGES
+                                    </button>
+                                </form>
+                            </div>
+                        </div><!-- End #vtab-settings -->
+
+                    </div><!-- End .tab-content -->
+                </div><!-- End .col-lg-9 -->
+            </div><!-- End .row -->
+        </div><!-- End .container -->
+    </div><!-- End .page-content -->
+</main>
+
+<!-- Edit Product Modal -->
+<div class="modal fade" id="vendorEditProductModal" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
+        <div class="modal-content" style="border-radius: 10px; overflow: hidden; border: none; box-shadow: 0 15px 50px rgba(0,0,0,0.25);">
+            <div class="modal-header bg-dark text-white p-4">
+                <div>
+                    <h4 class="modal-title font-weight-bold text-white mb-0" id="editModalProductTitle" style="font-size: 1.8rem;">
+                        Edit Product
+                    </h4>
+                    <span class="text-white-50" style="font-size: 1.25rem;">Update product details, pricing, images, and gallery</span>
+                </div>
+                <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close" style="opacity: 0.85;">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            
+            <form method="POST" id="vendorEditProductForm" action="" enctype="multipart/form-data">
+                {% csrf_token %}
+                
+                <div id="editModalLoading" class="text-center py-5">
+                    <i class="icon-refresh" style="font-size: 3.5rem; animation: spin 1s infinite linear; display: inline-block;"></i>
+                    <p class="mt-2 text-muted" style="font-size: 1.4rem;">Loading product data...</p>
+                </div>
+
+                <div class="modal-body p-4" id="editModalFormContent" style="display: none;">
+                    <div class="row">
+                        <div class="col-md-8 mb-3">
+                            <label style="font-size: 1.35rem; font-weight: 500;">Product Title *</label>
+                            <input type="text" class="form-control" id="edit_modal_title" name="title" required style="font-size: 1.4rem;">
+                        </div>
+
+                        <div class="col-md-4 mb-3">
+                            <label style="font-size: 1.35rem; font-weight: 500;">Category</label>
+                            <select class="form-control" id="edit_modal_category" name="category" style="font-size: 1.35rem; height: 42px;">
+                                <option value="">-- Keep Current / None --</option>
+                                {% for cat in categories %}
+                                <option value="{{ cat.id }}">{{ cat.title }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-sm-6 col-md-3 mb-3">
+                            <label style="font-size: 1.35rem; font-weight: 500;">Price ($) *</label>
+                            <input type="number" step="0.01" min="0" class="form-control" id="edit_modal_price" name="price" required style="font-size: 1.4rem;">
+                        </div>
+
+                        <div class="col-sm-6 col-md-3 mb-3">
+                            <label style="font-size: 1.35rem; font-weight: 500;">Old Price ($)</label>
+                            <input type="number" step="0.01" min="0" class="form-control" id="edit_modal_old_price" name="old_price" style="font-size: 1.4rem;">
+                        </div>
+
+                        <div class="col-sm-6 col-md-3 mb-3">
+                            <label style="font-size: 1.35rem; font-weight: 500;">Status</label>
+                            <select class="form-control" id="edit_modal_status" name="product_status" style="font-size: 1.35rem; height: 42px;">
+                                <option value="published">Published</option>
+                                <option value="in_review">In Review</option>
+                                <option value="draft">Draft</option>
+                            </select>
+                        </div>
+
+                        <div class="col-sm-6 col-md-3 mb-3">
+                            <label style="font-size: 1.35rem; font-weight: 500;">Stock & Features</label>
+                            <div class="custom-control custom-checkbox mt-2">
+                                <input type="checkbox" class="custom-control-input" id="edit_modal_stock" name="in_stock">
+                                <label class="custom-control-label" for="edit_modal_stock" style="font-size: 1.35rem;">In Stock</label>
+                            </div>
+                            <div class="custom-control custom-checkbox mt-1">
+                                <input type="checkbox" class="custom-control-input" id="edit_modal_featured" name="featured">
+                                <label class="custom-control-label" for="edit_modal_featured" style="font-size: 1.35rem;">Featured</label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Images Management in Edit Modal -->
+                    <div class="p-3 mb-3 rounded border bg-light">
+                        <h5 class="font-weight-bold mb-3 text-dark" style="font-size: 1.45rem;">
+                            <i class="icon-camera text-primary mr-1"></i> Images Management
+                        </h5>
+
+                        <div class="row mb-3">
+                            <!-- Current Main Image & Replace -->
+                            <div class="col-md-6 mb-3 mb-md-0 border-right">
+                                <label style="font-size: 1.3rem; font-weight: 600;">Main Cover Image</label>
+                                <div class="d-flex align-items-center mb-2" id="edit_modal_curr_main_box">
+                                    <img id="edit_modal_curr_main_img" src="#" alt="Main Product Image" style="width: 60px; height: 60px; object-fit: contain; border-radius: 6px; border: 1px solid #ddd; background: #fff; margin-right: 10px;">
+                                    <div>
+                                        <span class="text-muted d-block" style="font-size: 1.2rem;">Current cover photo</span>
+                                        <a href="#" id="edit_modal_view_main_link" target="_blank" class="text-primary font-weight-500" style="font-size: 1.15rem;">View Full Image</a>
+                                    </div>
+                                </div>
+                                <label style="font-size: 1.25rem; font-weight: 500; color: #555;">Replace Cover Photo (Optional)</label>
+                                <input type="file" class="form-control-file" name="image" id="edit_modal_image_input" accept="image/*" style="font-size: 1.3rem;">
+                                <div id="edit_modal_new_image_preview_box" class="mt-2 align-items-center" style="display: none;">
+                                    <img id="edit_modal_new_image_preview_img" src="#" alt="New Cover Preview" style="width: 60px; height: 60px; object-fit: contain; border-radius: 6px; border: 2px solid #28a745; background: #fff; padding: 2px;">
+                                    <div class="ml-2">
+                                        <small class="text-success d-block font-weight-bold">New photo selected</small>
+                                        <button type="button" class="btn btn-link text-danger p-0" id="btn_cancel_edit_main_img" style="font-size: 1.15rem; text-decoration: none;">
+                                            <i class="icon-close"></i> Cancel Replacement
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Additional Gallery Images -->
+                            <div class="col-md-6">
+                                <label style="font-size: 1.3rem; font-weight: 600;">
+                                    Existing Gallery Photos <span id="edit_modal_gallery_label_count" class="text-muted font-weight-normal">(0)</span>
+                                </label>
+                                <div id="edit_modal_existing_gallery" class="d-flex flex-wrap align-items-center mb-3" style="min-height: 50px;">
+                                    <!-- Rendered dynamically -->
+                                </div>
+
+                                <div class="d-flex justify-content-between align-items-center mb-1">
+                                    <label style="font-size: 1.25rem; font-weight: 500; color: #555;" class="mb-0">Upload More Gallery Photos (Optional)</label>
+                                    <button type="button" class="btn btn-link text-danger p-0" id="btn_clear_edit_gallery_img" style="display: none; font-size: 1.15rem; text-decoration: none;">
+                                        <i class="icon-close"></i> Clear New Photos
+                                    </button>
+                                </div>
+                                <input type="file" class="form-control-file" name="gallery_images" id="edit_modal_gallery_input" accept="image/*" multiple style="font-size: 1.3rem;">
+                                <div id="edit_modal_new_gallery_preview" class="d-flex flex-wrap mt-2" style="gap: 6px;"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-group mb-3">
+                        <label style="font-size: 1.35rem; font-weight: 500;">Description</label>
+                        <textarea class="form-control" id="edit_modal_desc" name="description" rows="3" style="font-size: 1.4rem;"></textarea>
+                    </div>
+
+                    <div class="form-group mb-0">
+                        <label style="font-size: 1.35rem; font-weight: 500;">Specifications</label>
+                        <textarea class="form-control" id="edit_modal_specs" name="specifications" rows="2" style="font-size: 1.4rem;"></textarea>
+                    </div>
+                </div>
+
+                <div class="modal-footer p-3 bg-light d-flex justify-content-between align-items-center">
+                    <button type="button" class="btn btn-outline-danger rounded" id="editModalDeleteBtn" style="font-size: 1.3rem;">
+                        <i class="icon-trash mr-1"></i> Delete Product
+                    </button>
+                    <div>
+                        <button type="button" class="btn btn-outline-dark rounded mr-2" data-dismiss="modal" style="font-size: 1.3rem;">Cancel</button>
+                        <button type="submit" class="btn btn-primary rounded px-4 py-2 font-weight-bold" style="font-size: 1.35rem;">
+                            <i class="icon-check mr-1"></i> Save Product Changes
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock content %}
+
+{% block extra_js %}
+<script>
+$(document).ready(function() {
+    const csrfToken = '{{ csrf_token }}';
+
+    // 1. Hash Routing for Vendor Tabs
+    function activateVendorTabFromHash() {
+        let hash = window.location.hash;
+        if (!hash || hash === '#overview') hash = '#vtab-overview';
+        if (hash === '#products') hash = '#vtab-products';
+        if (hash === '#add-product') hash = '#vtab-add-product';
+        if (hash === '#orders') hash = '#vtab-orders';
+        if (hash === '#settings') hash = '#vtab-settings';
+
+        if (hash && $(hash).length) {
+            const $tabLink = $('.nav-vendor-tabs a[href="' + hash + '"]');
+            if ($tabLink.length) {
+                $tabLink.tab('show');
+            }
+        }
+    }
+    activateVendorTabFromHash();
+    $(window).on('hashchange', function() {
+        activateVendorTabFromHash();
+    });
+
+    // Update URL hash on tab shown
+    $('.nav-vendor-tabs a[data-toggle="tab"]').on('shown.bs.tab', function(e) {
+        const hash = $(e.target).attr('href');
+        if (history.replaceState) {
+            history.replaceState(null, null, hash);
+        }
+    });
+
+    // Switch tab buttons
+    $(document).on('click', '.switch-vtab', function(e) {
+        e.preventDefault();
+        const target = $(this).data('target');
+        $(target).tab('show');
+        window.location.hash = target.replace('-link', '');
+        $('html, body').animate({
+            scrollTop: $('#vendorTabs').offset().top - 80
+        }, 250);
+    });
+
+    // 2. Fast Stock Toggle via AJAX
+    $(document).on('click', '.btn-toggle-stock', function(e) {
+        e.preventDefault();
+        const $btn = $(this);
+        const pid = $btn.data('pid');
+        $btn.prop('disabled', true);
+
+        $.ajax({
+            url: '/vendor/toggle-stock/' + pid + '/',
+            type: 'POST',
+            data: {
+                csrfmiddlewaretoken: csrfToken
+            },
+            dataType: 'json',
+            success: function(response) {
+                $btn.prop('disabled', false);
+                if (response.status === 'success') {
+                    if (response.in_stock) {
+                        $btn.removeClass('btn-danger').addClass('btn-success');
+                        $btn.find('i').removeClass('icon-close').addClass('icon-check');
+                        $btn.find('.stock-text').text('In Stock');
+                    } else {
+                        $btn.removeClass('btn-success').addClass('btn-danger');
+                        $btn.find('i').removeClass('icon-check').addClass('icon-close');
+                        $btn.find('.stock-text').text('Out of Stock');
+                    }
+                    if (typeof showCartToast === 'function') {
+                        showCartToast(response.message, 'success');
+                    }
+                }
+            },
+            error: function() {
+                $btn.prop('disabled', false);
+                if (typeof showCartToast === 'function') {
+                    showCartToast('Could not update stock status.', 'error');
+                }
+            }
+        });
+    });
+
+    // 3. Live image preview & clear handlers (Add Product)
+    $('#add_prod_main_image').on('change', function() {
+        if (this.files && this.files[0]) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                $('#add_main_image_preview_img').attr('src', e.target.result);
+                $('#add_main_image_preview_box').css('display', 'flex');
+                $('#btn_clear_add_main_img').show();
+            };
+            reader.readAsDataURL(this.files[0]);
+        } else {
+            $('#add_main_image_preview_box').hide();
+            $('#btn_clear_add_main_img').hide();
+        }
+    });
+
+    $('#btn_clear_add_main_img').on('click', function() {
+        $('#add_prod_main_image').val('');
+        $('#add_main_image_preview_box').hide();
+        $(this).hide();
+    });
+
+    $('#add_prod_gallery_images').on('change', function() {
+        const $container = $('#add_gallery_preview_container');
+        $container.empty();
+        if (this.files && this.files.length > 0) {
+            Array.from(this.files).forEach(file => {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    $container.append(`
+                        <div style="width: 65px; height: 65px; border-radius: 6px; overflow: hidden; border: 2px solid #28a745; background: #fff; padding: 2px;">
+                            <img src="${e.target.result}" style="width: 100%; height: 100%; object-fit: cover; border-radius: 4px;">
+                        </div>
+                    `);
+                };
+                reader.readAsDataURL(file);
+            });
+            $container.show();
+            $('#btn_clear_add_gallery_img').show();
+        } else {
+            $container.hide();
+            $('#btn_clear_add_gallery_img').hide();
+        }
+    });
+
+    $('#btn_clear_add_gallery_img').on('click', function() {
+        $('#add_prod_gallery_images').val('');
+        $('#add_gallery_preview_container').empty().hide();
+        $(this).hide();
+    });
+
+    // 4. Live image preview & clear handlers (Edit Modal)
+    $('#edit_modal_image_input').on('change', function() {
+        if (this.files && this.files[0]) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                $('#edit_modal_new_image_preview_img').attr('src', e.target.result);
+                $('#edit_modal_new_image_preview_box').css('display', 'flex');
+            };
+            reader.readAsDataURL(this.files[0]);
+        } else {
+            $('#edit_modal_new_image_preview_box').hide();
+        }
+    });
+
+    $('#btn_cancel_edit_main_img').on('click', function() {
+        $('#edit_modal_image_input').val('');
+        $('#edit_modal_new_image_preview_box').hide();
+    });
+
+    $('#edit_modal_gallery_input').on('change', function() {
+        const $container = $('#edit_modal_new_gallery_preview');
+        $container.empty();
+        if (this.files && this.files.length > 0) {
+            Array.from(this.files).forEach(file => {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    $container.append(`
+                        <div style="width: 55px; height: 55px; border-radius: 6px; overflow: hidden; border: 2px solid #007bff; background: #fff; margin: 3px; padding: 1px;">
+                            <img src="${e.target.result}" style="width: 100%; height: 100%; object-fit: cover; border-radius: 4px;">
+                        </div>
+                    `);
+                };
+                reader.readAsDataURL(file);
+            });
+            $container.show();
+            $('#btn_clear_edit_gallery_img').show();
+        } else {
+            $container.hide();
+            $('#btn_clear_edit_gallery_img').hide();
+        }
+    });
+
+    $('#btn_clear_edit_gallery_img').on('click', function() {
+        $('#edit_modal_gallery_input').val('');
+        $('#edit_modal_new_gallery_preview').empty().hide();
+        $(this).hide();
+    });
+
+    // 5. Edit Product Modal Population via AJAX
+    $(document).on('click', '.btn-edit-product', function(e) {
+        e.preventDefault();
+        const pid = $(this).data('pid');
+
+        $('#vendorEditProductModal').data('current-pid', pid);
+        $('#vendorEditProductForm').attr('action', '/vendor/edit-product/' + pid + '/');
+        $('#editModalLoading').show();
+        $('#editModalFormContent').hide();
+        $('#vendorEditProductModal').modal('show');
+
+        // Reset file inputs and previews
+        $('#edit_modal_image_input').val('');
+        $('#edit_modal_new_image_preview_box').hide();
+        $('#edit_modal_gallery_input').val('');
+        $('#edit_modal_new_gallery_preview').empty().hide();
+        $('#btn_clear_edit_gallery_img').hide();
+
+        $.ajax({
+            url: '/vendor/get-product-data/' + pid + '/',
+            type: 'GET',
+            dataType: 'json',
+            success: function(res) {
+                $('#editModalLoading').hide();
+                $('#editModalFormContent').show();
+
+                if (res.status === 'success') {
+                    $('#editModalProductTitle').text('Edit "' + res.title + '"');
+                    $('#edit_modal_title').val(res.title);
+                    $('#edit_modal_price').val(res.price);
+                    $('#edit_modal_old_price').val(res.old_price);
+                    $('#edit_modal_category').val(res.category_id);
+                    $('#edit_modal_status').val(res.product_status);
+                    $('#edit_modal_stock').prop('checked', res.in_stock === true);
+                    $('#edit_modal_featured').prop('checked', res.featured === true);
+                    $('#edit_modal_desc').val(res.description);
+                    $('#edit_modal_specs').val(res.specifications);
+
+                    // Show current main image
+                    if (res.main_image_url) {
+                        $('#edit_modal_curr_main_img').attr('src', res.main_image_url);
+                        $('#edit_modal_view_main_link').attr('href', res.main_image_url);
+                        $('#edit_modal_curr_main_box').show();
+                    } else {
+                        $('#edit_modal_curr_main_box').hide();
+                    }
+
+                    // Render existing gallery images
+                    const $galleryBox = $('#edit_modal_existing_gallery');
+                    $galleryBox.empty();
+
+                    if (res.gallery_images && res.gallery_images.length > 0) {
+                        $('#edit_modal_gallery_label_count').text('(' + res.gallery_images.length + ')');
+                        res.gallery_images.forEach(function(img) {
+                            $galleryBox.append(`
+                                <div class="position-relative d-inline-block m-1 gallery-thumb-item" id="gallery-thumb-${img.id}" style="width: 70px; height: 70px; border-radius: 6px; overflow: hidden; border: 1px solid #ddd; background: #fff;">
+                                    <img src="${img.url}" style="width: 100%; height: 100%; object-fit: cover;">
+                                    <button type="button" class="btn btn-danger btn-sm position-absolute btn-del-gallery-img" data-img-id="${img.id}" style="top: 2px; right: 2px; width: 22px; height: 22px; padding: 0; line-height: 20px; font-size: 13px; border-radius: 50%; opacity: 0.9;" title="Remove this photo">
+                                        <i class="icon-close"></i>
+                                    </button>
+                                </div>
+                            `);
+                        });
+                    } else {
+                        $('#edit_modal_gallery_label_count').text('(0)');
+                        $galleryBox.html('<span class="text-muted" style="font-size: 1.2rem;">No extra gallery photos yet.</span>');
+                    }
+                }
+            },
+            error: function() {
+                $('#editModalLoading').hide();
+                $('#editModalFormContent').show();
+                if (typeof showCartToast === 'function') {
+                    showCartToast('Could not load product details.', 'error');
+                }
+            }
+        });
+    });
+
+    // 6. Delete individual gallery image via AJAX
+    $(document).on('click', '.btn-del-gallery-img', function(e) {
+        e.preventDefault();
+        const imgId = $(this).data('img-id');
+        const $thumb = $('#gallery-thumb-' + imgId);
+
+        if (!confirm('Remove this photo from the product gallery?')) return;
+
+        $.ajax({
+            url: '/vendor/delete-gallery-image/' + imgId + '/',
+            type: 'POST',
+            data: { csrfmiddlewaretoken: csrfToken },
+            dataType: 'json',
+            success: function(res) {
+                if (res.status === 'success') {
+                    $thumb.fadeOut(200, function() {
+                        $(this).remove();
+                        const remaining = $('#edit_modal_existing_gallery .gallery-thumb-item').length;
+                        $('#edit_modal_gallery_label_count').text('(' + remaining + ')');
+                        if (remaining === 0) {
+                            $('#edit_modal_existing_gallery').html('<span class="text-muted" style="font-size: 1.2rem;">No extra gallery photos yet.</span>');
+                        }
+                    });
+                    if (typeof showCartToast === 'function') {
+                        showCartToast('Gallery photo removed.', 'success');
+                    }
+                }
+            },
+            error: function() {
+                if (typeof showCartToast === 'function') {
+                    showCartToast('Could not delete gallery photo.', 'error');
+                }
+            }
+        });
+    });
+
+    // 7. Delete product from inside Edit Modal
+    $(document).on('click', '#editModalDeleteBtn', function() {
+        const pid = $('#vendorEditProductModal').data('current-pid');
+        const title = $('#edit_modal_title').val() || 'this product';
+        if (!confirm('Are you sure you want to permanently delete "' + title + '" from your catalog?')) {
+            return;
+        }
+
+        $.ajax({
+            url: '/vendor/delete-product/' + pid + '/',
+            type: 'POST',
+            headers: { 'X-Requested-With': 'XMLHttpRequest' },
+            data: { csrfmiddlewaretoken: csrfToken },
+            dataType: 'json',
+            success: function(res) {
+                $('#vendorEditProductModal').modal('hide');
+                $('#prod-row-' + pid).fadeOut(300, function() {
+                    $(this).remove();
+                    const currentCount = parseInt($('#vtab-products-link .badge-pill').text()) || 0;
+                    const newCount = Math.max(0, currentCount - 1);
+                    $('#vtab-products-link .badge-pill').text(newCount);
+                    if ($('#vendorProductsTable tbody tr').length === 0) {
+                        location.reload();
+                    }
+                });
+                if (typeof showCartToast === 'function') {
+                    showCartToast(res.message, 'success');
+                } else {
+                    alert(res.message);
+                }
+            },
+            error: function() {
+                alert('Could not delete product.');
+            }
+        });
+    });
+
+    // 8. Delete product from Catalog Table with smooth AJAX
+    $(document).on('submit', '.form-delete-product', function(e) {
+        e.preventDefault();
+        const $form = $(this);
+        const pid = $form.data('pid');
+        const title = $form.data('title') || 'this product';
+        if (!confirm('Are you sure you want to permanently delete "' + title + '" from your catalog?')) {
+            return false;
+        }
+        const $row = $('#prod-row-' + pid);
+        const actionUrl = $form.attr('action');
+
+        $.ajax({
+            url: actionUrl,
+            type: 'POST',
+            headers: { 'X-Requested-With': 'XMLHttpRequest' },
+            data: $form.serialize(),
+            dataType: 'json',
+            success: function(res) {
+                if (res.status === 'success') {
+                    $row.fadeOut(300, function() {
+                        $(this).remove();
+                        const currentCount = parseInt($('#vtab-products-link .badge-pill').text()) || 0;
+                        const newCount = Math.max(0, currentCount - 1);
+                        $('#vtab-products-link .badge-pill').text(newCount);
+                        if ($('#vendorProductsTable tbody tr').length === 0) {
+                            location.reload();
+                        }
+                    });
+                    if (typeof showCartToast === 'function') {
+                        showCartToast(res.message, 'success');
+                    }
+                } else {
+                    alert(res.message || 'Error deleting product');
+                }
+            },
+            error: function() {
+                $form.off('submit').submit();
+            }
+        });
+    });
+});
+</script>
+{% endblock extra_js %}

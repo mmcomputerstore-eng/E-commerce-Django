@@ -8,9 +8,9 @@
     <!-- Page Header -->
     <div class="page-header text-center" style="background-image: url('{% static 'assets/images/page-header-bg.jpg' %}'); background-size: cover; background-position: center; padding: 4.5rem 0;">
         <div class="container">
-            <h1 class="page-title text-white font-weight-bold" style="font-size: 3.2rem; letter-spacing: -0.5px;">
+            <h1 class="page-title font-weight-bold" style="font-size: 3.6rem; color: #1a1a1a !important; letter-spacing: -0.5px; margin-bottom: 0;">
                 Our Verified Vendors
-                <span class="text-white-50 mt-1" style="font-size: 1.5rem; font-weight: normal; display: block;">Discover trusted stores and shop directly from top sellers</span>
+                <span class="mt-2" style="font-size: 1.6rem; font-weight: normal; color: #555555 !important; display: block;">Discover trusted stores and shop directly from top sellers</span>
             </h1>
         </div><!-- End .container -->
     </div><!-- End .page-header -->
@@ -90,7 +90,7 @@
 
                                 <!-- Description Snippet -->
                                 <p class="vendor-desc text-muted mb-3" style="font-size: 1.3rem; line-height: 1.5; min-height: 40px;">
-                                    {{ v.description|truncatewords:14|default:"Quality certified seller with authentic tech hardware and fast customer care." }}
+                                    {{ v.description|striptags|truncatewords:14|default:"Quality certified seller with authentic tech hardware and fast customer care." }}
                                 </p>
 
                                 <!-- Details List -->

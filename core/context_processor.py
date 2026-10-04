@@ -23,8 +23,14 @@ def default(request):
     cart_total_amount = sum(float(item.get('price', 0)) * int(item.get('qty', 1)) for item in cart_data.values()) if cart_data else 0.0
 
     wishlist_count = 0
+    vendor_count = Vendor.objects.count()
+    user_is_vendor = False
+    vendor_profile = None
     if request.user.is_authenticated:
         wishlist_count = Wishlist.objects.filter(user=request.user).count()
+        if getattr(request.user, 'is_vendor_user', False):
+            user_is_vendor = True
+            vendor_profile = Vendor.objects.filter(user=request.user).first()
 
     return {
         'categories': categories,
@@ -34,4 +40,7 @@ def default(request):
         'cart_total_amount': f"{cart_total_amount:.2f}",
         'cart_total_float': cart_total_amount,
         'wishlist_count': wishlist_count,
+        'vendor_count': vendor_count,
+        'is_vendor': user_is_vendor,
+        'vendor_profile': vendor_profile,
     }
